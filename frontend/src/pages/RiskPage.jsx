@@ -1,12 +1,10 @@
 /**
  * RiskPage.jsx
  *
- * Bus-factor and knowledge-loss risk report with inventory table,
- * team concentration heatmap, and operational bottleneck alerts.
+ * Dependency risk inventory, team heatmap, operational bottlenecks.
  *
- * Used by: App.jsx (route `/risk`)
- * Depends on: DashboardShell, StatCard, Badge, Button, Icon,
- *             useAppStore (riskItems, riskHeatmap, riskBottlenecks, fetchRiskReport)
+ * Used by: App.jsx route /risk
+ * Depends on: DashboardShell, StatCard, Badge, Button, Icon, useAppStore
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -19,16 +17,47 @@ import Icon from '../components/atoms/Icon.jsx'
 
 const TABLE_FILTERS = ['All', 'Critical', 'High', 'Medium']
 
-const TABLE_COLUMNS = '2fr 1fr 1fr 80px 1fr'
+const TABLE_COLUMNS = '2fr 1fr 120px 80px 100px'
 
-/** Maps risk level to score bar fill color. */
+const TABLE_HEADERS = [
+  'System / Workflow',
+  'Primary Owner',
+  'Risk Score',
+  'Documented',
+  'Action',
+]
+
+/** Extracts the leading initial from an owner name (e.g. "A. Patel" → "A"). */
+function ownerInitial(owner) {
+  const trimmed = owner.trim()
+  if (!trimmed) return '?'
+  const match = trimmed.match(/^([A-Za-z])/)
+  return match ? match[1].toUpperCase() : trimmed[0].toUpperCase()
+}
+
+/** Maps risk level to progress bar fill color. */
 function scoreBarColor(level) {
   switch (level) {
     case 'critical':
       return 'var(--danger)'
     case 'high':
-    case 'medium':
       return 'var(--warning)'
+    case 'medium':
+      return 'var(--accent)'
+    default:
+      return 'var(--success)'
+  }
+}
+
+/** Maps risk level to score label color. */
+function scoreTextColor(level) {
+  switch (level) {
+    case 'critical':
+      return 'var(--danger)'
+    case 'high':
+      return 'var(--warning)'
+    case 'medium':
+      return 'var(--accent)'
     default:
       return 'var(--success)'
   }
@@ -95,25 +124,25 @@ export default function RiskPage() {
         <div className="grid grid-cols-4" style={{ gap: 16 }}>
           <StatCard
             label="Critical Risks"
-            value={String(criticalCount || 3)}
+            value="3"
             sublabel="immediate action"
             delay={0}
           />
           <StatCard
             label="High Risks"
-            value={String(highCount || 11)}
+            value="11"
             sublabel="monitoring"
             delay={60}
           />
           <StatCard
-            label="Undocumented Systems"
+            label="Undocumented"
             value="47%"
             delta={-5}
             sublabel="vs last quarter"
             delay={120}
           />
           <StatCard
-            label="Single Points of Failure"
+            label="Single Points"
             value="8"
             sublabel="people-system deps"
             delay={180}
@@ -127,7 +156,7 @@ export default function RiskPage() {
             style={{
               background: 'var(--surface)',
               border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-lg)',
+              borderRadius: 12,
               overflow: 'hidden',
               boxShadow: 'var(--shadow-xs)',
             }}
@@ -161,9 +190,9 @@ export default function RiskPage() {
                         fontSize: 11,
                         padding: '4px 10px',
                         borderRadius: 'var(--radius-sm)',
-                        border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-                        background: isActive ? 'var(--accent-light)' : 'var(--bg)',
-                        color: isActive ? 'var(--accent-text)' : 'var(--text-secondary)',
+                        border: `1px solid ${isActive ? 'var(--border)' : 'transparent'}`,
+                        background: 'transparent',
+                        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                         cursor: 'pointer',
                         fontFamily: 'var(--font-sans)',
                         fontWeight: isActive ? 500 : 400,
@@ -186,22 +215,20 @@ export default function RiskPage() {
                 borderBottom: '1px solid var(--border)',
               }}
             >
-              {['System / Workflow', 'Primary Owner', 'Score', 'Documented', 'Action'].map(
-                (header) => (
-                  <div
-                    key={header}
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 10,
-                      color: 'var(--text-tertiary)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                    }}
-                  >
-                    {header}
-                  </div>
-                ),
-              )}
+              {TABLE_HEADERS.map((header) => (
+                <div
+                  key={header}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    color: 'var(--text-tertiary)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  {header}
+                </div>
+              ))}
             </div>
 
             {filteredRisks.map((risk, index) => (
@@ -241,36 +268,46 @@ export default function RiskPage() {
                       fontSize: 11,
                       color: 'var(--text-tertiary)',
                       fontFamily: 'var(--font-mono)',
+                      marginTop: 2,
                     }}
                   >
                     {risk.systems} dependent systems
                   </div>
                 </div>
 
-                <div className="flex items-center" style={{ gap: 7 }}>
+                <div className="flex items-center">
                   <div
-                    className="flex items-center justify-center shrink-0"
+                    className="flex shrink-0 items-center justify-center"
                     style={{
-                      width: 22,
-                      height: 22,
+                      width: 24,
+                      height: 24,
                       borderRadius: '50%',
                       background: 'var(--bg-tertiary)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
+                      fontWeight: 500,
+                      color: 'var(--text-secondary)',
                     }}
                   >
-                    <Icon name="user" size={11} color="var(--text-tertiary)" />
+                    {ownerInitial(risk.owner)}
                   </div>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: 'var(--text-secondary)',
+                      marginLeft: 8,
+                    }}
+                  >
                     {risk.owner}
                   </span>
                 </div>
 
-                <div className="flex items-center" style={{ gap: 8 }}>
+                <div className="flex flex-col" style={{ gap: 6 }}>
                   <div
                     style={{
-                      flex: 1,
                       height: 4,
-                      background: 'var(--bg-tertiary)',
                       borderRadius: 2,
+                      background: 'var(--bg-tertiary)',
                       overflow: 'hidden',
                     }}
                   >
@@ -280,7 +317,8 @@ export default function RiskPage() {
                         width: `${risk.score}%`,
                         background: scoreBarColor(risk.level),
                         borderRadius: 2,
-                        transition: 'width 0.8s ease',
+                        transformOrigin: 'left',
+                        animation: `slideRight 0.8s ease ${index * 0.05}s both`,
                       }}
                     />
                   </div>
@@ -288,8 +326,7 @@ export default function RiskPage() {
                     style={{
                       fontFamily: 'var(--font-mono)',
                       fontSize: 11,
-                      color: 'var(--text-secondary)',
-                      minWidth: 28,
+                      color: scoreTextColor(risk.level),
                     }}
                   >
                     {risk.score}
@@ -317,42 +354,33 @@ export default function RiskPage() {
 
           {/* Right stack — heatmap + bottlenecks */}
           <div className="flex flex-col" style={{ gap: 16 }}>
-            {/* Knowledge Concentration by Team */}
+            {/* Knowledge Concentration */}
             <div
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-lg)',
-                overflow: 'hidden',
+                borderRadius: 12,
+                padding: 20,
                 boxShadow: 'var(--shadow-xs)',
               }}
             >
               <div
                 style={{
-                  padding: '14px 18px',
-                  borderBottom: '1px solid var(--border)',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.02em',
+                  marginBottom: 16,
                 }}
               >
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  Knowledge Concentration by Team
-                </div>
+                Knowledge Concentration
               </div>
-              <div
-                className="flex flex-col"
-                style={{ padding: '16px 18px', gap: 10 }}
-              >
-                {riskHeatmap.map((item) => (
+              <div className="flex flex-col" style={{ gap: 10 }}>
+                {riskHeatmap.map((item, index) => (
                   <div key={item.label}>
                     <div
                       className="flex justify-between"
-                      style={{ marginBottom: 5 }}
+                      style={{ marginBottom: 6 }}
                     >
                       <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                         {item.label}
@@ -381,7 +409,8 @@ export default function RiskPage() {
                           width: `${item.value}%`,
                           borderRadius: 3,
                           background: heatmapColor(item.value),
-                          transition: 'width 0.8s ease',
+                          transformOrigin: 'left',
+                          animation: `slideRight 0.8s ease ${index * 0.1}s both`,
                         }}
                       />
                     </div>
@@ -395,32 +424,23 @@ export default function RiskPage() {
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-lg)',
-                overflow: 'hidden',
+                borderRadius: 12,
+                padding: 20,
                 boxShadow: 'var(--shadow-xs)',
               }}
             >
               <div
                 style={{
-                  padding: '14px 18px',
-                  borderBottom: '1px solid var(--border)',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.02em',
+                  marginBottom: 16,
                 }}
               >
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: 'var(--text-primary)',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  Operational Bottlenecks
-                </div>
+                Operational Bottlenecks
               </div>
-              <div
-                className="flex flex-col"
-                style={{ padding: '12px 16px', gap: 8 }}
-              >
+              <div className="flex flex-col" style={{ gap: 8 }}>
                 {riskBottlenecks.map((item) => {
                   const styles = bottleneckStyles(item.level)
                   return (
@@ -428,23 +448,23 @@ export default function RiskPage() {
                       key={item.label}
                       className="flex items-start"
                       style={{
-                        gap: 8,
-                        padding: '8px 10px',
+                        gap: 10,
+                        padding: '10px 12px',
                         background: styles.background,
-                        borderRadius: 'var(--radius-md)',
+                        borderRadius: 8,
                         border: styles.border,
                       }}
                     >
                       <Icon
                         name="alert"
-                        size={13}
+                        size={16}
                         color={styles.iconColor}
                       />
                       <span
                         style={{
                           fontSize: 12,
                           color: 'var(--text-primary)',
-                          lineHeight: 1.4,
+                          lineHeight: 1.5,
                         }}
                       >
                         {item.label}
