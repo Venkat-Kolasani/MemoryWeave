@@ -15,7 +15,7 @@ Phase 1 — Frontend scaffold
 - [x] API service layer with mocks (`src/services/api.js`)
 - [x] mockData.js — Acme Corp demo dataset
 - [x] Page stubs: Landing, Overview, Graph, Workflows, Risk, Assistant, Sources
-- [ ] Icon, Badge, Button, StatCard atoms
+- [x] Icon, Badge, Button, StatCard atoms
 - [ ] DashboardShell layout
 - [ ] Full LandingPage (11 sections)
 - [ ] mockData.js
