@@ -26,8 +26,8 @@ PEOPLE = [
         "x": 160,
         "y": 140,
         "r": 26,
-        "systems": "Payment API, Auth Service, Deploy System",
-        "incidents": "P-4021 and P-3722 resolved",
+        "systems": "Payment API, Auth Service",
+        "incidents": "8 P0s resolved",
         "risk": "CRITICAL - 95% bus factor",
     },
     {
@@ -209,16 +209,16 @@ INCIDENTS = [
     },
     {
         "id": "i2",
-        "external_id": "P-3722",
-        "title": "Payment Service Timeout",
-        "severity": "P0",
-        "date": "2024-03-10",
-        "duration": 31,
-        "resolved_by": "A. Patel",
+        "external_id": "P-3882",
+        "title": "Auth Token Failure",
+        "severity": "P1",
+        "date": "2024-03-28",
+        "duration": 22,
+        "resolved_by": "R. Chen",
         "x": 380,
         "y": 290,
         "r": 11,
-        "systems": "Payment API",
+        "systems": "Auth Service",
     },
 ]
 
@@ -242,6 +242,7 @@ def seed() -> dict:
                 person["x"],
                 person["y"],
                 person["r"],
+                label="Person",
                 systems=person.get("systems", ""),
                 incidents=person.get("incidents", ""),
                 risk=person.get("risk", ""),
@@ -261,6 +262,7 @@ def seed() -> dict:
                 system["x"],
                 system["y"],
                 system["r"],
+                label="System",
                 owner=system.get("owner", ""),
                 dependents=system.get("dependents", 0),
                 documented=system.get("documented", ""),
@@ -281,6 +283,7 @@ def seed() -> dict:
                 workflow["x"],
                 workflow["y"],
                 workflow["r"],
+                label="Workflow",
                 sublabel=workflow.get("sublabel", None)
                 or ("Documented" if workflow["documented"] else "Undocumented"),
                 steps=workflow["steps"],
@@ -301,34 +304,34 @@ def seed() -> dict:
                 incident["x"],
                 incident["y"],
                 incident["r"],
+                label="Incident",
                 name=incident["external_id"],
                 systems=incident["systems"],
             )
 
-        # 21 demo relationships. A. Patel intentionally has 8 direct connections.
-        service.link_person_knows_system("p1", "s1", confidence=0.95)
-        service.link_person_resolves_incident("p1", "i1")
+        # 21 demo relationships mirroring frontend/src/data/mockData.js.
+        service.link_person_knows_system("p1", "s1", confidence=0.95, weight=2.0)
+        service.link_person_resolves_incident("p1", "i1", weight=1.8)
         service.link_person_owns_workflow("p1", "w2", weight=1.5)
-        service.link_person_resolves_incident("p1", "i2")
-        service.link_person_knows_system("p1", "s2", confidence=0.82)
-        service.link_person_knows_system("p1", "s4", confidence=0.74)
-        service.link_people_work_together("p1", "p2", weight=1.0)
-        service.link_people_work_together("p1", "p5", weight=0.8)
-
-        service.link_person_knows_system("p2", "s2", confidence=0.92)
-        service.link_person_knows_system("p3", "s3", confidence=0.9)
-        service.link_person_knows_system("p4", "s4", confidence=0.96)
+        service.link_person_knows_system("p2", "s2", confidence=0.9, weight=1.8)
+        service.link_person_resolves_incident("p2", "i2", weight=1.5)
+        service.link_person_knows_system("p3", "s3", confidence=0.8, weight=1.5)
+        service.link_person_knows_system("p4", "s4", confidence=0.9, weight=1.8)
         service.link_person_owns_workflow("p4", "w1", weight=1.5)
         service.link_person_owns_workflow("p5", "w3", weight=1.2)
 
-        service.link_system_depends_on("s1", "s2")
-        service.link_system_depends_on("s2", "s3")
-        service.link_system_depends_on("s3", "s5")
-        service.link_incident_affects_system("i1", "s1")
-        service.link_incident_affects_system("i2", "s1")
+        service.link_system_depends_on("s1", "s2", weight=1.2, dashed=True)
+        service.link_system_depends_on("s2", "s3", weight=1.0, dashed=True)
+        service.link_system_depends_on("s3", "s5", weight=1.0, dashed=True)
+        service.link_incident_affects_system("i1", "s1", weight=1.5)
+        service.link_incident_affects_system("i2", "s2", weight=1.2)
         service.link_workflow_depends_on_system("w1", "s4", weight=1.5, dashed=False)
         service.link_workflow_depends_on_system("w2", "s1", weight=1.2, dashed=True)
         service.link_workflow_depends_on_system("w3", "s2", weight=1.0, dashed=True)
+        service.link_people_work_together("p1", "p2", weight=1.0)
+        service.link_people_work_together("p3", "p2", weight=0.8)
+        service.link_system_depends_on("s4", "s1", weight=1.2, dashed=True)
+        service.link_person_resolves_incident("p5", "i1", weight=0.8, dashed=True)
 
         counts = service.count_nodes_and_relationships()
         risk = service.get_risk_data()
@@ -337,6 +340,7 @@ def seed() -> dict:
             "nodes": counts["nodes"],
             "relationships": counts["relationships"],
             "patel_connections": patel["connection_count"],
+            "patel_risk_score": patel["risk_score"],
             "risk": risk,
         }
     finally:
@@ -349,7 +353,7 @@ def print_summary(summary: dict) -> None:
     print("Nodes seeded: 15 (5 people, 5 systems, 3 workflows, 2 incidents)")
     print(f"Relationships: {summary['relationships']}")
     print(
-        f"A. Patel connections: {summary['patel_connections']} (should be highest)"
+        f"A. Patel risk score: {summary['patel_risk_score']:.0f} (should be highest)"
     )
     print()
     print("People risk ranking")

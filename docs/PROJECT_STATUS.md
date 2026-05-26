@@ -57,8 +57,8 @@ Phase 3 — Backend data stores implemented (routes still mock-backed)
 4. WorkflowsPage full implementation
 
 ## Known Issues / Blockers
-- Neo4j and ChromaDB are external services. In this workspace on 2026-05-26, Neo4j was not listening on `localhost:7687`, and Docker/Neo4j CLI were not available, so live Neo4j seeding could not be completed here.
-- The Neo4j seed intentionally produces 15 visualization nodes (5 people, 5 systems, 3 workflows, 2 incidents) to match the existing frontend graph contract and the task's stated verification target. The Chroma pipeline indexes the broader demo corpus, including all incident markdown files present under `backend/data/demo/incidents/`.
+- FastAPI routes are still mock-backed; `/graph`, `/risk-report`, `/stats`, and `/query` need to be wired to Neo4j/ChromaDB services.
+- The Neo4j seed intentionally produces 15 visualization nodes (5 people, 5 systems, 3 workflows, 2 incidents) to match the existing frontend graph contract. The Chroma pipeline indexes the broader demo corpus, including all incident markdown files present under `backend/data/demo/incidents/`.
 
 ## API Endpoints Status
 | Endpoint | Status | Notes |
@@ -72,14 +72,13 @@ Phase 3 — Backend data stores implemented (routes still mock-backed)
 ## Data Store Scripts
 | Script | Status | Notes |
 |----------------|-------------|------------------------|
-| `python backend/data/seed.py` | Implemented | Clears Neo4j, creates constraints/indexes, seeds 15 Acme graph nodes and 21 relationships. Requires Neo4j at `bolt://localhost:7687` with `neo4j/memoryweave`. |
+| `python backend/data/seed.py` | Verified locally | Clears Neo4j, creates constraints/indexes, seeds 15 Acme graph nodes and 21 relationships. Requires Neo4j at `bolt://localhost:7687` with `neo4j/memoryweave`. |
 | `python backend/data/populate_chroma.py` | Verified locally | Indexed 58 chunks into `memoryweave_knowledge`: 9 Slack, 20 incident, 29 docs. Search assertion for `payment service recovery patel` passed. |
 
 ## Verification Log
-- `backend/.venv/bin/python` does not currently have `neo4j` or `chromadb` installed, though both packages are listed in `backend/requirements.txt`. System Python 3.13.9 has `neo4j==5.28.1` and `chromadb==1.0.8`.
 - Source compile check passed for `backend/services/neo4j_service.py`, `backend/services/chroma_service.py`, `backend/data/seed.py`, and `backend/data/populate_chroma.py`.
+- Neo4j verification: with Docker Neo4j listening on `localhost:7687`, `backend/.venv/bin/python backend/data/seed.py` completed with 15 nodes, 21 relationships, and A. Patel risk score 95. A follow-up edge-contract check returned `edge_contract_match True` against `frontend/src/data/mockData.js`.
 - ChromaDB verification: started temporary server with `chroma run --host localhost --port 8001 --path ./.chroma-memoryweave`; ran `python backend/data/populate_chroma.py`; saw `Search test passed` and `Indexed 58 chunks: 9 from Slack, 20 from incidents, 29 from docs`; `ChromaService.get_stats()` returned count `58` across `messages.json`, `P-3722.md`, `P-3882.md`, `P-4021.md`, `auth-service.md`, and `deploy-runbook.md`.
-- Neo4j verification blocked: `python backend/data/seed.py` failed with connection refused to `localhost:7687`; no process was listening on ports `7687`, `7474`, or `8001` before starting temporary Chroma; Docker daemon was unavailable.
 
 ## Environment
 - Frontend: http://localhost:5173

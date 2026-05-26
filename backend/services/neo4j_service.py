@@ -91,7 +91,7 @@ class Neo4jService:
         self,
         id: str,
         name: str,
-        type: str,
+        system_type: str,
         criticality: str,
         status: str,
         description: str,
@@ -114,7 +114,7 @@ class Neo4jService:
             {
                 "id": id,
                 "name": name,
-                "type": type,
+                "type": system_type,
                 "criticality": criticality,
                 "status": status,
                 "description": description,
@@ -208,54 +208,103 @@ class Neo4jService:
             {"person_id": person_id, "workflow_id": workflow_id, "weight": weight},
         )
 
-    def link_person_resolves_incident(self, person_id: str, incident_id: str):
+    def link_person_resolves_incident(
+        self,
+        person_id: str,
+        incident_id: str,
+        weight: float = 1.8,
+        dashed: bool = False,
+    ):
         """Create RESOLVES relationship."""
         query = """
         MATCH (p:Person {id: $person_id}), (i:Incident {id: $incident_id})
         MERGE (p)-[r:RESOLVES]->(i)
-        SET r.weight = 1.8, r.dashed = false
+        SET r.weight = $weight, r.dashed = $dashed
         RETURN r
         """
-        return self._single(query, {"person_id": person_id, "incident_id": incident_id})
+        return self._single(
+            query,
+            {
+                "person_id": person_id,
+                "incident_id": incident_id,
+                "weight": weight,
+                "dashed": dashed,
+            },
+        )
 
     def link_person_knows_system(
-        self, person_id: str, system_id: str, confidence: float = 1.0
+        self,
+        person_id: str,
+        system_id: str,
+        confidence: float = 1.0,
+        weight: Optional[float] = None,
     ):
         """Create KNOWS relationship."""
         query = """
         MATCH (p:Person {id: $person_id}), (s:System {id: $system_id})
         MERGE (p)-[r:KNOWS]->(s)
         SET r.confidence = $confidence,
-            r.weight = CASE WHEN $confidence >= 0.9 THEN 2.0 ELSE 1.5 END,
+            r.weight = coalesce($weight, CASE WHEN $confidence >= 0.9 THEN 2.0 ELSE 1.5 END),
             r.dashed = false
         RETURN r
         """
         return self._single(
             query,
-            {"person_id": person_id, "system_id": system_id, "confidence": confidence},
+            {
+                "person_id": person_id,
+                "system_id": system_id,
+                "confidence": confidence,
+                "weight": weight,
+            },
         )
 
-    def link_system_depends_on(self, system_id: str, depends_on_id: str):
+    def link_system_depends_on(
+        self,
+        system_id: str,
+        depends_on_id: str,
+        weight: float = 1.2,
+        dashed: bool = True,
+    ):
         """Create DEPENDS_ON relationship between Systems."""
         query = """
         MATCH (s:System {id: $system_id}), (d:System {id: $depends_on_id})
         MERGE (s)-[r:DEPENDS_ON]->(d)
-        SET r.weight = 1.2, r.dashed = true
+        SET r.weight = $weight, r.dashed = $dashed
         RETURN r
         """
         return self._single(
-            query, {"system_id": system_id, "depends_on_id": depends_on_id}
+            query,
+            {
+                "system_id": system_id,
+                "depends_on_id": depends_on_id,
+                "weight": weight,
+                "dashed": dashed,
+            },
         )
 
-    def link_incident_affects_system(self, incident_id: str, system_id: str):
+    def link_incident_affects_system(
+        self,
+        incident_id: str,
+        system_id: str,
+        weight: float = 1.5,
+        dashed: bool = False,
+    ):
         """Create AFFECTS relationship."""
         query = """
         MATCH (i:Incident {id: $incident_id}), (s:System {id: $system_id})
         MERGE (i)-[r:AFFECTS]->(s)
-        SET r.weight = 1.5, r.dashed = false
+        SET r.weight = $weight, r.dashed = $dashed
         RETURN r
         """
-        return self._single(query, {"incident_id": incident_id, "system_id": system_id})
+        return self._single(
+            query,
+            {
+                "incident_id": incident_id,
+                "system_id": system_id,
+                "weight": weight,
+                "dashed": dashed,
+            },
+        )
 
     def link_workflow_depends_on_system(
         self, workflow_id: str, system_id: str, weight: float = 1.2, dashed: bool = True
@@ -301,10 +350,19 @@ class Neo4jService:
         with self.driver.session() as session:
             session.run("MATCH (n) DETACH DELETE n")
 
-    def set_visual_properties(self, node_id: str, x: int, y: int, r: int, **details):
+    def set_visual_properties(
+        self,
+        node_id: str,
+        x: int,
+        y: int,
+        r: int,
+        label: Optional[str] = None,
+        **details,
+    ):
         """Store frontend graph layout/details on a seeded node."""
-        query = """
-        MATCH (n {id: $node_id})
+        label_prefix = self._label_prefix(label)
+        query = f"""
+        MATCH (n{label_prefix} {{id: $node_id}})
         SET n.x = $x, n.y = $y, n.r = $r, n += $details
         RETURN n
         """
@@ -441,11 +499,12 @@ class Neo4jService:
         query = """
         MATCH (n)
         WITH count(n) AS nodes
-        MATCH ()-[r]->()
+        OPTIONAL MATCH ()-[r]->()
         RETURN nodes, count(r) AS relationships
         """
         with self.driver.session() as session:
-            return dict(session.run(query).single())
+            record = session.run(query).single()
+            return dict(record) if record else {"nodes": 0, "relationships": 0}
 
     def _single(self, query: str, params: Optional[dict] = None):
         with self.driver.session() as session:
@@ -458,6 +517,14 @@ class Neo4jService:
             if label in LABEL_TO_TYPE:
                 return LABEL_TO_TYPE[label]
         return "system"
+
+    @staticmethod
+    def _label_prefix(label: Optional[str]) -> str:
+        if label is None:
+            return ""
+        if label not in LABEL_TO_TYPE:
+            raise ValueError(f"Unsupported Neo4j label: {label}")
+        return f":{label}"
 
     @staticmethod
     def _layout_position(node: dict, index: int) -> tuple[int, int]:
@@ -487,7 +554,6 @@ class Neo4jService:
         excluded = {
             "id",
             "name",
-            "title",
             "x",
             "y",
             "r",
