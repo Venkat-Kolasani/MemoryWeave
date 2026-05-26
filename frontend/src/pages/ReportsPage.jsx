@@ -1,26 +1,22 @@
 /**
- * WorkflowsPage.jsx
+ * ReportsPage.jsx
  *
- * Extracted workflows, dependencies, and process documentation.
- * Placeholder until workflow timeline is implemented.
+ * Reports and exports placeholder — nav item only, no real content per project rules.
  *
- * Used by: App.jsx (route /workflows)
+ * Used by: App.jsx (route /reports)
  * Depends on: DashboardShell, Icon
  */
 
 import DashboardShell from '../components/layout/DashboardShell.jsx'
 import Icon from '../components/atoms/Icon.jsx'
 
-/** Workflows page placeholder. */
-export default function WorkflowsPage() {
+/** Reports page placeholder. */
+export default function ReportsPage() {
   return (
-    <DashboardShell
-      title="Workflows"
-      subtitle="Operational procedures & runbooks"
-    >
+    <DashboardShell title="Reports" subtitle="Analytics & export history">
       <div style={{ padding: 80, textAlign: 'center', animation: 'fadeIn 0.3s ease both' }}>
         <div style={{ marginBottom: 16 }}>
-          <Icon name="workflow" size={48} color="var(--text-tertiary)" />
+          <Icon name="reports" size={48} color="var(--text-tertiary)" />
         </div>
         <h2
           style={{
@@ -31,7 +27,7 @@ export default function WorkflowsPage() {
             margin: 0,
           }}
         >
-          Workflows
+          Reports
         </h2>
         <p
           style={{

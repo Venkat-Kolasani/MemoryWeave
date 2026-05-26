@@ -16,9 +16,11 @@ import WorkflowsPage from './pages/WorkflowsPage.jsx'
 import RiskPage from './pages/RiskPage.jsx'
 import AssistantPage from './pages/AssistantPage.jsx'
 import SourcesPage from './pages/SourcesPage.jsx'
+import ReportsPage from './pages/ReportsPage.jsx'
+import SettingsPage from './pages/SettingsPage.jsx'
 
 /**
- * Application route table — 7 pages, landing at `/`.
+ * Application route table — landing at `/`, dashboard pages under app routes.
  */
 export default function App() {
   return (
@@ -30,6 +32,8 @@ export default function App() {
       <Route path="/risk" element={<RiskPage />} />
       <Route path="/assistant" element={<AssistantPage />} />
       <Route path="/sources" element={<SourcesPage />} />
+      <Route path="/reports" element={<ReportsPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

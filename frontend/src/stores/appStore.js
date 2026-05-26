@@ -11,7 +11,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import * as api from '../services/api.js'
-import { MOCK_INITIAL_MESSAGES } from '../data/mockData.js'
+import { MOCK_INITIAL_MESSAGES, MOCK_STATS } from '../data/mockData.js'
 
 /** @typedef {'all' | 'person' | 'system' | 'incident' | 'workflow'} FilterType */
 /** @typedef {null | 'processing' | 'complete' | 'error'} IngestionStatus */
@@ -49,7 +49,7 @@ const useAppStore = create(
     isLoading: false,
 
     // Dashboard & risk
-    knowledgeStats: { nodes: 2847, undocumented: 134, risks: 3, queries: 48 },
+    knowledgeStats: { ...MOCK_STATS },
     riskItems: [],
     riskHeatmap: [],
     riskBottlenecks: [],
@@ -131,15 +131,30 @@ const useAppStore = create(
     sendMessage: async (text) => {
       if (!text.trim()) return
 
+      let shouldSend = false
+
       set((state) => {
-        state.messages.push({ role: 'user', content: text })
+        if (state.isLoading) return
+        shouldSend = true
+        state.messages.push({
+          id: `u-${Date.now()}`,
+          role: 'user',
+          type: 'text',
+          content: text.trim(),
+        })
         state.isLoading = true
       })
+
+      if (!shouldSend) return
 
       try {
         const response = await api.sendQuery(text)
         set((state) => {
-          state.messages.push({ role: 'assistant', ...response })
+          state.messages.push({
+            id: `a-${Date.now()}`,
+            role: 'assistant',
+            ...response,
+          })
           state.isLoading = false
         })
       } catch (err) {

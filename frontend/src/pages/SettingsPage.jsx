@@ -1,26 +1,22 @@
 /**
- * WorkflowsPage.jsx
+ * SettingsPage.jsx
  *
- * Extracted workflows, dependencies, and process documentation.
- * Placeholder until workflow timeline is implemented.
+ * Application settings placeholder — nav item only, no real content per project rules.
  *
- * Used by: App.jsx (route /workflows)
+ * Used by: App.jsx (route /settings)
  * Depends on: DashboardShell, Icon
  */
 
 import DashboardShell from '../components/layout/DashboardShell.jsx'
 import Icon from '../components/atoms/Icon.jsx'
 
-/** Workflows page placeholder. */
-export default function WorkflowsPage() {
+/** Settings page placeholder. */
+export default function SettingsPage() {
   return (
-    <DashboardShell
-      title="Workflows"
-      subtitle="Operational procedures & runbooks"
-    >
+    <DashboardShell title="Settings" subtitle="Workspace configuration">
       <div style={{ padding: 80, textAlign: 'center', animation: 'fadeIn 0.3s ease both' }}>
         <div style={{ marginBottom: 16 }}>
-          <Icon name="workflow" size={48} color="var(--text-tertiary)" />
+          <Icon name="settings" size={48} color="var(--text-tertiary)" />
         </div>
         <h2
           style={{
@@ -31,7 +27,7 @@ export default function WorkflowsPage() {
             margin: 0,
           }}
         >
-          Workflows
+          Settings
         </h2>
         <p
           style={{

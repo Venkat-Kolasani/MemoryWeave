@@ -717,6 +717,7 @@ export default function LandingPage() {
             style={{
               gridTemplateColumns: '1fr 1.3fr',
               gap: 48,
+              marginBottom: 32,
               background: 'var(--surface)',
               border: '1px solid var(--border)',
               borderRadius: 16,
@@ -874,6 +875,102 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Block D — Data Sources */}
+          <div
+            className="grid items-center"
+            style={{
+              gridTemplateColumns: '1.3fr 1fr',
+              gap: 48,
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 16,
+              padding: 40,
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <div
+              className="grid grid-cols-2"
+              style={{
+                gap: 12,
+                background: 'var(--bg)',
+                borderRadius: 12,
+                padding: 24,
+                border: '1px solid var(--border)',
+              }}
+            >
+              {[
+                { name: 'Slack', icon: 'slack', nodes: '1,240' },
+                { name: 'GitHub', icon: 'gitBranch', nodes: '630' },
+                { name: 'Jira', icon: 'grid', nodes: '450' },
+                { name: 'PagerDuty', icon: 'alert', nodes: '89' },
+              ].map((source) => (
+                <div
+                  key={source.name}
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div className="flex items-center" style={{ gap: 8, marginBottom: 6 }}>
+                    <Icon name={source.icon} size={14} color="var(--text-secondary)" />
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                      }}
+                    >
+                      {source.name}
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 11,
+                      color: 'var(--text-tertiary)',
+                    }}
+                  >
+                    {source.nodes} nodes
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <Badge variant="dark" size="sm">
+                Data Sources
+              </Badge>
+              <h3
+                style={{
+                  fontSize: 24,
+                  fontWeight: 600,
+                  letterSpacing: '-0.03em',
+                  marginTop: 16,
+                  marginBottom: 14,
+                  color: 'var(--text-primary)',
+                }}
+              >
+                Connect your operational stack
+              </h3>
+              <p
+                style={{
+                  fontSize: 15,
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.65,
+                  marginBottom: 20,
+                }}
+              >
+                Ingest knowledge from Slack, GitHub, Jira, Confluence, PagerDuty,
+                and meeting transcripts. Every connected source enriches the
+                organizational memory graph.
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/sources')}>
+                View Data Sources
+              </Button>
             </div>
           </div>
         </ScrollReveal>
