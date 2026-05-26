@@ -1,0 +1,30 @@
+{
+  "type": "structured",
+  "content": "Based on 12 historical incidents and internal runbooks, here is the standard payment service recovery procedure:",
+  "steps": [
+    "Check payment-api health endpoint: GET /health on port 8080. Expected: { status: \"ok\" }",
+    "Inspect Stripe webhook dashboard for failed events queued in the last 15 minutes",
+    "Restart payment-worker pods via kubectl: kubectl rollout restart deploy/payment-worker -n prod",
+    "Verify Redis connection pool \u2014 payment-api uses Redis for idempotency keys. Check REDIS_URL env var",
+    "If pods fail to restart, escalate to A. Patel directly \u2014 sole holder of billing DB credentials"
+  ],
+  "related": {
+    "systems": [
+      "Payment API",
+      "Stripe Webhook Service",
+      "Redis Cache"
+    ],
+    "people": [
+      "A. Patel (primary \u2014 9/12 incidents)",
+      "R. Chen (backup \u2014 never resolved solo)"
+    ],
+    "incidents": [
+      "P-4021 (Apr 14, 47min)",
+      "P-3722 (Mar 2, 31min)",
+      "P-3509 (Jan 19, 18min)"
+    ],
+    "warnings": [
+      "CRITICAL: A. Patel has resolved 9 of 12 payment incidents. No documented backup owner exists."
+    ]
+  }
+}

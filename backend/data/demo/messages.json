@@ -1,0 +1,26 @@
+[
+  {
+    "channel": "#incidents",
+    "user": "pagerduty",
+    "text": "P0: Payment Gateway Outage \u2014 payment-api returning 503",
+    "ts": "2026-04-14T09:12:00Z"
+  },
+  {
+    "channel": "#incidents",
+    "user": "A. Patel",
+    "text": "On it. Checking Stripe webhooks and Redis pool first.",
+    "ts": "2026-04-14T09:14:00Z"
+  },
+  {
+    "channel": "#engineering",
+    "user": "R. Chen",
+    "text": "Auth service unaffected but seeing elevated token refresh errors",
+    "ts": "2026-04-14T09:18:00Z"
+  },
+  {
+    "channel": "#incidents",
+    "user": "A. Patel",
+    "text": "Resolved \u2014 worker pods restarted, Stripe queue drained. 47min total.",
+    "ts": "2026-04-14T09:59:00Z"
+  }
+]

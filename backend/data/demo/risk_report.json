@@ -1,0 +1,98 @@
+{
+  "risks": [
+    {
+      "id": "r1",
+      "name": "Payment Service",
+      "owner": "A. Patel",
+      "score": 95,
+      "level": "critical",
+      "systems": 4,
+      "undoc": true,
+      "note": "Sole resolver of 8/12 P0 incidents"
+    },
+    {
+      "id": "r2",
+      "name": "Auth Pipeline",
+      "owner": "R. Chen",
+      "score": 78,
+      "level": "high",
+      "systems": 6,
+      "undoc": true,
+      "note": "Single team dependency, no backup owner"
+    },
+    {
+      "id": "r3",
+      "name": "Data Ingestion",
+      "owner": "M. Kim",
+      "score": 64,
+      "level": "medium",
+      "systems": 3,
+      "undoc": false,
+      "note": "Moderate concentration, documented"
+    },
+    {
+      "id": "r4",
+      "name": "Deploy System",
+      "owner": "T. Walsh",
+      "score": 41,
+      "level": "low",
+      "systems": 2,
+      "undoc": false,
+      "note": "Runbook exists, low incident rate"
+    },
+    {
+      "id": "r5",
+      "name": "Analytics",
+      "owner": "M. Kim",
+      "score": 38,
+      "level": "low",
+      "systems": 1,
+      "undoc": false,
+      "note": "Beta system, low operational impact"
+    }
+  ],
+  "heatmap": [
+    {
+      "label": "Engineering",
+      "value": 82
+    },
+    {
+      "label": "Platform",
+      "value": 71
+    },
+    {
+      "label": "Infrastructure",
+      "value": 67
+    },
+    {
+      "label": "Security",
+      "value": 45
+    },
+    {
+      "label": "Data",
+      "value": 38
+    },
+    {
+      "label": "Product",
+      "value": 22
+    }
+  ],
+  "bottlenecks": [
+    {
+      "label": "A. Patel resolves 85% of payment incidents \u2014 sole critical path",
+      "level": "critical"
+    },
+    {
+      "label": "Payment API has no documented recovery procedure",
+      "level": "critical"
+    },
+    {
+      "label": "Deploy System runbook has 3 undocumented steps known only to T. Walsh",
+      "level": "high"
+    },
+    {
+      "label": "Auth Service backup owner has never run an incident independently",
+      "level": "high"
+    }
+  ]
+}
