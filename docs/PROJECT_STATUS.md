@@ -17,6 +17,7 @@ Phase 1 — Frontend scaffold
 - [x] Page stubs: Landing, Overview, Graph, Workflows, Risk, Assistant, Sources
 - [x] Icon, Badge, Button, StatCard atoms
 - [x] DashboardShell, Sidebar, TopBar, Nav layout components
+- [x] MiniKnowledgeGraph + DashboardPreview graph components
 - [ ] Full LandingPage (11 sections)
 - [ ] mockData.js
 
