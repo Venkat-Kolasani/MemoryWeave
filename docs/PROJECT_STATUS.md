@@ -30,7 +30,8 @@ Phase 2 — Frontend complete (mock-backed)
 - [x] FastAPI skeleton with CORS (`backend/main.py`)
 - [x] Routers: GET /graph, GET /risk-report, GET /stats, POST /query, POST /ingest
 - [x] Demo seed JSON in `backend/data/demo/` (mirrors mockData.js)
-- [x] `.env.example` with Fireworks.ai (open-source LLM via OpenAI-compatible API)
+- [x] Acme Corp extraction corpus: 50 Slack messages, 3 incident MDs, deploy + auth runbooks
+- [x] Fireworks.ai single-model config (`services/fireworks_config.py`, llama-v3p1-70b for extraction + query)
 - [ ] Neo4j schema (Codex)
 - [ ] ChromaDB integration (Codex)
 

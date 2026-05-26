@@ -21,10 +21,11 @@ async def post_ingest(file: UploadFile = File(...)) -> dict[str, str]:
     Upload a file and trigger the extraction pipeline.
     Returns: { status, job_id }
     """
-    # CODEX: replace this with real implementation:
+    # CODEX: replace this with real implementation (C3-03):
     #   - Validate extension, chunk document, run extractor agent
     #   - Persist entities to Neo4j, embeddings to ChromaDB (built-in embed fn)
-    #   - Use Fireworks.ai for entity/relationship extraction passes
+    #   - from services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
+    #       model = get_fireworks_model("extraction")  # llama-v3p1-70b (single-model setup)
     filename = file.filename or "upload"
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 

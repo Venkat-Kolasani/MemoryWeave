@@ -40,13 +40,13 @@ async def post_query(body: QueryRequest) -> QueryResponse:
     Phase 1: mock template with question interpolated into content.
     Phase 4: Fireworks.ai chat completion + RAG context from ChromaDB/Neo4j.
     """
-    # CODEX: replace this with real implementation:
+    # CODEX: replace this with real implementation (C3-05):
     #   - ChromaDB semantic search for relevant chunks
     #   - Neo4j graph context for entity relationships
-    #   - Fireworks.ai via OpenAI-compatible client:
-    #       client = OpenAI(api_key=os.getenv("FIREWORKS_API_KEY"),
-    #                       base_url=os.getenv("FIREWORKS_BASE_URL"))
-    #       model = os.getenv("FIREWORKS_MODEL")
+    #   - from openai import OpenAI
+    #   - from services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
+    #       client = OpenAI(**fireworks_client_kwargs())
+    #       model = get_fireworks_model("query")  # llama-v3p1-70b (single-model setup)
 
     template = load_demo_json("query_response.json")
     content = (
