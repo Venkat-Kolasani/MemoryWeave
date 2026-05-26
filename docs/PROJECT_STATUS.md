@@ -27,9 +27,12 @@ Phase 2 — Frontend complete (mock-backed)
 - [x] All navigation + routing verified end-to-end
 
 ### Backend
-- [ ] FastAPI skeleton with CORS
-- [ ] Neo4j schema
-- [ ] ChromaDB integration
+- [x] FastAPI skeleton with CORS (`backend/main.py`)
+- [x] Routers: GET /graph, GET /risk-report, GET /stats, POST /query, POST /ingest
+- [x] Demo seed JSON in `backend/data/demo/` (mirrors mockData.js)
+- [x] `.env.example` with Fireworks.ai (open-source LLM via OpenAI-compatible API)
+- [ ] Neo4j schema (Codex)
+- [ ] ChromaDB integration (Codex)
 
 ## Phase 2 Checklist (Complete)
 - [x] P2-01 — React Router routes for all pages (`/`, `/dashboard`, `/graph`, `/workflows`, `/risk`, `/assistant`, `/sources`, `/reports`, `/settings`)
@@ -44,11 +47,11 @@ Phase 2 — Frontend complete (mock-backed)
 - [x] P2-10 — All dashboard pages wrapped in `DashboardShell`
 
 ## What's In Progress
-Nothing — Phase 2 frontend complete
+Nothing
 
 ## What's Next
-1. FastAPI skeleton with CORS
-2. Wire api.js to real endpoints (Phase 4)
+1. Wire api.js to real endpoints (Phase 4)
+2. Codex: agents + Neo4j/ChromaDB + Fireworks.ai live query path
 3. WorkflowsPage full implementation
 
 ## Known Issues / Blockers
@@ -57,10 +60,11 @@ None
 ## API Endpoints Status
 | Endpoint | Status | Notes |
 |----------------|-------------|------------------------|
-| GET /graph | Mock only | Via api.js → MOCK_GRAPH_NODES/EDGES |
-| GET /stats | Mock only | Via api.js → MOCK_STATS |
-| GET /risk-report | Mock only | Via api.js → MOCK_RISK_ITEMS |
-| POST /query | Mock only | 1500ms delay, structured response |
+| GET /graph | Mock (backend live) | `backend/routers/graph.py` → graph.json |
+| GET /stats | Mock (backend live) | `backend/routers/risk.py` → stats.json |
+| GET /risk-report | Mock (backend live) | `backend/routers/risk.py` → risk_report.json |
+| POST /query | Mock (backend live) | `backend/routers/query.py` → query_response.json |
+| POST /ingest | Mock (backend live) | Returns `{ status: processing, job_id: demo-001 }` |
 
 ## Environment
 - Frontend: http://localhost:5173

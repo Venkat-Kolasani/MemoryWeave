@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+openai>=1.40.0
+neo4j
+chromadb
+networkx
+python-multipart
