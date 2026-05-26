@@ -11,7 +11,9 @@ Phase 1 — Frontend scaffold
 - [x] Vite + React 18 project (`frontend/`)
 - [x] CSS design tokens + keyframes (`src/index.css`)
 - [x] App.jsx route table (react-router-dom)
-- [x] Zustand store scaffold (`src/stores/appStore.js`) — no routing state
+- [x] Zustand store — full data state + async actions (`src/stores/appStore.js`)
+- [x] API service layer with mocks (`src/services/api.js`)
+- [x] mockData.js — Acme Corp demo dataset
 - [x] Page stubs: Landing, Overview, Graph, Workflows, Risk, Assistant, Sources
 - [ ] Icon, Badge, Button, StatCard atoms
 - [ ] DashboardShell layout
@@ -29,7 +31,7 @@ Frontend Phase 1 scaffold complete — ready for atoms and layout components.
 ## What's Next
 1. Atom components (Icon, Badge, Button, StatCard)
 2. Layout shell (Sidebar, TopBar, DashboardShell)
-3. mockData.js + expand appStore
+3. mockData.js wired into pages on mount
 
 ## Known Issues / Blockers
 None
