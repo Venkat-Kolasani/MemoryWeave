@@ -18,9 +18,18 @@ import TopBar from './TopBar.jsx'
  *   title: string,
  *   subtitle?: string,
  *   actions?: React.ReactNode,
+ *   contentPadding?: string | number,
+ *   contentOverflow?: string,
  * }} props
  */
-export default function DashboardShell({ children, title, subtitle, actions }) {
+export default function DashboardShell({
+  children,
+  title,
+  subtitle,
+  actions,
+  contentPadding = '28px',
+  contentOverflow = 'auto',
+}) {
   return (
     <div
       className="flex overflow-hidden"
@@ -34,8 +43,9 @@ export default function DashboardShell({ children, title, subtitle, actions }) {
         <main
           style={{
             flex: 1,
-            overflowY: 'auto',
-            padding: '28px',
+            overflow: contentOverflow,
+            padding: contentPadding,
+            minHeight: 0,
           }}
         >
           {children}

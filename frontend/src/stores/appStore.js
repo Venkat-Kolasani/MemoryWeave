@@ -51,6 +51,8 @@ const useAppStore = create(
     // Dashboard & risk
     knowledgeStats: { nodes: 2847, undocumented: 134, risks: 3, queries: 48 },
     riskItems: [],
+    riskHeatmap: [],
+    riskBottlenecks: [],
 
     // Sources & ingestion
     sources: [],
@@ -107,6 +109,8 @@ const useAppStore = create(
         const data = await api.fetchRiskReport()
         set((state) => {
           state.riskItems = data.risks
+          state.riskHeatmap = data.heatmap
+          state.riskBottlenecks = data.bottlenecks
         })
       } catch (err) {
         console.error('fetchRiskReport failed:', err)

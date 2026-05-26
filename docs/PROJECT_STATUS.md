@@ -14,12 +14,12 @@ Phase 1 — Frontend scaffold
 - [x] Zustand store — full data state + async actions (`src/stores/appStore.js`)
 - [x] API service layer with mocks (`src/services/api.js`)
 - [x] mockData.js — Acme Corp demo dataset
-- [x] Page stubs + LandingPage (full), OverviewPage (full)
+- [x] Page stubs + LandingPage, OverviewPage, GraphPage (full)
 - [x] Icon, Badge, Button, StatCard atoms
 - [x] DashboardShell, Sidebar, TopBar, Nav layout components
 - [x] MiniKnowledgeGraph + DashboardPreview graph components
 - [x] Full LandingPage.jsx — all 11 sections
-- [x] OverviewPage.jsx — dashboard with stats, graph, risks, extractions
+- [x] GraphPage.jsx — interactive SVG graph with filters + detail panel
 - [x] mockData.js — Acme Corp demo dataset
 
 ### Backend
@@ -28,12 +28,12 @@ Phase 1 — Frontend scaffold
 - [ ] ChromaDB integration
 
 ## What's In Progress
-OverviewPage complete — remaining app pages (Graph, Risk, Assistant, etc.)
+GraphPage complete — remaining app pages (Risk, Assistant, Sources, Workflows)
 
 ## What's Next
-1. GraphPage with FullKnowledgeGraph
-2. RiskPage, AssistantPage, SourcesPage
-3. WorkflowsPage
+1. RiskPage (table, heatmap, bottlenecks)
+2. AssistantPage (chat + structured responses)
+3. SourcesPage + WorkflowsPage
 
 ## Known Issues / Blockers
 None
@@ -41,10 +41,10 @@ None
 ## API Endpoints Status
 | Endpoint | Status | Notes |
 |----------------|-------------|------------------------|
-| GET /graph | Not started | |
-| POST /query | Not started | |
-| GET /stats | Not started | |
-| GET /risk | Not started | |
+| GET /graph | Mock only | Via api.js → MOCK_GRAPH_NODES/EDGES |
+| GET /stats | Mock only | Via api.js → MOCK_STATS |
+| GET /risk-report | Mock only | Via api.js → MOCK_RISK_ITEMS |
+| POST /query | Mock only | 1500ms delay, structured response |
 
 ## Environment
 - Frontend: http://localhost:5173
