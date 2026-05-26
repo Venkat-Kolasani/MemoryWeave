@@ -16,9 +16,10 @@ Every UI decision must be traceable to that file. When in doubt, check it.
 
 ## Critical Rules (Never Break These)
 
-1. NEVER use Tailwind for primary component styling. Use inline styles with CSS
-   variable references. Tailwind is only permitted for layout utilities in edge
-   cases (e.g., `flex`, `overflow-hidden` on wrapper divs when CSS-in-JS is impractical).
+1. Use a hybrid approach: Tailwind for layout, spacing, and flex/grid utilities.
+ Use CSS variable inline styles for all design token values — colors, shadows, border-radius, typography. 
+ Never replace a CSS variable with a Tailwind color, shadow, or radius class. 
+ The design system lives in CSS variables, not Tailwind's config.
 
 2. NEVER deviate from the design token system. Every color, shadow, radius, and
    font must use CSS variables defined in `src/index.css`. No hardcoded hex values
@@ -378,6 +379,9 @@ Related systems/people/incidents render as Badge rows.
 - Memoize expensive computations with useMemo. Memoize callbacks with useCallback
   only when passed to child components that are wrapped in React.memo.
 - Key props on lists must be stable IDs, never array index.
+- Use React Router (react-router-dom) for all navigation.
+Routes defined in App.jsx. Use useNavigate() hook for programmatic navigation.
+Do not manage currentPage in Zustand — routing is a URL concern, not data state.
 
 ### Naming Conventions
 - Components: PascalCase (StatCard, DashboardShell)

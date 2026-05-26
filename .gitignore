@@ -34,3 +34,7 @@ htmlcov/
 # Neo4j / Chroma local data (if mounted locally)
 neo4j_data/
 chroma_data/
+
+
+MemoryWeave-BuildPlan.md
+docs/MemoryWeave-BuildPlan.md
