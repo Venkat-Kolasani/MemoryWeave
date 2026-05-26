@@ -4,7 +4,7 @@
 2026-05-26
 
 ## Current Phase
-Phase 2 — Frontend complete (mock-backed)
+Phase 3 — Backend data stores implemented (routes still mock-backed)
 
 ## What's Been Built
 ### Frontend
@@ -32,8 +32,8 @@ Phase 2 — Frontend complete (mock-backed)
 - [x] Demo seed JSON in `backend/data/demo/` (mirrors mockData.js)
 - [x] Acme Corp extraction corpus: 50 Slack messages, 3 incident MDs, deploy + auth runbooks
 - [x] Fireworks.ai single-model config (`services/fireworks_config.py`, llama-v3p1-70b for extraction + query)
-- [ ] Neo4j schema (Codex)
-- [ ] ChromaDB integration (Codex)
+- [x] Neo4j schema + Acme Corp graph seed script (`backend/services/neo4j_service.py`, `backend/data/seed.py`)
+- [x] ChromaDB integration + demo corpus population pipeline (`backend/services/chroma_service.py`, `backend/data/populate_chroma.py`)
 
 ## Phase 2 Checklist (Complete)
 - [x] P2-01 — React Router routes for all pages (`/`, `/dashboard`, `/graph`, `/workflows`, `/risk`, `/assistant`, `/sources`, `/reports`, `/settings`)
@@ -48,15 +48,17 @@ Phase 2 — Frontend complete (mock-backed)
 - [x] P2-10 — All dashboard pages wrapped in `DashboardShell`
 
 ## What's In Progress
-Nothing
+- Wire backend routes to Neo4j and ChromaDB services (current FastAPI routes still return demo JSON fixtures)
 
 ## What's Next
-1. Wire api.js to real endpoints (Phase 4)
-2. Codex: agents + Neo4j/ChromaDB + Fireworks.ai live query path
-3. WorkflowsPage full implementation
+1. Start Neo4j locally, then run `python backend/data/seed.py`
+2. Wire `/graph`, `/stats`, `/risk-report`, and `/query` to Neo4j/ChromaDB services
+3. Codex: agents + Fireworks.ai live query path
+4. WorkflowsPage full implementation
 
 ## Known Issues / Blockers
-None
+- FastAPI routes are still mock-backed; `/graph`, `/risk-report`, `/stats`, and `/query` need to be wired to Neo4j/ChromaDB services.
+- The Neo4j seed intentionally produces 15 visualization nodes (5 people, 5 systems, 3 workflows, 2 incidents) to match the existing frontend graph contract. The Chroma pipeline indexes the broader demo corpus, including all incident markdown files present under `backend/data/demo/incidents/`.
 
 ## API Endpoints Status
 | Endpoint | Status | Notes |
@@ -66,6 +68,17 @@ None
 | GET /risk-report | Mock (backend live) | `backend/routers/risk.py` → risk_report.json |
 | POST /query | Mock (backend live) | `backend/routers/query.py` → query_response.json |
 | POST /ingest | Mock (backend live) | Returns `{ status: processing, job_id: demo-001 }` |
+
+## Data Store Scripts
+| Script | Status | Notes |
+|----------------|-------------|------------------------|
+| `python backend/data/seed.py` | Verified locally | Clears Neo4j, creates constraints/indexes, seeds 15 Acme graph nodes and 21 relationships. Requires Neo4j at `bolt://localhost:7687` with `neo4j/memoryweave`. |
+| `python backend/data/populate_chroma.py` | Verified locally | Indexed 58 chunks into `memoryweave_knowledge`: 9 Slack, 20 incident, 29 docs. Search assertion for `payment service recovery patel` passed. |
+
+## Verification Log
+- Source compile check passed for `backend/services/neo4j_service.py`, `backend/services/chroma_service.py`, `backend/data/seed.py`, and `backend/data/populate_chroma.py`.
+- Neo4j verification: with Docker Neo4j listening on `localhost:7687`, `backend/.venv/bin/python backend/data/seed.py` completed with 15 nodes, 21 relationships, and A. Patel risk score 95. A follow-up edge-contract check returned `edge_contract_match True` against `frontend/src/data/mockData.js`.
+- ChromaDB verification: started temporary server with `chroma run --host localhost --port 8001 --path ./.chroma-memoryweave`; ran `python backend/data/populate_chroma.py`; saw `Search test passed` and `Indexed 58 chunks: 9 from Slack, 20 from incidents, 29 from docs`; `ChromaService.get_stats()` returned count `58` across `messages.json`, `P-3722.md`, `P-3882.md`, `P-4021.md`, `auth-service.md`, and `deploy-runbook.md`.
 
 ## Environment
 - Frontend: http://localhost:5173
