@@ -14,12 +14,13 @@ Phase 1 — Frontend scaffold
 - [x] Zustand store — full data state + async actions (`src/stores/appStore.js`)
 - [x] API service layer with mocks (`src/services/api.js`)
 - [x] mockData.js — Acme Corp demo dataset
-- [x] Page stubs: Landing, Overview, Graph, Workflows, Risk, Assistant, Sources
+- [x] Page stubs + LandingPage (full), OverviewPage (full)
 - [x] Icon, Badge, Button, StatCard atoms
 - [x] DashboardShell, Sidebar, TopBar, Nav layout components
 - [x] MiniKnowledgeGraph + DashboardPreview graph components
 - [x] Full LandingPage.jsx — all 11 sections
-- [ ] mockData.js
+- [x] OverviewPage.jsx — dashboard with stats, graph, risks, extractions
+- [x] mockData.js — Acme Corp demo dataset
 
 ### Backend
 - [ ] FastAPI skeleton with CORS
@@ -27,12 +28,12 @@ Phase 1 — Frontend scaffold
 - [ ] ChromaDB integration
 
 ## What's In Progress
-Frontend Phase 1 scaffold complete — ready for atoms and layout components.
+OverviewPage complete — remaining app pages (Graph, Risk, Assistant, etc.)
 
 ## What's Next
-1. Atom components (Icon, Badge, Button, StatCard)
-2. Layout shell (Sidebar, TopBar, DashboardShell)
-3. mockData.js wired into pages on mount
+1. GraphPage with FullKnowledgeGraph
+2. RiskPage, AssistantPage, SourcesPage
+3. WorkflowsPage
 
 ## Known Issues / Blockers
 None
