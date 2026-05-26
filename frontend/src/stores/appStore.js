@@ -1,17 +1,16 @@
 /**
  * appStore.js
  *
- * Single Zustand store for MemoryWeave global state (navigation, graph, assistant, data).
+ * Single Zustand store for MemoryWeave global state (graph, assistant, data).
+ * Routing is handled by react-router-dom — not stored here.
  *
- * Used by: App.jsx and all page/layout components
+ * Used by: page and layout components
  */
 
 import { create } from 'zustand'
 
-const useAppStore = create((set) => ({
-  // Navigation
-  currentPage: 'landing',
-  setCurrentPage: (page) => set({ currentPage: page }),
+const useAppStore = create(() => ({
+  // Graph, assistant, ingestion, and risk slices added in subsequent phases
 }))
 
 export default useAppStore

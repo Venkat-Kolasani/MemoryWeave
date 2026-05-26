@@ -3,14 +3,16 @@
  *
  * Marketing landing page — full-scroll hero and product sections.
  *
- * Used by: App.jsx (currentPage === 'landing')
- * Depends on: setCurrentPage prop for navigation into the app
+ * Used by: App.jsx (route `/`)
+ * Depends on: useNavigate for programmatic navigation into the app
  */
 
-/**
- * @param {{ setCurrentPage: (page: string) => void }} props
- */
-export default function LandingPage({ setCurrentPage }) {
+import { useNavigate } from 'react-router-dom'
+
+/** Landing page with entry point into the dashboard. */
+export default function LandingPage() {
+  const navigate = useNavigate()
+
   return (
     <main
       style={{
@@ -50,7 +52,7 @@ export default function LandingPage({ setCurrentPage }) {
       </p>
       <button
         type="button"
-        onClick={() => setCurrentPage('dashboard')}
+        onClick={() => navigate('/dashboard')}
         style={{
           fontFamily: 'var(--font-sans)',
           fontWeight: 500,

@@ -1,14 +1,14 @@
 /**
  * App.jsx
  *
- * Root page switcher — renders the active view based on currentPage in Zustand.
- * No react-router; navigation updates currentPage via setCurrentPage.
+ * Root router — defines all MemoryWeave routes via react-router-dom.
+ * Navigation is URL-based; use useNavigate() for programmatic navigation.
  *
  * Used by: main.jsx
- * Depends on: appStore, page components
+ * Depends on: page components
  */
 
-import useAppStore from './stores/appStore.js'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage.jsx'
 import OverviewPage from './pages/OverviewPage.jsx'
 import GraphPage from './pages/GraphPage.jsx'
@@ -18,28 +18,19 @@ import AssistantPage from './pages/AssistantPage.jsx'
 import SourcesPage from './pages/SourcesPage.jsx'
 
 /**
- * Renders the active page component based on Zustand currentPage state.
+ * Application route table — 7 pages, landing at `/`.
  */
 export default function App() {
-  const currentPage = useAppStore((s) => s.currentPage)
-  const setCurrentPage = useAppStore((s) => s.setCurrentPage)
-
-  switch (currentPage) {
-    case 'landing':
-      return <LandingPage setCurrentPage={setCurrentPage} />
-    case 'dashboard':
-      return <OverviewPage setCurrentPage={setCurrentPage} />
-    case 'graph':
-      return <GraphPage setCurrentPage={setCurrentPage} />
-    case 'workflows':
-      return <WorkflowsPage setCurrentPage={setCurrentPage} />
-    case 'risk':
-      return <RiskPage setCurrentPage={setCurrentPage} />
-    case 'assistant':
-      return <AssistantPage setCurrentPage={setCurrentPage} />
-    case 'sources':
-      return <SourcesPage setCurrentPage={setCurrentPage} />
-    default:
-      return <LandingPage setCurrentPage={setCurrentPage} />
-  }
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/dashboard" element={<OverviewPage />} />
+      <Route path="/graph" element={<GraphPage />} />
+      <Route path="/workflows" element={<WorkflowsPage />} />
+      <Route path="/risk" element={<RiskPage />} />
+      <Route path="/assistant" element={<AssistantPage />} />
+      <Route path="/sources" element={<SourcesPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
 }

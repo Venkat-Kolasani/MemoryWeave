@@ -10,8 +10,8 @@ Phase 1 — Frontend scaffold
 ### Frontend
 - [x] Vite + React 18 project (`frontend/`)
 - [x] CSS design tokens + keyframes (`src/index.css`)
-- [x] Zustand store — navigation slice (`src/stores/appStore.js`)
-- [x] App.jsx page switcher (no react-router)
+- [x] App.jsx route table (react-router-dom)
+- [x] Zustand store scaffold (`src/stores/appStore.js`) — no routing state
 - [x] Page stubs: Landing, Overview, Graph, Workflows, Risk, Assistant, Sources
 - [ ] Icon, Badge, Button, StatCard atoms
 - [ ] DashboardShell layout
