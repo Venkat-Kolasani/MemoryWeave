@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoryWeave — The Digital Twin of Human Capital</title>
+
+<template id="__bundler_thumbnail" data-bg-color="#111110">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="1200" height="800" fill="#111110"/>
+    <!-- Logo mark -->
+    <rect x="540" y="260" width="120" height="120" rx="20" fill="#ffffff" opacity="0.08"/>
+    <polygon points="600,285 565,303 600,321 635,303" fill="none" stroke="white" stroke-width="3"/>
+    <polyline points="565,330 600,348 635,330" fill="none" stroke="white" stroke-width="3"/>
+    <polyline points="565,317 600,335 635,317" fill="none" stroke="white" stroke-width="3"/>
+    <!-- Wordmark -->
+    <rect x="390" y="410" width="420" height="28" rx="4" fill="white" opacity="0.12"/>
+    <!-- Tagline -->
+    <rect x="430" y="452" width="340" height="14" rx="3" fill="white" opacity="0.06"/>
+    <!-- Accent dot -->
+    <circle cx="600" cy="510" r="4" fill="#3b6fe8"/>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fafaf9;
+    --bg-secondary: #f4f4f2;
+    --bg-tertiary: #eeeeec;
+    --surface: #ffffff;
+    --border: #e4e4e2;
+    --border-subtle: #efefed;
+    --text-primary: #111110;
+    --text-secondary: #6b6b67;
+    --text-tertiary: #9a9a96;
+    --accent: #3b6fe8;
+    --accent-light: #eef2fd;
+    --accent-text: #2c57c8;
+    --danger: #c94040;
+    --danger-bg: #fdf2f2;
+    --danger-border: #f0cfcf;
+    --warning: #b97b1a;
+    --warning-bg: #fdf7ee;
+    --warning-border: #f0dfb0;
+    --success: #2d8a5e;
+    --success-bg: #f0faf5;
+    --success-border: #b8e8d0;
+    --dark: #111110;
+    --font-sans: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+  }
+
+  html, body {
+    font-family: var(--font-sans);
+    background: white;
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── PAGE STRUCTURE ─────────────────────────────────── */
+  .page {
+    width: 297mm;
+    min-height: 210mm;
+    background: white;
+    position: relative;
+    overflow: hidden;
+    break-before: page;
+    break-inside: avoid;
+    page-break-before: always;
+    page-break-inside: avoid;
+  }
+  .page:first-child {
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    body { background: white; }
+    .page {
+      width: 297mm;
+      height: 210mm;
+      overflow: hidden;
+      break-before: page;
+      break-inside: avoid;
+    }
+    .page:first-child { break-before: avoid; }
+  }
+
+  /* ── SHARED UTILITIES ──────────────────────────────── */
+  .mono { font-family: var(--font-mono); }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .badge {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono); font-size: 10px;
+    font-weight: 500; letter-spacing: 0.02em;
+    padding: 2px 7px; border-radius: 4px;
+  }
+  .badge-accent { background: var(--accent-light); color: var(--accent-text); border: 1px solid #c8d8f8; }
+  .badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+  .badge-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
+  .badge-success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+  .badge-dark { background: var(--dark); color: #fff; border: none; }
+  .badge-neutral { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  /* ── PAGE 1: HERO / LANDING ─────────────────────────── */
+  .p1-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 40px;
+    border-bottom: 1px solid var(--border);
+    background: white;
+  }
+  .p1-nav-logo { display: flex; align-items: center; gap: 8px; }
+  .p1-nav-logo-mark {
+    width: 24px; height: 24px; background: var(--dark);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  }
+  .p1-nav-items { display: flex; gap: 24px; align-items: center; }
+  .p1-hero { padding: 36px 40px 24px; display: flex; gap: 40px; align-items: flex-start; }
+  .p1-hero-left { flex: 1; }
+  .p1-hero-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 100px; padding: 4px 10px 4px 6px;
+    margin-bottom: 20px;
+  }
+  .p1-hero-h1 {
+    font-size: 36px; font-weight: 600; letter-spacing: -0.04em;
+    line-height: 1.08; color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .p1-hero-sub {
+    font-size: 14px; color: var(--text-secondary);
+    line-height: 1.65; margin-bottom: 24px; max-width: 400px;
+  }
+  .p1-btns { display: flex; gap: 10px; margin-bottom: 20px; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--dark); color: white;
+    border: none; border-radius: 7px;
+    font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+    padding: 8px 16px; cursor: default; letter-spacing: -0.01em;
+  }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: white; color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 7px;
+    font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+    padding: 8px 16px; cursor: default; letter-spacing: -0.01em;
+  }
+  .p1-trusted { font-size: 11px; color: var(--text-tertiary); }
+  .p1-trusted strong { color: var(--text-secondary); }
+  .p1-dashboard-preview {
+    width: 360px; flex-shrink: 0;
+    background: white; border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .p1-preview-chrome {
+    background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+    padding: 8px 12px; display: flex; align-items: center; gap: 5px;
+  }
+  .p1-preview-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .p1-preview-url {
+    margin: 0 auto;
+    background: var(--bg-tertiary); border-radius: 4px;
+    padding: 3px 12px; font-family: var(--font-mono); font-size: 9px;
+    color: var(--text-tertiary);
+  }
+  .p1-preview-body { display: flex; height: 230px; }
+  .p1-preview-sidebar {
+    width: 40px; background: #111110;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 0; gap: 6px;
+  }
+  .p1-preview-sidebar-logo {
+    width: 22px; height: 22px; background: white;
+    border-radius: 5px; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .p1-preview-sidebar-item {
+    width: 26px; height: 26px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .p1-preview-main { flex: 1; background: var(--bg); padding: 12px; overflow: hidden; }
+  .p1-preview-right {
+    width: 110px; border-left: 1px solid var(--border);
+    background: white; padding: 10px 9px;
+  }
+  .p1-integrations { padding: 0 40px 24px; }
+  .p1-int-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .p1-int-chip {
+    display: flex; align-items: center; gap: 5px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 10px;
+    font-size: 11px; color: var(--text-secondary); font-weight: 500;
+  }
+
+  /* ── PAGE 2: PROBLEM + STATS ─────────────────────────── */
+  .p2 { background: var(--dark) !important; }
+  .p2-inner { padding: 48px 52px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; height: 210mm; }
+  .p2-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 16px; }
+  .p2-h2 { font-size: 28px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.1; color: white; margin-bottom: 20px; }
+  .p2-body { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-bottom: 12px; }
+  .p2-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .p2-stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 20px;
+  }
+  .p2-stat-value { font-size: 32px; font-weight: 600; letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px; }
+  .p2-stat-label { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+
+  /* ── PAGE 3: HOW IT WORKS ───────────────────────────── */
+  .p3 { background: var(--bg); }
+  .p3-inner { padding: 44px 52px; }
+  .p3-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 40px; position: relative; }
+  .p3-connector { position: absolute; top: 18px; left: 60px; right: 60px; height: 1px; background: var(--border); }
+  .p3-step { position: relative; z-index: 1; padding-right: 20px; }
+  .p3-step-num {
+    width: 36px; height: 36px; background: white;
+    border: 1px solid var(--border); border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--text-tertiary);
+  }
+  .p3-step-title { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 8px; }
+  .p3-step-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* ── PAGE 4: DASHBOARD OVERVIEW ─────────────────────── */
+  .p4 { background: var(--bg); }
+  .p4-inner { display: flex; height: 210mm; overflow: hidden; }
+  .p4-sidebar {
+    width: 180px; background: #111110; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.07);
+  }
+  .p4-sidebar-header { padding: 18px 14px 14px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .p4-sidebar-logo { display: flex; align-items: center; gap: 7px; }
+  .p4-sidebar-logo-mark {
+    width: 22px; height: 22px; background: white;
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  }
+  .p4-nav { padding: 10px 8px; flex: 1; }
+  .p4-nav-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 8px; border-radius: 6px; margin-bottom: 1px;
+    font-size: 12px;
+  }
+  .p4-nav-active { background: rgba(255,255,255,0.1); color: white; }
+  .p4-nav-default { color: rgba(255,255,255,0.45); }
+  .p4-nav-dot { width: 5px; height: 5px; border-radius: 50%; background: #c94040; margin-left: auto; }
+  .p4-main { flex: 1; overflow: hidden; }
+  .p4-topbar {
+    height: 50px; border-bottom: 1px solid var(--border);
+    background: white; display: flex; align-items: center;
+    padding: 0 22px; gap: 12px;
+  }
+  .p4-topbar-title { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; }
+  .p4-topbar-sub { font-size: 10px; color: var(--text-tertiary); font-family: var(--font-mono); }
+  .p4-content { padding: 20px 22px; background: var(--bg); overflow: hidden; }
+  .p4-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .p4-stat-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .p4-stat-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
+  .p4-stat-value { font-size: 22px; font-weight: 600; letter-spacing: -0.03em; color: var(--text-primary); line-height: 1; }
+  .p4-stat-delta { font-family: var(--font-mono); font-size: 10px; margin-top: 4px; }
+  .p4-grid { display: grid; grid-template-columns: 1fr 230px; gap: 14px; }
+  .p4-panel { background: white; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .p4-panel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .p4-panel-header-sub { font-size: 9px; color: var(--text-tertiary); font-family: var(--font-mono); margin-top: 2px; }
+  .p4-right-panels { display: flex; flex-direction: column; gap: 14px; }
+
+  /* ── PAGE 5: KNOWLEDGE GRAPH ────────────────────────── */
+  .p5 { background: var(--bg); }
+  .p5-inner { display: flex; height: 210mm; overflow: hidden; }
+  .p5-main { flex: 1; overflow: hidden; }
+  .p5-graph-area { flex: 1; background: white; position: relative; overflow: hidden; }
+  .p5-legend {
+    position: absolute; bottom: 16px; left: 16px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+  }
+  .p5-legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); }
+  .p5-legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .p5-detail {
+    width: 260px; border-left: 1px solid var(--border);
+    background: white; padding: 18px; overflow: hidden;
+  }
+
+  /* ── PAGE 6: RISK ANALYTICS ─────────────────────────── */
+  .p6 { background: var(--bg); }
+  .p6-inner { display: flex; height: 210mm; overflow: hidden; }
+  .p6-main { flex: 1; overflow: hidden; }
+  .p6-content { padding: 20px 22px; }
+  .p6-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .risk-table { background: white; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .risk-table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 70px 80px; padding: 8px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+  .risk-table-header-cell { font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
+  .risk-table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 70px 80px; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center; }
+  .risk-table-row:last-child { border-bottom: none; }
+  .risk-bar-track { height: 4px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; flex: 1; }
+  .p6-right { width: 260px; border-left: 1px solid var(--border); background: white; padding: 18px; overflow: hidden; }
+
+  /* ── PAGE 7: AI ASSISTANT ───────────────────────────── */
+  .p7 { background: var(--bg); }
+  .p7-inner { display: flex; height: 210mm; overflow: hidden; }
+  .p7-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .p7-msgs { flex: 1; overflow: hidden; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .p7-msg { display: flex; gap: 10px; align-items: flex-start; }
+  .p7-avatar {
+    width: 26px; height: 26px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .p7-avatar-ai { background: var(--dark); }
+  .p7-avatar-user { background: var(--bg-tertiary); border: 1px solid var(--border); }
+  .p7-bubble-user {
+    background: var(--dark); color: white;
+    border-radius: 8px 8px 8px 2px; padding: 10px 14px;
+    font-size: 13px; line-height: 1.5; display: inline-block;
+  }
+  .p7-bubble-ai {
+    background: white; border: 1px solid var(--border);
+    border-radius: 8px 8px 2px 8px; padding: 14px 16px;
+    font-size: 12px; color: var(--text-primary); line-height: 1.6;
+  }
+  .p7-step { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; }
+  .p7-step-num {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent-light); border: 1px solid #c8d8f8;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-family: var(--font-mono); font-size: 8px; font-weight: 600; color: var(--accent-text);
+  }
+  .p7-related { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .p7-related-label { font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 5px; }
+  .p7-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+  .p7-input-area {
+    padding: 12px 24px; border-top: 1px solid var(--border);
+    background: white;
+  }
+  .p7-input-mock {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px;
+  }
+  .p7-context { width: 220px; border-left: 1px solid var(--border); background: white; padding: 18px; overflow: hidden; }
+
+  /* ── PAGE 8: DATA SOURCES ───────────────────────────── */
+  .p8 { background: var(--bg); }
+  .p8-inner { display: flex; height: 210mm; overflow: hidden; }
+  .p8-content { padding: 20px 22px; flex: 1; overflow: hidden; }
+  .p8-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .p8-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .p8-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .p8-icon-wrap { width: 32px; height: 32px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .p8-stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .p8-mini-stat { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+  .p8-mini-label { font-family: var(--font-mono); font-size: 7px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 2px; }
+  .p8-mini-val { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+
+  /* ── PAGE 9: USE CASES ──────────────────────────────── */
+  .p9 { background: white; }
+  .p9-inner { padding: 44px 52px; }
+  .p9-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 36px; }
+  .p9-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 22px; }
+  .p9-num { width: 28px; height: 28px; background: white; border: 1px solid var(--border); border-radius: 7px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; font-family: var(--font-mono); font-size: 9px; font-weight: 600; color: var(--text-tertiary); }
+  .p9-title { font-size: 13px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 8px; }
+  .p9-body { font-size: 11.5px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* ── PAGE 10: SECURITY + CTA ─────────────────────────── */
+  .p10-top { background: var(--dark); padding: 44px 52px; }
+  .p10-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .p10-sec-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .p10-sec-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; }
+  .p10-sec-title { font-size: 12px; font-weight: 600; color: white; margin-top: 10px; margin-bottom: 6px; }
+  .p10-sec-body { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+  .p10-cta { background: white; padding: 32px 52px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .p10-footer { padding: 16px 52px; border-top: 1px solid var(--border); background: var(--bg-secondary); display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── MINI GRAPH SVG ─────────────────────────────────── */
+  .graph-bg { background: #f9faf8; }
+
+  /* ── PAGE NUMBER WATERMARK ─────────────────────────── */
+  .page-num {
+    position: absolute; bottom: 12px; right: 20px;
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--text-tertiary); letter-spacing: 0.06em;
+  }
+
+  /* ── SVG ICON HELPERS ───────────────────────────────── */
+  .svg-icon { display: inline-flex; flex-shrink: 0; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 1: LANDING HERO                               -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page" style="background: white;">
+
+  <!-- Nav -->
+  <div class="p1-nav">
+    <div class="p1-nav-logo">
+      <div class="p1-nav-logo-mark">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </div>
+      <span style="font-weight:600;font-size:14px;letter-spacing:-0.02em;color:var(--text-primary)">MemoryWeave</span>
+    </div>
+    <div class="p1-nav-items">
+      <span style="font-size:13px;color:var(--text-secondary)">Product</span>
+      <span style="font-size:13px;color:var(--text-secondary)">Architecture</span>
+      <span style="font-size:13px;color:var(--text-secondary)">Security</span>
+      <span style="font-size:13px;color:var(--text-secondary)">Docs</span>
+      <span class="btn-primary" style="padding:6px 14px;font-size:12px">Request Demo</span>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="p1-hero">
+    <div class="p1-hero-left">
+      <div class="p1-hero-tag">
+        <span class="badge badge-dark" style="font-size:9px;padding:2px 5px">NEW</span>
+        <span style="font-size:11px;color:var(--text-secondary)">Knowledge Graph v2 — dependency risk scoring</span>
+      </div>
+      <h1 class="p1-hero-h1">Your organization loses<br>knowledge every day.</h1>
+      <p class="p1-hero-sub">MemoryWeave reconstructs operational intelligence from conversations, workflows, and organizational activity — before it disappears.</p>
+      <div class="p1-btns">
+        <span class="btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Request Demo
+        </span>
+        <span class="btn-secondary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="12" x2="16" y2="6.5"/><line x1="8" y1="12" x2="16" y2="17.5"/></svg>
+          View Architecture
+        </span>
+      </div>
+      <p class="p1-trusted">Trusted by teams at <strong>Stripe, Vercel, Figma, Linear, Notion</strong></p>
+
+      <!-- Integrations -->
+      <div style="margin-top:20px">
+        <p class="label" style="margin-bottom:10px">Ingests from your existing stack</p>
+        <div class="p1-int-row">
+          <div class="p1-int-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/></svg> Slack</div>
+          <div class="p1-int-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg> GitHub</div>
+          <div class="p1-int-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> Jira</div>
+          <div class="p1-int-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> Confluence</div>
+          <div class="p1-int-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg> PagerDuty</div>
+          <div class="p1-int-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Meetings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard preview -->
+    <div class="p1-dashboard-preview">
+      <div class="p1-preview-chrome">
+        <div class="p1-preview-dot" style="background:#ff5f57"></div>
+        <div class="p1-preview-dot" style="background:#febc2e"></div>
+        <div class="p1-preview-dot" style="background:#28c840"></div>
+        <div class="p1-preview-url">app.memoryweave.ai/graph</div>
+      </div>
+      <div class="p1-preview-body">
+        <!-- Sidebar -->
+        <div class="p1-preview-sidebar">
+          <div class="p1-preview-sidebar-logo">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <div class="p1-preview-sidebar-item" style="background:rgba(255,255,255,0.15)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="12" x2="16" y2="6.5"/><line x1="8" y1="12" x2="16" y2="17.5"/></svg></div>
+          <div class="p1-preview-sidebar-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="p1-preview-sidebar-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg></div>
+          <div class="p1-preview-sidebar-item"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/></svg></div>
+        </div>
+        <!-- Main -->
+        <div class="p1-preview-main">
+          <div style="font-family:var(--font-mono);font-size:7px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Knowledge Graph</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:8px">Organizational Map</div>
+          <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:7px;height:130px;overflow:hidden;position:relative">
+            <!-- Mini graph SVG -->
+            <svg width="100%" height="100%" viewBox="0 0 280 130" style="position:absolute;inset:0">
+              <defs><radialGradient id="g1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f5f8f5"/><stop offset="100%" stop-color="white"/></radialGradient></defs>
+              <rect width="280" height="130" fill="url(#g1)"/>
+              <line x1="80" y1="65" x2="140" y2="42" stroke="#e4e4e2" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="80" y1="65" x2="110" y2="92" stroke="#e4e4e2" stroke-width="1" stroke-dasharray="3,2"/>
+              <line x1="140" y1="42" x2="195" y2="58" stroke="#e4e4e2" stroke-width="1.5"/>
+              <line x1="140" y1="42" x2="170" y2="80" stroke="#e4e4e2" stroke-width="1"/>
+              <line x1="195" y1="58" x2="240" y2="42" stroke="#e4e4e2" stroke-width="1"/>
+              <line x1="110" y1="92" x2="170" y2="80" stroke="#e4e4e2" stroke-width="1"/>
+              <circle cx="80" cy="65" r="14" fill="white" stroke="#3b6fe8" stroke-width="1.5"/>
+              <text x="80" y="65.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#3b6fe8" font-family="monospace" font-weight="500">A. Patel</text>
+              <circle cx="140" cy="42" r="11" fill="white" stroke="#2d8a5e" stroke-width="1.5"/>
+              <text x="140" y="42.5" text-anchor="middle" dominant-baseline="middle" font-size="5.5" fill="#2d8a5e" font-family="monospace">Pay API</text>
+              <circle cx="195" cy="58" r="10" fill="white" stroke="#2d8a5e" stroke-width="1.5"/>
+              <text x="195" y="58.5" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#2d8a5e" font-family="monospace">Auth Svc</text>
+              <circle cx="110" cy="92" r="12" fill="white" stroke="#3b6fe8" stroke-width="1.5"/>
+              <text x="110" y="92.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#3b6fe8" font-family="monospace">R. Chen</text>
+              <circle cx="170" cy="80" r="9" fill="white" stroke="#c94040" stroke-width="1.5"/>
+              <text x="170" y="80.5" text-anchor="middle" dominant-baseline="middle" font-size="5.5" fill="#c94040" font-family="monospace">P-4021</text>
+              <circle cx="240" cy="42" r="9" fill="white" stroke="#b97b1a" stroke-width="1.5"/>
+              <text x="240" y="42.5" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="#b97b1a" font-family="monospace">Deploy</text>
+            </svg>
+            <div style="position:absolute;bottom:6px;right:6px;background:white;border:1px solid var(--border);border-radius:4px;padding:4px 6px">
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px"><div style="width:5px;height:5px;border-radius:50%;background:#3b6fe8"></div><span style="font-family:var(--font-mono);font-size:7px;color:var(--text-secondary)">People · 24</span></div>
+              <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px"><div style="width:5px;height:5px;border-radius:50%;background:#2d8a5e"></div><span style="font-family:var(--font-mono);font-size:7px;color:var(--text-secondary)">Systems · 18</span></div>
+              <div style="display:flex;align-items:center;gap:4px"><div style="width:5px;height:5px;border-radius:50%;background:#c94040"></div><span style="font-family:var(--font-mono);font-size:7px;color:var(--text-secondary)">Incidents · 7</span></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:6px">
+            <div style="background:white;border:1px solid var(--border);border-radius:5px;padding:5px 7px"><div style="font-family:var(--font-mono);font-size:6px;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:2px">Critical Deps</div><div style="font-size:13px;font-weight:600;color:#c94040;letter-spacing:-0.02em">3</div></div>
+            <div style="background:white;border:1px solid var(--border);border-radius:5px;padding:5px 7px"><div style="font-family:var(--font-mono);font-size:6px;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:2px">At-risk nodes</div><div style="font-size:13px;font-weight:600;color:#b97b1a;letter-spacing:-0.02em">11</div></div>
+            <div style="background:white;border:1px solid var(--border);border-radius:5px;padding:5px 7px"><div style="font-family:var(--font-mono);font-size:6px;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:2px">Undocumented</div><div style="font-size:13px;font-weight:600;color:var(--text-primary);letter-spacing:-0.02em">47%</div></div>
+          </div>
+        </div>
+        <!-- Right panel -->
+        <div class="p1-preview-right">
+          <div style="font-family:var(--font-mono);font-size:7px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Risk Signals</div>
+          <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;font-weight:500;color:var(--text-primary)">Payment Svc</span><span style="font-family:var(--font-mono);font-size:8px;color:#c94040">95%</span></div><div style="height:3px;background:var(--bg-tertiary);border-radius:2px"><div style="height:100%;width:95%;background:#c94040;border-radius:2px"></div></div><div style="font-size:7px;color:var(--text-tertiary);font-family:monospace;margin-top:1px">A. Patel</div></div>
+          <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;font-weight:500;color:var(--text-primary)">Auth Pipeline</span><span style="font-family:var(--font-mono);font-size:8px;color:#b97b1a">78%</span></div><div style="height:3px;background:var(--bg-tertiary);border-radius:2px"><div style="height:100%;width:78%;background:#b97b1a;border-radius:2px"></div></div><div style="font-size:7px;color:var(--text-tertiary);font-family:monospace;margin-top:1px">R. Chen</div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;font-weight:500;color:var(--text-primary)">Data Ingestion</span><span style="font-family:var(--font-mono);font-size:8px;color:#b97b1a">64%</span></div><div style="height:3px;background:var(--bg-tertiary);border-radius:2px"><div style="height:100%;width:64%;background:#b97b1a;border-radius:2px"></div></div><div style="font-size:7px;color:var(--text-tertiary);font-family:monospace;margin-top:1px">M. Kim</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-num">01 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 2: THE PROBLEM                                -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page p2" style="background:#111110 !important">
+  <div class="p2-inner" style="background:#111110">
+    <div>
+      <p class="p2-label">The Problem</p>
+      <h2 class="p2-h2">Critical operational knowledge exists only in people's heads.</h2>
+      <p class="p2-body">Slack threads, meeting notes, incident post-mortems, GitHub comments — the real operational intelligence of your organization is scattered across dozens of tools, held by a handful of individuals.</p>
+      <p class="p2-body">When those individuals leave, the knowledge leaves with them. MemoryWeave changes that.</p>
+    </div>
+    <div class="p2-stat-grid">
+      <div class="p2-stat-card">
+        <div class="p2-stat-value" style="color:#c94040">42%</div>
+        <div class="p2-stat-label">of operational knowledge is undocumented</div>
+      </div>
+      <div class="p2-stat-card">
+        <div class="p2-stat-value" style="color:#b97b1a">$4.5M</div>
+        <div class="p2-stat-label">average cost of knowledge loss per departure</div>
+      </div>
+      <div class="p2-stat-card">
+        <div class="p2-stat-value" style="color:#3b6fe8">6mo</div>
+        <div class="p2-stat-label">avg time to recover critical workflows after turnover</div>
+      </div>
+      <div class="p2-stat-card">
+        <div class="p2-stat-value" style="color:#2d8a5e">73%</div>
+        <div class="p2-stat-label">of engineers lack documented runbooks for key systems</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num" style="color:rgba(255,255,255,0.25)">02 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 3: HOW IT WORKS                               -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page p3">
+  <div class="p3-inner">
+    <p class="label" style="text-align:center">How It Works</p>
+    <h2 style="font-size:28px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;color:var(--text-primary);margin-top:12px;text-align:center">From raw activity to operational intelligence</h2>
+    <div class="p3-steps">
+      <div class="p3-connector"></div>
+      <div class="p3-step">
+        <div class="p3-step-num">01</div>
+        <h3 class="p3-step-title">Connect Data Sources</h3>
+        <p class="p3-step-body">Connect Slack, GitHub, Jira, meeting transcripts, and internal documentation. MemoryWeave ingests activity across your operational stack.</p>
+      </div>
+      <div class="p3-step">
+        <div class="p3-step-num">02</div>
+        <h3 class="p3-step-title">AI Extraction Engine</h3>
+        <p class="p3-step-body">Our multi-agent system extracts workflows, maps dependencies, identifies expertise concentration, and reconstructs undocumented processes.</p>
+      </div>
+      <div class="p3-step">
+        <div class="p3-step-num">03</div>
+        <h3 class="p3-step-title">Knowledge Graph Construction</h3>
+        <p class="p3-step-body">People, systems, incidents, and workflows are automatically linked into a living organizational intelligence map.</p>
+      </div>
+      <div class="p3-step">
+        <div class="p3-step-num">04</div>
+        <h3 class="p3-step-title">Operational Intelligence</h3>
+        <p class="p3-step-body">Query the system in natural language. Get structured operational guidance, runbooks, and risk signals grounded in real history.</p>
+      </div>
+    </div>
+
+    <!-- Feature strip -->
+    <div style="margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:20px">
+        <span class="badge badge-accent" style="margin-bottom:12px;display:inline-flex">Knowledge Graph</span>
+        <div style="font-size:13px;font-weight:600;letter-spacing:-0.02em;color:var(--text-primary);margin-bottom:7px">Living organizational intelligence map</div>
+        <div style="font-size:11.5px;color:var(--text-secondary);line-height:1.6">Automatically maps relationships between people, systems, workflows, and incidents. Identifies who knows what and where risk is concentrated.</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:20px">
+        <span class="badge badge-danger" style="margin-bottom:12px;display:inline-flex">Risk Detection</span>
+        <div style="font-size:13px;font-weight:600;letter-spacing:-0.02em;color:var(--text-primary);margin-bottom:7px">Identify knowledge concentration before it becomes a crisis</div>
+        <div style="font-size:11.5px;color:var(--text-secondary);line-height:1.6">Proactively surface single points of knowledge failure. When critical systems depend on one person's undocumented expertise, MemoryWeave flags it.</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:20px">
+        <span class="badge badge-success" style="margin-bottom:12px;display:inline-flex">AI Assistant</span>
+        <div style="font-size:13px;font-weight:600;letter-spacing:-0.02em;color:var(--text-primary);margin-bottom:7px">Operational mentor, available always</div>
+        <div style="font-size:11.5px;color:var(--text-secondary);line-height:1.6">Ask questions in natural language. Get structured answers grounded in your organization's actual operational history — not generic AI responses.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">03 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 4: DASHBOARD OVERVIEW                         -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page p4">
+  <div class="p4-inner">
+    <!-- Sidebar -->
+    <div class="p4-sidebar">
+      <div class="p4-sidebar-header">
+        <div class="p4-sidebar-logo">
+          <div class="p4-sidebar-logo-mark">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <span style="font-weight:600;font-size:12px;color:white;letter-spacing:-0.02em">MemoryWeave</span>
+        </div>
+      </div>
+      <div class="p4-nav">
+        <div class="p4-nav-item p4-nav-active"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <span>Overview</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="12" x2="16" y2="6.5"/><line x1="8" y1="12" x2="16" y2="17.5"/></svg> <span>Knowledge Graph</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/><line x1="8" y1="5.5" x2="16" y2="5.5"/><line x1="18.5" y1="8" x2="12" y2="16"/><line x1="5.5" y1="8" x2="12" y2="16"/></svg> <span>Workflows</span></div>
+        <div class="p4-nav-item p4-nav-default" style="position:relative"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> <span>Risks</span><div class="p4-nav-dot"></div></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg> <span>AI Assistant</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> <span>Data Sources</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> <span>Reports</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg> <span>Settings</span></div>
+      </div>
+      <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:7px">
+        <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div><div style="font-size:10px;font-weight:500;color:white">Sarah Chen</div><div style="font-size:9px;color:rgba(255,255,255,0.35);font-family:var(--font-mono)">Admin</div></div>
+      </div>
+    </div>
+    <!-- Main -->
+    <div class="p4-main">
+      <div class="p4-topbar">
+        <div style="flex:1"><div class="p4-topbar-title">Overview</div><div class="p4-topbar-sub">Acme Corp · Last synced 4 min ago</div></div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:7px;padding:6px 10px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span style="font-size:11px;color:var(--text-tertiary)">Search knowledge base...</span></div>
+      </div>
+      <div class="p4-content">
+        <div class="p4-stats">
+          <div class="p4-stat-card"><div class="p4-stat-label">Knowledge Nodes</div><div class="p4-stat-value">2,847</div><div class="p4-stat-delta" style="color:#2d8a5e">+12%</div></div>
+          <div class="p4-stat-card"><div class="p4-stat-label">Undocumented Flows</div><div class="p4-stat-value">134</div><div class="p4-stat-delta" style="color:#2d8a5e">−8%</div></div>
+          <div class="p4-stat-card"><div class="p4-stat-label">Critical Risk Signals</div><div class="p4-stat-value">3</div><div class="p4-stat-delta" style="color:var(--text-tertiary)">require attention</div></div>
+          <div class="p4-stat-card"><div class="p4-stat-label">AI Queries Today</div><div class="p4-stat-value">48</div><div class="p4-stat-delta" style="color:#2d8a5e">+23%</div></div>
+        </div>
+        <div class="p4-grid">
+          <!-- Graph panel -->
+          <div class="p4-panel">
+            <div class="p4-panel-header">Knowledge Graph<div class="p4-panel-header-sub">24 people · 18 systems · 7 incidents</div></div>
+            <div style="height:165px;background:var(--bg);position:relative;overflow:hidden">
+              <svg width="100%" height="100%" viewBox="0 0 450 170">
+                <defs><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f5f8f5"/><stop offset="100%" stop-color="#fafaf9"/></radialGradient></defs>
+                <rect width="450" height="170" fill="url(#g2)"/>
+                <pattern id="gp" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e8e8e6" stroke-width="0.4"/></pattern>
+                <rect width="450" height="170" fill="url(#gp)"/>
+                <line x1="120" y1="85" x2="200" y2="55" stroke="#e4e4e2" stroke-width="1" stroke-dasharray="3,2"/>
+                <line x1="120" y1="85" x2="155" y2="120" stroke="#e4e4e2" stroke-width="1.5"/>
+                <line x1="200" y1="55" x2="270" y2="75" stroke="#e4e4e2" stroke-width="1.5"/>
+                <line x1="200" y1="55" x2="240" y2="105" stroke="#e4e4e2" stroke-width="1" stroke-dasharray="3,2"/>
+                <line x1="270" y1="75" x2="330" y2="50" stroke="#e4e4e2" stroke-width="1"/>
+                <line x1="155" y1="120" x2="240" y2="105" stroke="#e4e4e2" stroke-width="1"/>
+                <line x1="330" y1="50" x2="390" y2="80" stroke="#e4e4e2" stroke-width="1"/>
+                <circle cx="120" cy="85" r="18" fill="white" stroke="#3b6fe8" stroke-width="1.5"/><circle cx="120" cy="85" r="24" fill="#3b6fe8" fill-opacity="0.06"/>
+                <text x="120" y="85.5" text-anchor="middle" dominant-baseline="middle" font-size="7" fill="#3b6fe8" font-family="monospace" font-weight="500">A. Patel</text>
+                <text x="120" y="113" text-anchor="middle" font-size="6" fill="#9a9a96" font-family="monospace">Eng Lead</text>
+                <circle cx="200" cy="55" r="14" fill="white" stroke="#2d8a5e" stroke-width="1.5"/>
+                <text x="200" y="55.5" text-anchor="middle" dominant-baseline="middle" font-size="6.5" fill="#2d8a5e" font-family="monospace">Pay API</text>
+                <circle cx="270" cy="75" r="12" fill="white" stroke="#2d8a5e" stroke-width="1.5"/>
+                <text x="270" y="75.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#2d8a5e" font-family="monospace">Auth Svc</text>
+                <circle cx="155" cy="120" r="15" fill="white" stroke="#3b6fe8" stroke-width="1.5"/>
+                <text x="155" y="120.5" text-anchor="middle" dominant-baseline="middle" font-size="7" fill="#3b6fe8" font-family="monospace">R. Chen</text>
+                <circle cx="240" cy="105" r="11" fill="white" stroke="#c94040" stroke-width="1.5"/>
+                <text x="240" y="105.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#c94040" font-family="monospace">P-4021</text>
+                <circle cx="330" cy="50" r="10" fill="white" stroke="#3b6fe8" stroke-width="1.5"/>
+                <text x="330" y="50.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#3b6fe8" font-family="monospace">M. Kim</text>
+                <circle cx="390" cy="80" r="10" fill="white" stroke="#2d8a5e" stroke-width="1.5"/>
+                <text x="390" y="80.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#2d8a5e" font-family="monospace">Data Bus</text>
+                <circle cx="70" cy="120" r="9" fill="white" stroke="#b97b1a" stroke-width="1.5"/>
+                <text x="70" y="120.5" text-anchor="middle" dominant-baseline="middle" font-size="5.5" fill="#b97b1a" font-family="monospace">Deploy</text>
+              </svg>
+            </div>
+          </div>
+          <!-- Right panels -->
+          <div class="p4-right-panels">
+            <div class="p4-panel">
+              <div class="p4-panel-header" style="display:flex;justify-content:space-between;align-items:center">Risk Signals <span style="font-size:10px;color:var(--accent-text);font-weight:400">View all →</span></div>
+              <div style="padding:8px 14px">
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-subtle)"><div style="width:5px;height:5px;border-radius:50%;background:#c94040;flex-shrink:0"></div><div style="flex:1"><div style="font-size:11px;font-weight:500;color:var(--text-primary)">Payment Service</div><div style="font-size:9px;color:var(--text-tertiary);font-family:monospace">Owner: A. Patel</div></div><span class="badge badge-danger">95%</span></div>
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-subtle)"><div style="width:5px;height:5px;border-radius:50%;background:#b97b1a;flex-shrink:0"></div><div style="flex:1"><div style="font-size:11px;font-weight:500;color:var(--text-primary)">Auth Pipeline</div><div style="font-size:9px;color:var(--text-tertiary);font-family:monospace">Owner: R. Chen</div></div><span class="badge badge-warning">78%</span></div>
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 0"><div style="width:5px;height:5px;border-radius:50%;background:#b97b1a;flex-shrink:0"></div><div style="flex:1"><div style="font-size:11px;font-weight:500;color:var(--text-primary)">Data Ingestion</div><div style="font-size:9px;color:var(--text-tertiary);font-family:monospace">Owner: M. Kim</div></div><span class="badge badge-warning">64%</span></div>
+              </div>
+            </div>
+            <div class="p4-panel">
+              <div class="p4-panel-header">Recent Extractions</div>
+              <div style="padding:4px 0">
+                <div style="display:flex;gap:8px;padding:6px 12px;align-items:flex-start"><div style="width:20px;height:20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div style="font-size:10px;font-weight:500;color:var(--text-primary)">P-4021 recovery workflow</div><div style="font-size:9px;color:var(--text-tertiary);font-family:monospace">Slack #incidents · 2m ago</div></div></div>
+                <div style="display:flex;gap:8px;padding:6px 12px;align-items:flex-start"><div style="width:20px;height:20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div style="font-size:10px;font-weight:500;color:var(--text-primary)">Deploy pipeline dependency</div><div style="font-size:9px;color:var(--text-tertiary);font-family:monospace">GitHub PR #847 · 18m ago</div></div></div>
+                <div style="display:flex;gap:8px;padding:6px 12px;align-items:flex-start"><div style="width:20px;height:20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div><div style="font-size:10px;font-weight:500;color:var(--text-primary)">Q4 architecture decision</div><div style="font-size:9px;color:var(--text-tertiary);font-family:monospace">Meeting transcript · 1h ago</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">04 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 5: KNOWLEDGE GRAPH DETAIL                     -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page p5">
+  <div class="p5-inner">
+    <!-- Reuse sidebar -->
+    <div class="p4-sidebar" style="width:180px">
+      <div class="p4-sidebar-header">
+        <div class="p4-sidebar-logo">
+          <div class="p4-sidebar-logo-mark"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+          <span style="font-weight:600;font-size:12px;color:white;letter-spacing:-0.02em">MemoryWeave</span>
+        </div>
+      </div>
+      <div class="p4-nav">
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <span>Overview</span></div>
+        <div class="p4-nav-item p4-nav-active"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="12" x2="16" y2="6.5"/><line x1="8" y1="12" x2="16" y2="17.5"/></svg> <span>Knowledge Graph</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/></svg> <span>Workflows</span></div>
+        <div class="p4-nav-item p4-nav-default" style="position:relative"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> <span>Risks</span><div class="p4-nav-dot"></div></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg> <span>AI Assistant</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/></svg> <span>Data Sources</span></div>
+      </div>
+    </div>
+    <div class="p5-main">
+      <div class="p4-topbar">
+        <div style="flex:1"><div class="p4-topbar-title">Knowledge Graph</div><div class="p4-topbar-sub">856 nodes · 1,204 edges · Updated 4 min ago</div></div>
+        <div style="display:flex;gap:6px">
+          <span style="font-size:11px;padding:4px 10px;background:var(--dark);color:white;border-radius:5px;font-family:var(--font-sans)">All</span>
+          <span style="font-size:11px;padding:4px 10px;background:white;border:1px solid var(--border);border-radius:5px;color:var(--text-secondary)">People</span>
+          <span style="font-size:11px;padding:4px 10px;background:white;border:1px solid var(--border);border-radius:5px;color:var(--text-secondary)">Systems</span>
+          <span style="font-size:11px;padding:4px 10px;background:white;border:1px solid var(--border);border-radius:5px;color:var(--text-secondary)">Incidents</span>
+        </div>
+      </div>
+      <div style="display:flex;flex:1;overflow:hidden;height:calc(100% - 50px)">
+        <!-- Graph -->
+        <div style="flex:1;position:relative;overflow:hidden;background:var(--bg)">
+          <svg width="100%" height="100%" viewBox="0 0 600 380" style="position:absolute;inset:0">
+            <pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#efefed" stroke-width="0.5"/></pattern>
+            <rect width="600" height="380" fill="white"/>
+            <rect width="600" height="380" fill="url(#grid2)"/>
+            <!-- Edges -->
+            <line x1="210" y1="155" x2="320" y2="115" stroke="#e4e4e2" stroke-width="1.5"/>
+            <line x1="210" y1="155" x2="210" y2="155" stroke="#e4e4e2" stroke-width="1"/>
+            <line x1="210" y1="155" x2="265" y2="210" stroke="#e4e4e2" stroke-width="1.5"/>
+            <line x1="320" y1="115" x2="400" y2="140" stroke="#e4e4e2" stroke-width="1.5"/>
+            <line x1="320" y1="115" x2="360" y2="175" stroke="#e4e4e2" stroke-width="1" stroke-dasharray="4,3"/>
+            <line x1="400" y1="140" x2="460" y2="100" stroke="#e4e4e2" stroke-width="1"/>
+            <line x1="400" y1="140" x2="500" y2="170" stroke="#e4e4e2" stroke-width="1"/>
+            <line x1="265" y1="210" x2="360" y2="175" stroke="#e4e4e2" stroke-width="1"/>
+            <line x1="265" y1="210" x2="210" y2="280" stroke="#e4e4e2" stroke-width="1"/>
+            <line x1="460" y1="100" x2="500" y2="170" stroke="#e4e4e2" stroke-width="1"/>
+            <line x1="130" y1="200" x2="210" y2="155" stroke="#e4e4e2" stroke-width="1" stroke-dasharray="4,3"/>
+            <!-- People nodes -->
+            <circle cx="210" cy="155" r="26" fill="#eef2fd" stroke="#3b6fe8" stroke-width="2"/><circle cx="210" cy="155" r="20" fill="white" stroke="#3b6fe8" stroke-width="1.5"/>
+            <text x="210" y="154" text-anchor="middle" dominant-baseline="middle" font-size="8.5" fill="#3b6fe8" font-family="monospace" font-weight="500">A. Patel</text>
+            <text x="210" y="183" text-anchor="middle" font-size="7" fill="#9a9a96" font-family="monospace">Eng Lead</text>
+            <circle cx="265" cy="210" r="22" fill="#eef2fd" stroke="#3b6fe8" stroke-width="1.5"/><circle cx="265" cy="210" r="16" fill="white" stroke="#3b6fe8" stroke-width="1.5"/>
+            <text x="265" y="209.5" text-anchor="middle" dominant-baseline="middle" font-size="8" fill="#3b6fe8" font-family="monospace">R. Chen</text>
+            <circle cx="460" cy="100" r="16" fill="#eef2fd" stroke="#3b6fe8" stroke-width="1.5"/>
+            <text x="460" y="100" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#3b6fe8" font-family="monospace">M. Kim</text>
+            <circle cx="500" cy="240" r="14" fill="#eef2fd" stroke="#3b6fe8" stroke-width="1.5"/>
+            <text x="500" y="240" text-anchor="middle" dominant-baseline="middle" font-size="7" fill="#3b6fe8" font-family="monospace">J. Brooks</text>
+            <!-- System nodes -->
+            <circle cx="320" cy="115" r="20" fill="#f0faf5" stroke="#2d8a5e" stroke-width="1.5"/>
+            <text x="320" y="114.5" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#2d8a5e" font-family="monospace">Pay API</text>
+            <circle cx="400" cy="140" r="16" fill="#f0faf5" stroke="#2d8a5e" stroke-width="1.5"/>
+            <text x="400" y="139.5" text-anchor="middle" dominant-baseline="middle" font-size="7" fill="#2d8a5e" font-family="monospace">Auth Svc</text>
+            <circle cx="500" cy="170" r="13" fill="#f0faf5" stroke="#2d8a5e" stroke-width="1.5"/>
+            <text x="500" y="169.5" text-anchor="middle" dominant-baseline="middle" font-size="6.5" fill="#2d8a5e" font-family="monospace">Data Bus</text>
+            <circle cx="130" cy="200" r="12" fill="#f0faf5" stroke="#2d8a5e" stroke-width="1.5"/>
+            <text x="130" y="199.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#2d8a5e" font-family="monospace">Analytics</text>
+            <!-- Incident nodes -->
+            <circle cx="360" cy="175" r="15" fill="#fdf2f2" stroke="#c94040" stroke-width="1.5"/>
+            <text x="360" y="175" text-anchor="middle" dominant-baseline="middle" font-size="7.5" fill="#c94040" font-family="monospace">P-4021</text>
+            <circle cx="430" cy="220" r="11" fill="#fdf2f2" stroke="#c94040" stroke-width="1.5"/>
+            <text x="430" y="220" text-anchor="middle" dominant-baseline="middle" font-size="6.5" fill="#c94040" font-family="monospace">P-3882</text>
+            <!-- Workflow nodes -->
+            <circle cx="210" cy="280" r="12" fill="#fdf7ee" stroke="#b97b1a" stroke-width="1.5"/>
+            <text x="210" y="279.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#b97b1a" font-family="monospace">Rollback</text>
+            <circle cx="100" cy="130" r="12" fill="#fdf7ee" stroke="#b97b1a" stroke-width="1.5"/>
+            <text x="100" y="129.5" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#b97b1a" font-family="monospace">Deploy</text>
+          </svg>
+          <!-- Legend -->
+          <div class="p5-legend">
+            <div class="p5-legend-item"><div class="p5-legend-dot" style="background:#3b6fe8"></div>People · 5</div>
+            <div class="p5-legend-item"><div class="p5-legend-dot" style="background:#2d8a5e"></div>Systems · 5</div>
+            <div class="p5-legend-item"><div class="p5-legend-dot" style="background:#c94040"></div>Incidents · 2</div>
+            <div class="p5-legend-item" style="margin-bottom:0"><div class="p5-legend-dot" style="background:#b97b1a"></div>Workflows · 3</div>
+          </div>
+        </div>
+        <!-- Detail panel -->
+        <div class="p5-detail">
+          <span class="badge badge-accent" style="margin-bottom:10px;display:inline-flex">Person</span>
+          <div style="font-size:18px;font-weight:600;letter-spacing:-0.03em;color:var(--text-primary);margin-bottom:4px">A. Patel</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Engineering Lead</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-subtle)"><span style="font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);text-transform:capitalize">Role</span><span style="font-size:11px;color:var(--text-primary);font-weight:500">Engineering Lead</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-subtle)"><span style="font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary)">Systems</span><span style="font-size:11px;color:var(--text-primary);font-weight:500">Payment API, Billing</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-subtle)"><span style="font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary)">Incidents</span><span style="font-size:11px;color:var(--text-primary);font-weight:500">8</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-subtle)"><span style="font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary)">Risk Score</span><span style="font-size:11px;color:#c94040;font-weight:600">95%</span></div>
+          </div>
+          <div style="margin-top:14px;padding:10px;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:7px;display:flex;gap:7px;align-items:flex-start">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c94040" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span style="font-size:11px;color:#c94040;line-height:1.45">Sole owner of Payment API — critical dependency risk</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">05 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 6: RISK ANALYTICS                             -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page p6">
+  <div class="p6-inner">
+    <div class="p4-sidebar" style="width:180px">
+      <div class="p4-sidebar-header">
+        <div class="p4-sidebar-logo">
+          <div class="p4-sidebar-logo-mark"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+          <span style="font-weight:600;font-size:12px;color:white;letter-spacing:-0.02em">MemoryWeave</span>
+        </div>
+      </div>
+      <div class="p4-nav">
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Overview</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="12" x2="16" y2="6.5"/><line x1="8" y1="12" x2="16" y2="17.5"/></svg><span>Knowledge Graph</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/></svg><span>Workflows</span></div>
+        <div class="p4-nav-item p4-nav-active" style="position:relative"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><span>Risks</span><div class="p4-nav-dot"></div></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg><span>AI Assistant</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/></svg><span>Data Sources</span></div>
+      </div>
+    </div>
+    <div class="p6-main">
+      <div class="p4-topbar">
+        <div style="flex:1"><div class="p4-topbar-title">Risk Analytics</div><div class="p4-topbar-sub">Knowledge concentration & dependency risk</div></div>
+      </div>
+      <div class="p6-content">
+        <div class="p6-stats">
+          <div class="p4-stat-card"><div class="p4-stat-label">Critical Risks</div><div class="p4-stat-value" style="color:#c94040">3</div></div>
+          <div class="p4-stat-card"><div class="p4-stat-label">High Risks</div><div class="p4-stat-value" style="color:#b97b1a">11</div></div>
+          <div class="p4-stat-card"><div class="p4-stat-label">Undocumented</div><div class="p4-stat-value">47%</div><div class="p4-stat-delta" style="color:#2d8a5e">−5% vs last quarter</div></div>
+          <div class="p4-stat-card"><div class="p4-stat-label">Single Points of Failure</div><div class="p4-stat-value">8</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 230px;gap:14px">
+          <div class="risk-table">
+            <div class="risk-table-header">
+              <div class="risk-table-header-cell">System / Workflow</div>
+              <div class="risk-table-header-cell">Primary Owner</div>
+              <div class="risk-table-header-cell">Score</div>
+              <div class="risk-table-header-cell">Documented</div>
+              <div class="risk-table-header-cell">Action</div>
+            </div>
+            <div class="risk-table-row">
+              <div><div style="font-size:12px;font-weight:500;color:var(--text-primary)">Payment Service</div><div style="font-size:10px;color:var(--text-tertiary);font-family:monospace">4 dependent systems</div></div>
+              <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span style="font-size:11px;color:var(--text-secondary)">A. Patel</span></div>
+              <div style="display:flex;align-items:center;gap:5px"><div class="risk-bar-track"><div style="height:100%;width:95%;background:#c94040;border-radius:2px"></div></div><span style="font-family:monospace;font-size:10px;color:var(--text-secondary)">95</span></div>
+              <div><span class="badge badge-danger">No</span></div>
+              <div style="font-size:11px;color:var(--accent-text);font-weight:500">Extract →</div>
+            </div>
+            <div class="risk-table-row">
+              <div><div style="font-size:12px;font-weight:500;color:var(--text-primary)">Auth Pipeline</div><div style="font-size:10px;color:var(--text-tertiary);font-family:monospace">6 dependent systems</div></div>
+              <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span style="font-size:11px;color:var(--text-secondary)">R. Chen</span></div>
+              <div style="display:flex;align-items:center;gap:5px"><div class="risk-bar-track"><div style="height:100%;width:78%;background:#b97b1a;border-radius:2px"></div></div><span style="font-family:monospace;font-size:10px;color:var(--text-secondary)">78</span></div>
+              <div><span class="badge badge-danger">No</span></div>
+              <div style="font-size:11px;color:var(--accent-text);font-weight:500">Extract →</div>
+            </div>
+            <div class="risk-table-row">
+              <div><div style="font-size:12px;font-weight:500;color:var(--text-primary)">Data Ingestion</div><div style="font-size:10px;color:var(--text-tertiary);font-family:monospace">3 dependent systems</div></div>
+              <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span style="font-size:11px;color:var(--text-secondary)">M. Kim</span></div>
+              <div style="display:flex;align-items:center;gap:5px"><div class="risk-bar-track"><div style="height:100%;width:64%;background:#b97b1a;border-radius:2px"></div></div><span style="font-family:monospace;font-size:10px;color:var(--text-secondary)">64</span></div>
+              <div><span class="badge badge-warning">Partial</span></div>
+              <div style="font-size:11px;color:var(--accent-text);font-weight:500">Review →</div>
+            </div>
+            <div class="risk-table-row">
+              <div><div style="font-size:12px;font-weight:500;color:var(--text-primary)">Deploy System</div><div style="font-size:10px;color:var(--text-tertiary);font-family:monospace">2 dependent systems</div></div>
+              <div style="display:flex;align-items:center;gap:5px"><div style="width:18px;height:18px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span style="font-size:11px;color:var(--text-secondary)">T. Walsh</span></div>
+              <div style="display:flex;align-items:center;gap:5px"><div class="risk-bar-track"><div style="height:100%;width:41%;background:#2d8a5e;border-radius:2px"></div></div><span style="font-family:monospace;font-size:10px;color:var(--text-secondary)">41</span></div>
+              <div><span class="badge badge-success">Yes</span></div>
+              <div style="font-size:11px;color:var(--text-tertiary)">Review →</div>
+            </div>
+          </div>
+          <!-- Right: heatmap + bottlenecks -->
+          <div class="p6-right">
+            <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:12px">Knowledge Concentration</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--text-secondary)">Engineering</span><span style="font-family:monospace;font-size:10px;color:#c94040">82%</span></div><div style="height:5px;background:var(--bg-tertiary);border-radius:3px"><div style="height:100%;width:82%;background:#c94040;border-radius:3px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--text-secondary)">Platform</span><span style="font-family:monospace;font-size:10px;color:#b97b1a">71%</span></div><div style="height:5px;background:var(--bg-tertiary);border-radius:3px"><div style="height:100%;width:71%;background:#b97b1a;border-radius:3px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--text-secondary)">Infrastructure</span><span style="font-family:monospace;font-size:10px;color:#b97b1a">67%</span></div><div style="height:5px;background:var(--bg-tertiary);border-radius:3px"><div style="height:100%;width:67%;background:#b97b1a;border-radius:3px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--text-secondary)">Security</span><span style="font-family:monospace;font-size:10px;color:#3b6fe8">45%</span></div><div style="height:5px;background:var(--bg-tertiary);border-radius:3px"><div style="height:100%;width:45%;background:#3b6fe8;border-radius:3px"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--text-secondary)">Data</span><span style="font-family:monospace;font-size:10px;color:#2d8a5e">38%</span></div><div style="height:5px;background:var(--bg-tertiary);border-radius:3px"><div style="height:100%;width:38%;background:#2d8a5e;border-radius:3px"></div></div></div>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:8px">Bottlenecks</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:6px;padding:7px 8px;display:flex;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#c94040" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><span style="font-size:10px;color:#c94040;line-height:1.4">A. Patel is sole resolver for 8/12 P0 incidents</span></div>
+              <div style="background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:6px;padding:7px 8px;display:flex;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#c94040" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><span style="font-size:10px;color:#c94040;line-height:1.4">Payment API has no secondary ownership</span></div>
+              <div style="background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:6px;padding:7px 8px;display:flex;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b97b1a" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg><span style="font-size:10px;color:#b97b1a;line-height:1.4">3 systems have zero documentation in 90 days</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">06 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 7: AI ASSISTANT                               -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page p7">
+  <div class="p7-inner">
+    <div class="p4-sidebar" style="width:180px">
+      <div class="p4-sidebar-header">
+        <div class="p4-sidebar-logo">
+          <div class="p4-sidebar-logo-mark"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+          <span style="font-weight:600;font-size:12px;color:white;letter-spacing:-0.02em">MemoryWeave</span>
+        </div>
+      </div>
+      <div class="p4-nav">
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Overview</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="12" x2="16" y2="6.5"/><line x1="8" y1="12" x2="16" y2="17.5"/></svg><span>Knowledge Graph</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/></svg><span>Workflows</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><span>Risks</span><div class="p4-nav-dot"></div></div>
+        <div class="p4-nav-item p4-nav-active"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg><span>AI Assistant</span></div>
+        <div class="p4-nav-item p4-nav-default"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/></svg><span>Data Sources</span></div>
+      </div>
+    </div>
+    <div class="p7-main">
+      <div class="p4-topbar">
+        <div style="flex:1"><div class="p4-topbar-title">AI Assistant</div><div class="p4-topbar-sub">Operational Mentor · Grounded in organizational memory</div></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:6px;height:6px;border-radius:50%;background:#2d8a5e"></div><span style="font-family:var(--font-mono);font-size:10px;color:#2d8a5e">Active</span></div>
+      </div>
+      <div style="display:flex;flex:1;overflow:hidden;height:calc(100% - 50px)">
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="p7-msgs">
+            <!-- System message -->
+            <div class="p7-msg">
+              <div class="p7-avatar p7-avatar-ai"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg></div>
+              <div style="max-width:500px">
+                <div class="p7-bubble-ai">I have access to your organization's complete operational history — incidents, workflows, dependencies, and expertise maps. What would you like to know?</div>
+              </div>
+            </div>
+            <!-- User message -->
+            <div class="p7-msg" style="flex-direction:row-reverse">
+              <div class="p7-avatar p7-avatar-user"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+              <div style="max-width:400px"><div class="p7-bubble-user">How do we recover payment service failures?</div></div>
+            </div>
+            <!-- AI structured response -->
+            <div class="p7-msg">
+              <div class="p7-avatar p7-avatar-ai"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg></div>
+              <div style="max-width:520px">
+                <div class="p7-bubble-ai">
+                  <div style="margin-bottom:10px">Based on 12 historical P0/P1 incidents, here is the recovery protocol:</div>
+                  <div class="p7-step"><div class="p7-step-num">1</div><span style="font-size:11px;color:var(--text-secondary);line-height:1.5">Check payment-api health endpoint at /internal/health and review error rate in Datadog</span></div>
+                  <div class="p7-step"><div class="p7-step-num">2</div><span style="font-size:11px;color:var(--text-secondary);line-height:1.5">Inspect Stripe webhook delivery dashboard for failed events — check for queue backlog</span></div>
+                  <div class="p7-step"><div class="p7-step-num">3</div><span style="font-size:11px;color:var(--text-secondary);line-height:1.5">If DB connection issues detected, restart payment-worker pods in Kubernetes</span></div>
+                  <div class="p7-step"><div class="p7-step-num">4</div><span style="font-size:11px;color:var(--text-secondary);line-height:1.5">Escalate to A. Patel (primary on-call) or R. Chen (backup)</span></div>
+                  <div class="p7-related">
+                    <div><div class="p7-related-label">Systems</div><div class="p7-chips"><span class="badge badge-neutral" style="font-size:9px">Payment API</span><span class="badge badge-neutral" style="font-size:9px">Stripe Webhooks</span></div></div>
+                    <div><div class="p7-related-label">People</div><div class="p7-chips"><span class="badge badge-neutral" style="font-size:9px">A. Patel</span><span class="badge badge-neutral" style="font-size:9px">R. Chen</span><span class="badge badge-neutral" style="font-size:9px">J. Brooks</span></div></div>
+                    <div><div class="p7-related-label">Incidents</div><div class="p7-chips"><span class="badge badge-neutral" style="font-size:9px">P-4021</span><span class="badge badge-neutral" style="font-size:9px">P-3891</span></div></div>
+                    <div><div class="p7-related-label">Warning</div><div style="background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:5px;padding:4px 7px;font-size:10px;color:#c94040">Sole owner risk: A. Patel resolved 9/12 payment incidents</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p7-input-area">
+            <div class="p7-input-mock">
+              <span style="font-size:12px;color:var(--text-tertiary);flex:1">Ask about workflows, incidents, dependencies, or operational procedures...</span>
+              <div style="width:30px;height:30px;background:var(--dark);border-radius:7px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            </div>
+            <div style="margin-top:6px;font-size:9px;color:var(--text-tertiary);text-align:center;font-family:var(--font-mono)">Grounded in 2,847 knowledge nodes · 134 workflows · 89 incidents</div>
+          </div>
+        </div>
+        <!-- Context panel -->
+        <div class="p7-context">
+          <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-tertiary);margin-bottom:12px">Knowledge Context</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-subtle)"><div style="width:24px;height:24px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/></svg></div><div><div style="font-size:12px;font-weight:600;color:var(--text-primary)">8</div><div style="font-size:10px;color:var(--text-tertiary)">Active Sources</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-subtle)"><div style="width:24px;height:24px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="8" y1="12" x2="16" y2="6.5"/><line x1="8" y1="12" x2="16" y2="17.5"/></svg></div><div><div style="font-size:12px;font-weight:600;color:var(--text-primary)">2,847</div><div style="font-size:10px;color:var(--text-tertiary)">Knowledge Nodes</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-subtle)"><div style="width:24px;height:24px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div><div style="font-size:12px;font-weight:600;color:var(--text-primary)">89</div><div style="font-size:10px;color:var(--text-tertiary)">Indexed Incidents</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 0"><div style="width:24px;height:24px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="16" width="5" height="5" rx="1"/></svg></div><div><div style="font-size:12px;font-weight:600;color:var(--text-primary)">134</div><div style="font-size:10px;color:var(--text-tertiary)">Workflows</div></div></div>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-tertiary);margin-bottom:8px">Recent Queries</div>
+            <div style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);margin-bottom:4px;background:var(--bg-secondary)">How do we recover payment failures?</div>
+            <div style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);margin-bottom:4px">Who owns auth pipeline?</div>
+            <div style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;color:var(--text-secondary)">Q4 deployment history</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">07 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 8: USE CASES                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page p9">
+  <div class="p9-inner">
+    <p class="label">Use Cases</p>
+    <h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;color:var(--text-primary);margin-top:10px">Built for enterprise operations</h2>
+    <div class="p9-grid">
+      <div class="p9-card"><div class="p9-num">01</div><div class="p9-title">Employee Transition Risk</div><div class="p9-body">Before a critical engineer departs, extract and preserve their undocumented operational knowledge into structured runbooks and dependency maps.</div></div>
+      <div class="p9-card"><div class="p9-num">02</div><div class="p9-title">Incident Reconstruction</div><div class="p9-body">When production issues arise, surface historical resolution patterns, past incident timelines, and the engineers who've solved similar problems.</div></div>
+      <div class="p9-card"><div class="p9-num">03</div><div class="p9-title">Organizational Onboarding</div><div class="p9-body">New hires get instant access to institutional context — understanding who knows what, how systems connect, and how decisions have been made.</div></div>
+      <div class="p9-card"><div class="p9-num">04</div><div class="p9-title">M&amp;A Due Diligence</div><div class="p9-body">Map knowledge concentration risks across an acquired organization before integration. Identify undocumented systems and critical dependencies.</div></div>
+      <div class="p9-card"><div class="p9-num">05</div><div class="p9-title">Compliance &amp; Audit Trail</div><div class="p9-body">Maintain a continuous audit trail of operational decisions and their rationale, with full chain-of-custody for governance requirements.</div></div>
+      <div class="p9-card"><div class="p9-num">06</div><div class="p9-title">Operational Continuity</div><div class="p9-body">Ensure that distributed, undocumented knowledge is systematically captured, so organizational continuity is not dependent on any single individual.</div></div>
+    </div>
+  </div>
+  <div class="page-num">08 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 9: SECURITY                                   -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page" style="background:#111110">
+  <div style="padding:48px 52px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;height:100%">
+    <div>
+      <p style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:16px">Security &amp; Privacy</p>
+      <h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;color:white;margin-bottom:20px">Built for enterprise security requirements</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.7">MemoryWeave is designed for organizations where security and data governance are non-negotiable. All data remains in your infrastructure or your dedicated cloud environment.</p>
+      <div style="margin-top:28px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.6)">SOC 2 Type II certified</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.6)">VPC deployment or on-premise</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.6)">Zero-trust architecture</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.6)">Complete audit logging for all queries</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><span style="font-size:12px;color:rgba(255,255,255,0.6)">GDPR &amp; CCPA compliant by design</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="p10-sec-card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div class="p10-sec-title">SOC 2 Type II</div><div class="p10-sec-body">Fully audited security controls and access management</div></div>
+      <div class="p10-sec-card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div class="p10-sec-title">Zero-trust Architecture</div><div class="p10-sec-body">No data leaves your environment without explicit authorization</div></div>
+      <div class="p10-sec-card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg><div class="p10-sec-title">VPC Deployment</div><div class="p10-sec-body">Deploy within your own cloud infrastructure or on-prem</div></div>
+      <div class="p10-sec-card"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><div class="p10-sec-title">Audit Logging</div><div class="p10-sec-body">Complete audit trail for all data access and AI queries</div></div>
+    </div>
+  </div>
+  <div class="page-num" style="color:rgba(255,255,255,0.25)">09 / 10 · MemoryWeave</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PAGE 10: CTA + FOOTER                              -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="page" style="background:white;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:48px 52px">
+  <div style="max-width:560px">
+    <p class="label" style="margin-bottom:20px">Get Started</p>
+    <h2 style="font-size:44px;font-weight:600;letter-spacing:-0.04em;line-height:1.06;color:var(--text-primary);margin-bottom:20px">The digital twin of your<br>human capital.</h2>
+    <p style="font-size:15px;color:var(--text-secondary);line-height:1.65;margin-bottom:36px;max-width:440px;margin-left:auto;margin-right:auto">Start preserving critical operational knowledge before it disappears. Enterprise pilots available now for qualified organizations.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:40px">
+      <span class="btn-primary" style="font-size:14px;padding:11px 22px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        Request Demo
+      </span>
+      <span class="btn-secondary" style="font-size:14px;padding:11px 22px">Talk to Sales</span>
+    </div>
+    <div style="padding-top:32px;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">
+        <div style="width:22px;height:22px;background:var(--dark);border-radius:6px;display:flex;align-items:center;justify-content:center"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+        <span style="font-weight:600;font-size:14px;letter-spacing:-0.02em;color:var(--text-primary)">MemoryWeave</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">— The Digital Twin of Human Capital</span>
+      </div>
+      <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text-tertiary)">Privacy</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">Security</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">Terms</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">Docs</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">Status</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">Blog</span>
+      </div>
+      <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary);margin-top:16px">© 2026 MemoryWeave, Inc. · San Francisco, CA</p>
+    </div>
+  </div>
+  <div class="page-num">10 / 10 · MemoryWeave</div>
+</div>
+
+<script>
+  // Wait for fonts and layout to be fully ready, then print
+  document.fonts.ready.then(function() {
+    setTimeout(function() {
+      window.print();
+    }, 500);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,582 @@
+# MemoryWeave — Cursor Rules
+# AI-powered Organizational Memory & Operational Intelligence Platform
+# Hackathon Edition | React + Vite + FastAPI + Neo4j + ChromaDB + Claude API
+
+## Project Identity
+
+MemoryWeave is an enterprise SaaS platform that preserves organizational memory
+using AI agents, knowledge graphs, and semantic retrieval. It prevents knowledge
+loss when employees leave by extracting workflows, dependencies, and institutional
+knowledge from Slack, GitHub, incidents, and internal docs.
+
+The design source of truth is `_design-reference.html` in the repo root.
+Every UI decision must be traceable to that file. When in doubt, check it.
+
+---
+
+## Critical Rules (Never Break These)
+
+1. NEVER use Tailwind for primary component styling. Use inline styles with CSS
+   variable references. Tailwind is only permitted for layout utilities in edge
+   cases (e.g., `flex`, `overflow-hidden` on wrapper divs when CSS-in-JS is impractical).
+
+2. NEVER deviate from the design token system. Every color, shadow, radius, and
+   font must use CSS variables defined in `src/index.css`. No hardcoded hex values
+   in components except for sidebar-specific colors (#111110, rgba(255,255,255,x)).
+
+3. NEVER use Inter, Roboto, Arial, or system fonts as primary typefaces.
+   DM Sans is the sans font. DM Mono is the mono font. Always.
+
+4. NEVER create new animation keyframes. All animations are defined globally in
+   `src/index.css`. Reference them by name: fadeUp, fadeIn, slideRight, pulse-dot,
+   float, shimmer, dashFlow, nodeAppear, graphPulse.
+
+5. NEVER import or install a CSS framework, UI kit (MUI, Chakra, shadcn, Ant),
+   or chart library other than Recharts. The graph is custom SVG — not
+   react-force-graph, not D3, not vis-network.
+
+6. NEVER use localStorage or sessionStorage. All state lives in Zustand.
+
+7. NEVER write API calls directly in components. All API calls go through
+   service functions in `src/services/api.js`.
+
+---
+
+## Design System
+
+### Color Tokens (defined in src/index.css, use via var())
+```
+--bg: #fafaf9
+--bg-secondary: #f4f4f2
+--bg-tertiary: #eeeeec
+--surface: #ffffff
+--border: #e4e4e2
+--border-subtle: #efefed
+--text-primary: #111110
+--text-secondary: #6b6b67
+--text-tertiary: #9a9a96
+--accent: oklch(50% 0.12 240)       ← blue, primary brand color
+--accent-light: oklch(96% 0.03 240)
+--accent-text: oklch(45% 0.13 240)
+--danger: oklch(50% 0.16 25)        ← red
+--warning: oklch(60% 0.14 65)       ← amber
+--success: oklch(52% 0.14 160)      ← green
+--shadow-xs / --shadow-sm / --shadow-md / --shadow-lg
+--radius-sm: 6px / --radius-md: 10px / --radius-lg: 16px
+```
+
+### Sidebar (Dark Theme)
+The sidebar is NOT affected by the main design token system. It has its own values:
+```
+background: #111110
+text active: #ffffff
+text inactive: rgba(255,255,255,0.45)
+active item bg: rgba(255,255,255,0.1)
+hover item bg: rgba(255,255,255,0.05)
+border color: rgba(255,255,255,0.07)
+icon active: #ffffff
+icon inactive: rgba(255,255,255,0.4)
+```
+
+### Typography Rules
+- Headings: DM Sans, fontWeight 600, letterSpacing -0.03em to -0.04em
+- Body: DM Sans, fontWeight 400, lineHeight 1.5–1.7
+- Labels/overlines: DM Mono, fontSize 10-11px, textTransform uppercase, letterSpacing 0.06-0.08em
+- Badges/tags: DM Mono, fontWeight 500, letterSpacing 0.02em
+- Code/technical: DM Mono
+
+### Node Colors (Knowledge Graph)
+```
+person   → oklch(50% 0.12 240)   blue
+system   → oklch(52% 0.14 160)   green
+incident → oklch(50% 0.16 25)    red
+workflow → oklch(60% 0.14 65)    amber
+```
+
+---
+
+## File Structure
+
+```
+memoryweave/
+├── _design-reference.html         ← SOURCE OF TRUTH, never edit
+├── .cursorrules                   ← this file
+├── frontend/
+│   ├── index.html                 ← Google Fonts link here
+│   ├── vite.config.js
+│   ├── src/
+│   │   ├── index.css              ← ALL global styles, tokens, keyframes
+│   │   ├── main.jsx
+│   │   ├── App.jsx                ← Router, page switching
+│   │   ├── stores/
+│   │   │   └── appStore.js        ← Zustand, single store
+│   │   ├── services/
+│   │   │   └── api.js             ← All fetch calls, exports async functions
+│   │   ├── components/
+│   │   │   ├── atoms/
+│   │   │   │   ├── Icon.jsx
+│   │   │   │   ├── Badge.jsx
+│   │   │   │   ├── Button.jsx
+│   │   │   │   └── StatCard.jsx
+│   │   │   ├── graph/
+│   │   │   │   ├── MiniKnowledgeGraph.jsx
+│   │   │   │   └── FullKnowledgeGraph.jsx
+│   │   │   └── layout/
+│   │   │       ├── Nav.jsx
+│   │   │       ├── Sidebar.jsx
+│   │   │       ├── TopBar.jsx
+│   │   │       └── DashboardShell.jsx
+│   │   ├── pages/
+│   │   │   ├── LandingPage.jsx
+│   │   │   ├── OverviewPage.jsx
+│   │   │   ├── GraphPage.jsx
+│   │   │   ├── WorkflowsPage.jsx
+│   │   │   ├── RiskPage.jsx
+│   │   │   ├── AssistantPage.jsx
+│   │   │   └── SourcesPage.jsx
+│   │   └── data/
+│   │       └── mockData.js        ← All hardcoded demo data while backend builds
+└── backend/
+    ├── main.py
+    ├── requirements.txt
+    ├── routers/
+    ├── agents/                    ← CODEX territory
+    ├── services/                  ← CODEX territory
+    └── data/demo/                 ← JSON seed files
+```
+
+---
+
+## Component Patterns
+
+### Icon Component Usage
+```jsx
+// Always use the Icon component, never raw SVG inline in pages
+<Icon name="graph" size={16} strokeWidth={1.5} color="currentColor" />
+
+// Available names: logo, menu, x, chevronRight, chevronDown, arrowRight,
+// grid, graph, workflow, alert, ai, database, file, reports, settings,
+// search, user, send, check, lock, shield, cpu, zap, gitBranch, slack,
+// messageSquare, plus, bell, home, externalLink, eye, layers
+```
+
+### Badge Component Usage
+```jsx
+<Badge variant="danger" size="sm">CRITICAL</Badge>
+<Badge variant="accent" size="xs">Knowledge Graph</Badge>
+// variants: default | accent | danger | warning | success | dark
+// sizes: xs | sm | md
+```
+
+### Button Component Usage
+```jsx
+<Button variant="primary" size="lg" icon="arrowRight" onClick={fn}>
+  Request Demo
+</Button>
+// variants: primary | secondary | ghost | accent | link
+// sizes: sm | md | lg | xl
+// icon prop is optional — renders Icon before children
+```
+
+### StatCard Usage
+```jsx
+<StatCard
+  label="Knowledge Nodes"
+  value="2,847"
+  delta={12}           // optional, positive=green, negative=red
+  sublabel="vs last month"
+  delay={0}            // animation delay in ms, increment by 60 per card
+/>
+```
+
+### DashboardShell Usage
+```jsx
+<DashboardShell
+  currentPage="graph"
+  setCurrentPage={setCurrentPage}
+  title="Knowledge Graph"
+  subtitle="856 nodes · 1,204 edges · Updated 4 min ago"
+  actions={<Button variant="secondary" size="sm">Export</Button>}
+>
+  {/* page content */}
+</DashboardShell>
+```
+
+---
+
+## State Management (Zustand)
+
+Single store at `src/stores/appStore.js`. Never create additional stores.
+
+```javascript
+// Reading state in components
+const currentPage = useAppStore(s => s.currentPage)
+const { graphNodes, graphEdges } = useAppStore(s => ({ ... }))
+
+// Never destructure the entire store — always select minimally
+// WRONG: const store = useAppStore()
+// RIGHT: const nodes = useAppStore(s => s.graphNodes)
+```
+
+Store shape:
+```javascript
+{
+  // Navigation
+  currentPage: 'landing',
+  setCurrentPage: fn,
+
+  // Graph
+  graphNodes: [],
+  graphEdges: [],
+  selectedNode: null,
+  filterType: 'all',  // all | person | system | incident | workflow
+  setSelectedNode: fn,
+  setFilterType: fn,
+
+  // Assistant
+  messages: [],
+  isLoading: false,
+  addMessage: fn,
+  setLoading: fn,
+
+  // Data
+  knowledgeStats: { nodes: 0, workflows: 0, incidents: 0, sources: 0 },
+  riskItems: [],
+  sources: [],
+
+  // Ingest
+  ingestionStatus: null,  // null | processing | complete | error
+  setIngestionStatus: fn,
+
+  // Actions (async, call API then update state)
+  fetchGraph: async fn,
+  fetchRiskReport: async fn,
+  fetchStats: async fn,
+  sendMessage: async fn,
+}
+```
+
+---
+
+## API Service Pattern
+
+All API calls in `src/services/api.js`:
+
+```javascript
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+export async function fetchGraph() {
+  const res = await fetch(`${BASE}/graph`)
+  if (!res.ok) throw new Error('Failed to fetch graph')
+  return res.json()
+}
+
+export async function sendQuery(question) {
+  const res = await fetch(`${BASE}/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question })
+  })
+  return res.json()
+}
+```
+
+During Phase 1 (frontend-only), these functions return mock data instead of fetching.
+Phase 3 switches them to real fetch calls — no component changes required.
+
+---
+
+## Mock Data Strategy
+
+All mock data in `src/data/mockData.js`. This is the Acme Corp demo scenario.
+
+The fictional org has a deliberate skew: A. Patel is overloaded (95% bus factor
+on Payment Service, resolved 8/12 P0 incidents). This makes the demo narrative
+compelling: "What happens when Patel doesn't come in Monday?"
+
+```javascript
+export const MOCK_GRAPH_NODES = [ ... ]  // 15 nodes
+export const MOCK_GRAPH_EDGES = [ ... ]  // 21 edges
+export const MOCK_RISK_ITEMS = [ ... ]   // 5 items
+export const MOCK_STATS = { nodes: 2847, undocumented: 134, risks: 3, queries: 48 }
+export const MOCK_SOURCES = [ ... ]      // 8 data sources
+export const MOCK_INITIAL_MESSAGES = [  // pre-loaded chat
+  { role: 'assistant', ... },
+  { role: 'user', content: 'How do we recover payment service failures?' },
+  { role: 'assistant', type: 'structured', steps: [...], related: {...} }
+]
+```
+
+---
+
+## Knowledge Graph SVG Rules
+
+The graph is custom SVG. Do not install graph libraries.
+
+Node rendering order (always this order, never change):
+1. Glow ring: `<circle r={node.r + 4} fill={node.color} opacity="0.08" />`
+2. White fill: `<circle r={node.r} fill="var(--surface)" stroke={node.color} strokeWidth="1.5" />`
+3. Label: `<text>` centered inside large nodes, below small nodes
+
+Edge rendering:
+- Strong relationships (weight >= 1.5): solid stroke, `var(--border)`
+- Weak relationships (weight < 1.5): dashed, `strokeDasharray="4,4"`
+
+Grid background (Graph page only):
+```jsx
+<pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--border-subtle)" strokeWidth="0.5"/>
+</pattern>
+```
+
+---
+
+## AI Assistant Message Format
+
+Structured responses from the backend follow this shape. The AssistantPage
+must render each field correctly:
+
+```javascript
+{
+  role: 'assistant',
+  type: 'structured',
+  content: 'Based on 12 historical incidents...',  // intro paragraph
+  steps: [                                           // numbered steps list
+    'Check payment-api health endpoint...',
+    'Inspect Stripe webhook dashboard...',
+  ],
+  related: {
+    systems: ['Payment API', 'Stripe Webhook Service'],
+    people: ['A. Patel (primary)', 'R. Chen (backup)'],
+    incidents: ['P-4021 (Apr 14)', 'P-3891 (Mar 2)'],
+    warnings: ['Sole owner risk: A. Patel has resolved 9/12 incidents']
+  }
+}
+```
+
+Warnings always render as a red alert box, not a badge.
+Related systems/people/incidents render as Badge rows.
+
+---
+
+## Coding Practices (Always Follow)
+
+### General
+- Write clean, readable code. Prefer clarity over cleverness.
+- Follow single-responsibility principle — one component does one thing.
+- Use meaningful, descriptive names. No single-letter variables except loop indices.
+- No dead code, no commented-out blocks, no unused imports.
+- Extract magic numbers and strings into named constants at the top of the file.
+- Keep components under 200 lines. If longer, split into sub-components.
+- All async operations must have error handling (try/catch or .catch()).
+- Never mutate props or state directly.
+
+### React Specifics
+- Functional components only. No class components.
+- Custom hooks go in src/hooks/ if logic is reused across 2+ components.
+- useEffect dependencies must be complete and correct — no lint suppressions.
+- Memoize expensive computations with useMemo. Memoize callbacks with useCallback
+  only when passed to child components that are wrapped in React.memo.
+- Key props on lists must be stable IDs, never array index.
+
+### Naming Conventions
+- Components: PascalCase (StatCard, DashboardShell)
+- Hooks: camelCase prefixed with "use" (useGraphFilter, useAutoScroll)
+- Event handlers: handle + event (handleNodeClick, handleFilterChange)
+- Constants: SCREAMING_SNAKE_CASE (MOCK_GRAPH_NODES, MAX_RETRY_COUNT)
+- CSS variables: kebab-case (--text-primary, --accent-light)
+- Files: match their default export name exactly
+
+### Python (Backend)
+- Follow PEP 8. 4-space indentation. Max line length 100.
+- Type hints on all function signatures.
+- Docstring on every function (one-line minimum, full for complex functions).
+- Use dataclasses or Pydantic models for structured data — no raw dicts as function contracts.
+- All Neo4j and ChromaDB calls wrapped in try/except with specific error messages.
+
+---
+
+## Documentation Rules (Non-Negotiable)
+
+Two living documents must be kept in docs/ throughout the entire build.
+Cursor must update these files whenever relevant changes are made.
+
+---
+
+### docs/PROJECT_STATUS.md — Build Log
+
+This file tracks what has been built, what is in progress, and what is next.
+Update it at the end of every Cursor session.
+
+Structure:
+```
+# MemoryWeave — Project Status
+
+## Last Updated
+[timestamp]
+
+## Current Phase
+[Phase 1 / 2 / 3 / 4 / 5]
+
+## What's Been Built
+### Frontend
+- [x] CSS design tokens + keyframes (index.css)
+- [x] Zustand store (appStore.js)
+- [x] Icon, Badge, Button, StatCard atoms
+- [ ] DashboardShell layout
+... (keep this list current)
+
+### Backend
+- [x] FastAPI skeleton with CORS
+- [ ] Neo4j schema (Codex C3-01)
+...
+
+## What's In Progress
+[Current task being worked on]
+
+## What's Next
+[Next 2-3 tasks in queue]
+
+## Known Issues / Blockers
+[Any active issues blocking progress]
+
+## API Endpoints Status
+| Endpoint       | Status      | Notes                  |
+|----------------|-------------|------------------------|
+| GET /graph     | Mock only   | Returns hardcoded data |
+| POST /query    | Not started |                        |
+...
+
+## Environment
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8000
+- Neo4j: http://localhost:7474
+- ChromaDB: http://localhost:8001
+```
+
+---
+
+### docs/FIXES_AND_LEARNINGS.md — Critical Failures Log
+
+This file documents every significant bug, failure, or architectural decision encountered
+during the build — along with exactly how it was fixed.
+
+This is a personal interview reference. Write it as if explaining to a future interviewer
+who asks "tell me about a challenge you faced on this project."
+
+Update it every time something breaks and gets fixed. Do not skip minor-seeming bugs —
+they are often the most interesting to discuss.
+
+Structure for each entry:
+```
+## [Short title of the issue]
+**Date:** [when it happened]
+**Phase:** [which phase of the build]
+**Severity:** Critical / High / Medium
+
+### What Happened
+[1-2 sentences: what broke and how it was discovered]
+
+### Root Cause
+[Technical explanation of why it happened]
+
+### How It Was Fixed
+[Exact fix — code snippet if applicable]
+
+### What I Learned
+[Key takeaway — architectural insight, library gotcha, debugging technique]
+
+### Relevant for Interview
+[Why this is worth discussing: system design, debugging, trade-off reasoning, etc.]
+```
+
+Pre-populate with this first entry as a template:
+```
+## Initial Entry — Log Created
+**Date:** [project start date]
+**Phase:** Phase 1
+
+### What Happened
+Project initialized. This log will track all critical failures and fixes.
+
+### Root Cause
+N/A
+
+### How It Was Fixed
+N/A
+
+### What I Learned
+Documenting failures in real-time is far more accurate than reconstructing from memory.
+
+### Relevant for Interview
+Shows disciplined engineering habits and self-awareness about failure modes.
+```
+
+---
+
+## Code Commenting Rules
+
+Every file must be commented. These are the minimum requirements:
+
+### File Header Comment (every .jsx and .py file)
+```javascript
+/**
+ * ComponentName.jsx
+ * 
+ * [One-line description of what this file does]
+ * 
+ * Used by: [which pages or components use this]
+ * Depends on: [key dependencies — store slices, services, other components]
+ */
+```
+
+### Function/Component Comments
+- Every React component: one-line JSDoc above it explaining its purpose and key props
+- Every custom hook: explain what it manages and what it returns
+- Every utility function: explain inputs, outputs, and any gotchas
+
+### Inline Comments
+- Comment any non-obvious logic (graph traversal, animation math, regex)
+- Comment all TODO items with format: `// TODO [Phase X]: description`
+- Comment all Codex territory stubs: `// CODEX: this function is implemented in agents/`
+- Comment all mock data placeholders: `// MOCK: replace with api.fetchX() in Phase 4`
+
+### Example (required style)
+```javascript
+/**
+ * FullKnowledgeGraph.jsx
+ * 
+ * Interactive SVG knowledge graph with filter, click-to-select, and detail panel.
+ * Renders nodes by type (person/system/incident/workflow) with glow effects.
+ * 
+ * Used by: GraphPage
+ * Depends on: appStore (graphNodes, graphEdges, selectedNode, filterType)
+ */
+
+/**
+ * Computes edge visibility based on the active filter type.
+ * An edge is visible only if BOTH connected nodes pass the current filter.
+ * This prevents orphaned visible edges when nodes are filtered out.
+ */
+function isEdgeVisible(edge, nodes, filterType) {
+  if (filterType === 'all') return true
+  const fromNode = nodes.find(n => n.id === edge.from)
+  const toNode = nodes.find(n => n.id === edge.to)
+  return fromNode?.type === filterType || toNode?.type === filterType
+}
+```
+
+---
+
+## What Cursor Should Never Do
+
+- Generate a settings page with real content (nav item only, content = placeholder)
+- Generate a reports page with real content (nav item only)
+- Install react-force-graph, D3, vis-network, or any graph library
+- Add dark mode logic
+- Add authentication/login flows
+- Add real Slack/GitHub OAuth
+- Use purple gradients on white backgrounds
+- Use Space Grotesk, Inter, or Poppins
+- Create more than one Zustand store
+- Put fetch calls inside components
