@@ -14,13 +14,13 @@ Phase 1 — Frontend scaffold
 - [x] Zustand store — full data state + async actions (`src/stores/appStore.js`)
 - [x] API service layer with mocks (`src/services/api.js`)
 - [x] mockData.js — Acme Corp demo dataset
-- [x] Page stubs + LandingPage, OverviewPage, GraphPage (full)
+- [x] Page stubs + LandingPage, OverviewPage, GraphPage, RiskPage, AssistantPage (full)
 - [x] Icon, Badge, Button, StatCard atoms
 - [x] DashboardShell, Sidebar, TopBar, Nav layout components
 - [x] MiniKnowledgeGraph + DashboardPreview graph components
 - [x] Full LandingPage.jsx — all 11 sections
-- [x] GraphPage.jsx — interactive SVG graph with filters + detail panel
-- [x] mockData.js — Acme Corp demo dataset
+- [x] RiskPage.jsx — dependency inventory, heatmap, bottlenecks
+- [x] AssistantPage.jsx — chat UI with structured responses + context panel
 
 ### Backend
 - [ ] FastAPI skeleton with CORS
@@ -28,12 +28,11 @@ Phase 1 — Frontend scaffold
 - [ ] ChromaDB integration
 
 ## What's In Progress
-GraphPage complete — remaining app pages (Risk, Assistant, Sources, Workflows)
+AssistantPage complete — remaining app pages (Sources, Workflows)
 
 ## What's Next
-1. RiskPage (table, heatmap, bottlenecks)
-2. AssistantPage (chat + structured responses)
-3. SourcesPage + WorkflowsPage
+1. SourcesPage (integration cards)
+2. WorkflowsPage (workflow cards + timeline drawer)
 
 ## Known Issues / Blockers
 None
