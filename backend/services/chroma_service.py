@@ -7,10 +7,15 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import Optional
 
 import chromadb
+from dotenv import load_dotenv
 from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+
+load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 class ChromaService:

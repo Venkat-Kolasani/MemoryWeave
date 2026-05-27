@@ -6,14 +6,16 @@ Provides node creation, relationship linking, and graph query functions.
 
 from __future__ import annotations
 
-import math
 import os
+from collections import defaultdict
+from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
 
 load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 NODE_COLORS = {
@@ -380,11 +382,25 @@ class Neo4jService:
         with self.driver.session() as session:
             records = list(session.run(query))
 
-        nodes = []
-        for index, record in enumerate(records):
+        layout_slots: dict[str, int] = defaultdict(int)
+        layout_totals: dict[str, int] = defaultdict(int)
+        prepared = []
+        for record in records:
             node = dict(record["n"])
             node_type = self._node_type(record["labels"])
-            x, y = self._layout_position(node, index)
+            row_key = self._layout_row_key(node_type)
+            if node.get("x") is None or node.get("y") is None:
+                layout_totals[row_key] += 1
+            prepared.append((node, node_type, row_key))
+
+        nodes = []
+        for node, node_type, row_key in prepared:
+            row_index = layout_slots[row_key]
+            if node.get("x") is None or node.get("y") is None:
+                layout_slots[row_key] += 1
+            x, y = self._layout_position(
+                node, node_type, row_index, layout_totals[row_key]
+            )
             label = node.get("name") or node.get("title") or node.get("id")
             details = self._node_details(node)
             nodes.append(
@@ -527,17 +543,31 @@ class Neo4jService:
         return f":{label}"
 
     @staticmethod
-    def _layout_position(node: dict, index: int) -> tuple[int, int]:
+    def _layout_row_key(node_type: str) -> str:
+        if node_type in {"incident", "workflow"}:
+            return "operational"
+        return node_type
+
+    @staticmethod
+    def _layout_position(
+        node: dict, node_type: str, row_index: int, row_count: int
+    ) -> tuple[int, int]:
         if node.get("x") is not None and node.get("y") is not None:
             return node["x"], node["y"]
 
-        columns = 5
-        spacing_x = 120
-        spacing_y = 100
-        return (
-            120 + (index % columns) * spacing_x,
-            120 + math.floor(index / columns) * spacing_y,
-        )
+        row_y = {
+            "person": 140,
+            "system": 230,
+            "incident": 320,
+            "workflow": 320,
+        }.get(node_type, 320)
+        if row_count <= 1:
+            return 420, row_y
+
+        left = 100
+        right = 740
+        spacing = (right - left) / (row_count - 1)
+        return round(left + row_index * spacing), row_y
 
     @staticmethod
     def _radius(node_type: str, node: dict) -> int:

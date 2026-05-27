@@ -10,28 +10,49 @@ Depends on: agents/ (Codex), services/ (Codex)
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+try:
+    from agents.pipeline import run_extraction_pipeline
+    from services.chroma_service import ChromaService
+    from services.neo4j_service import Neo4jService
+except ModuleNotFoundError:
+    from backend.agents.pipeline import run_extraction_pipeline
+    from backend.services.chroma_service import ChromaService
+    from backend.services.neo4j_service import Neo4jService
+
 router = APIRouter(tags=["ingest"])
 
 ALLOWED_EXTENSIONS = {".txt", ".md", ".json", ".csv"}
 
 
 @router.post("/ingest")
-async def post_ingest(file: UploadFile = File(...)) -> dict[str, str]:
+async def post_ingest(file: UploadFile = File(...)) -> dict:
     """
     Upload a file and trigger the extraction pipeline.
     Returns: { status, job_id }
     """
-    # CODEX: replace this with real implementation (C3-03):
-    #   - Validate extension, chunk document, run extractor agent
-    #   - Persist entities to Neo4j, embeddings to ChromaDB (built-in embed fn)
-    #   - from services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
-    #       model = get_fireworks_model("extraction")  # llama-v3p1-70b (single-model setup)
     filename = file.filename or "upload"
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
     if ext and ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
 
-    await file.read()
+    raw_content = await file.read()
+    try:
+        content = raw_content.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise HTTPException(status_code=400, detail="File must be UTF-8 text") from e
 
-    return {"status": "processing", "job_id": "demo-001"}
+    neo4j = Neo4jService()
+    chroma = ChromaService()
+    try:
+        summary = run_extraction_pipeline(
+            content,
+            ext.removeprefix(".") or "upload",
+            filename,
+            neo4j,
+            chroma,
+        )
+    finally:
+        neo4j.close()
+
+    return {"status": "completed", "job_id": filename, **summary}
