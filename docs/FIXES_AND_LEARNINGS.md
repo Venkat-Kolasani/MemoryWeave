@@ -1,5 +1,27 @@
 # MemoryWeave — Fixes & Learnings
 
+## Render Docker — Coral install 404 (wrong CORAL_VERSION tag)
+**Date:** 2026-05-28
+**Phase:** Phase 6 — Coral integration
+**Severity:** Critical
+
+### What Happened
+Docker build failed at `RUN curl ... install.sh` with `curl: (22) The requested URL returned error: 404` after `Installing Coral 0.4.1 for x86_64-unknown-linux-gnu`.
+
+### Root Cause
+`CORAL_VERSION=0.4.1` without the `v` prefix. GitHub assets live under `/releases/download/v0.4.1/`, not `/releases/download/0.4.1/`.
+
+### How It Was Fixed
+Set `ARG CORAL_VERSION=v0.4.1` in `backend/Dockerfile`.
+
+### What I Learned
+Always match the exact GitHub release tag string when pinning binary downloads.
+
+### Relevant for Interview
+Debugging container builds from opaque install scripts.
+
+---
+
 ## Render Docker — Coral CLI not on PATH at runtime
 **Date:** 2026-05-28
 **Phase:** Phase 6 — Coral integration
@@ -12,7 +34,7 @@ Render deploy logs showed `[coral] CLI not found` and `[coral] setup error: cora
 `install.sh` defaults to `$HOME/.local/bin` (`/root/.local/bin`). The binary was not reliably on PATH at container start, and unpinned `CORAL_VERSION` could fail silently against GitHub API rate limits during build.
 
 ### How It Was Fixed
-- Dockerfile: `CORAL_INSTALL_DIR=/usr/local/bin`, pin `CORAL_VERSION=0.4.1`, run `coral --version` in build (fails image if install breaks).
+- Dockerfile: `CORAL_INSTALL_DIR=/usr/local/bin`, pin `CORAL_VERSION=v0.4.1` (GitHub tag prefix), run `coral --version` in build (fails image if install breaks).
 - `start.sh`: prepend `/usr/local/bin` to PATH; optional runtime install fallback.
 
 ### What I Learned

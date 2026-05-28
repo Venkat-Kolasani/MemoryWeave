@@ -1,7 +1,8 @@
 # MemoryWeave API — Python + Coral CLI for production SQL retrieval
 FROM python:3.11-slim-bookworm
 
-ARG CORAL_VERSION=0.4.1
+# GitHub release tags are v-prefixed (e.g. v0.4.1) — 0.4.1 alone 404s the asset URL.
+ARG CORAL_VERSION=v0.4.1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates bash \

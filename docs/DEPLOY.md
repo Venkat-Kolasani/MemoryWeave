@@ -56,7 +56,7 @@ Aura’s download file labels the user as `NEO4J_USERNAME`; this app also accept
 | `CORAL_SKIP_TESTS` | `1` (faster cold start on free tier) |
 | `CORAL_CONFIG_DIR` | `/app/.coral_config` (Docker) |
 
-**Coral (required for Assistant):** Production uses **Docker** (`backend/Dockerfile`) so the Coral CLI is installed to **`/usr/local/bin`** at build time (`CORAL_VERSION=0.4.1` pinned to avoid GitHub API rate limits). Build logs must show `coral 0.4.x` before `Deploying...`. After deploy, `GET /health` should include `"coral": "ok"`.
+**Coral (required for Assistant):** Production uses **Docker** (`backend/Dockerfile`) so the Coral CLI is installed to **`/usr/local/bin`** at build time (`CORAL_VERSION=v0.4.1` — note the **`v`** prefix matches GitHub tags). Build logs must show `Installing Coral v0.4.1` and `coral 0.4.x` before `Deploying...`. After deploy, `GET /health` should include `"coral": "ok"`.
 
 If logs show `[coral] CLI not found`, the image was built without a successful Coral install step — redeploy after pulling latest `main` (Dockerfile verifies `coral --version` during build).
 
