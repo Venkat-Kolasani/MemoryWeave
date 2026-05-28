@@ -1,7 +1,7 @@
 # MemoryWeave — Project Status
 
 ## Last Updated
-2026-05-28 (Fireworks + port conflict resolved)
+2026-05-28 (Render + Vercel deploy config)
 
 ## Current Phase
 Phase 5 — Polish and Deploy
@@ -23,7 +23,9 @@ Phase 5 — Polish and Deploy
 - [x] RiskPage.jsx — fetches live risk report on mount
 - [x] AssistantPage.jsx — chat UI with live `/query` + error fallback
 - [x] SourcesPage.jsx — 8 source cards with status badges and stats
-- [x] WorkflowsPage, ReportsPage, SettingsPage — DashboardShell placeholders
+- [x] WorkflowsPage.jsx — Acme Corp workflow cards (hardcoded demo data)
+- [ ] ReportsPage, SettingsPage — DashboardShell placeholders
+- [x] `frontend/vercel.json` — SPA rewrites for React Router
 - [x] All navigation + routing verified end-to-end
 
 ### Backend
@@ -37,21 +39,26 @@ Phase 5 — Polish and Deploy
 - [x] **POST /ingest → background extraction pipeline** (`routers/ingest.py`, `agents/pipeline.py`)
 - [x] **GET /risk-report → live Neo4j + NetworkX** (`services/risk_scorer.py`)
 - [x] **POST /query → Chroma + Neo4j hybrid retrieval** (`services/retriever.py`, `routers/query.py`)
+- [x] Render deploy files (`Procfile`, `runtime.txt`, `render.yaml`)
+- [x] Production Chroma in-memory + startup auto-populate (`CHROMA_MODE=inmemory`)
 
 ## What's In Progress
-- Production deploy + Loom demo
+- Render Web Service + Aura seed + Vercel frontend (`docs/DEPLOY.md`)
 
 ## What's Next
-1. WorkflowsPage full implementation
-2. Deploy (Vercel + Railway) — use `127.0.0.1` or dedicated port locally; set production `VITE_API_URL`
-3. Node LTS build verification (`npm run build`)
+1. Create AuraDB instance and seed graph against production URI
+2. Deploy backend on Render; set env vars; verify `/` and `/graph`
+3. Deploy frontend on Vercel; set `VITE_API_URL` to Render URL
+4. Update README demo links
+5. Node LTS build verification (`npm run build`)
 4. Compute `/stats` undocumented/risk/query counters from live data
 5. Automated tests
 
 ## Known Issues / Blockers
 - `/stats` returns live Neo4j node count but `undocumented`, `risks`, `queries` are placeholder values.
 - `/ingest` requires Neo4j + Chroma + `FIREWORKS_API_KEY`; runs as background task.
-- Chroma server must be running (`chroma run --port 8001`) for `/query` and ingest indexing.
+- Local dev: Chroma server must be running (`chroma run --port 8001`) unless using `CHROMA_MODE=inmemory`.
+- Render: in-memory Chroma resets on redeploy; startup re-indexes demo chunks (~58).
 - Fireworks may return 404 for configured model — `/query` uses grounded retrieval fallback.
 - `npm run build` may hang on Node v25; use Node 20/22 LTS.
 

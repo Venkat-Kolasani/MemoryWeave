@@ -21,7 +21,11 @@ MIN_CHARS = 80
 BATCH_SIZE = 50
 
 
-def populate() -> dict:
+def populate(service: ChromaService | None = None) -> dict:
+    """
+    Index demo corpus into ChromaDB.
+    @param service: optional shared instance (required for in-memory Render mode)
+    """
     chunks = []
     chunks.extend(read_slack_messages(DEMO_DIR / "messages.json"))
     chunks.extend(read_incidents(DEMO_DIR / "incidents"))
@@ -29,7 +33,7 @@ def populate() -> dict:
 
     filtered = [chunk for chunk in chunks if len(chunk["text"]) >= MIN_CHARS]
 
-    service = ChromaService()
+    service = service or ChromaService()
     for index in range(0, len(filtered), BATCH_SIZE):
         service.add_documents(filtered[index : index + BATCH_SIZE])
 

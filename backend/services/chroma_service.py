@@ -1,6 +1,12 @@
 """
-chroma_service.py — ChromaDB operations for MemoryWeave semantic search.
-Uses ChromaDB's built-in embedding function (onnxruntime, no PyTorch required).
+chroma_service.py
+
+ChromaDB operations for MemoryWeave semantic search.
+Local dev: HttpClient to `chroma run` (CHROMA_MODE=http, default).
+Render production: in-memory client (CHROMA_MODE=inmemory) with process-wide singleton.
+
+Used by: routers/query.py, routers/ingest.py, data/populate_chroma.py
+Depends on: CHROMA_MODE, CHROMA_HOST, CHROMA_PORT env vars
 """
 
 from __future__ import annotations
@@ -11,30 +17,57 @@ from pathlib import Path
 from typing import Optional
 
 import chromadb
+from chromadb.api import ClientAPI
 from dotenv import load_dotenv
 from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 
 load_dotenv()
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
+COLLECTION_NAME = "memoryweave_knowledge"
+_shared_client: Optional[ClientAPI] = None
 
-class ChromaService:
-    def __init__(self):
-        self.client = chromadb.HttpClient(
+
+def _chroma_mode() -> str:
+    """http = local Chroma server; inmemory = ephemeral (Render demo)."""
+    return os.getenv("CHROMA_MODE", "http").strip().lower()
+
+
+def _get_shared_client() -> ClientAPI:
+    """One client per process so in-memory data survives across ChromaService() calls."""
+    global _shared_client
+    if _shared_client is not None:
+        return _shared_client
+
+    if _chroma_mode() == "inmemory":
+        _shared_client = chromadb.Client()
+        print("[chroma] Using in-memory client (production demo mode)")
+    else:
+        _shared_client = chromadb.HttpClient(
             host=os.getenv("CHROMA_HOST", "localhost"),
             port=int(os.getenv("CHROMA_PORT", 8001)),
         )
-        # DefaultEmbeddingFunction uses all-MiniLM-L6-v2 via onnxruntime (lightweight)
+        print(
+            f"[chroma] Using HttpClient at "
+            f"{os.getenv('CHROMA_HOST', 'localhost')}:{os.getenv('CHROMA_PORT', '8001')}"
+        )
+    return _shared_client
+
+
+class ChromaService:
+    def __init__(self) -> None:
+        self.client = _get_shared_client()
         self.ef = DefaultEmbeddingFunction()
         self.collection = self.init_collection()
 
     def init_collection(self):
         """Get or create the memoryweave_knowledge collection."""
         return self.client.get_or_create_collection(
-            name="memoryweave_knowledge", embedding_function=self.ef
+            name=COLLECTION_NAME,
+            embedding_function=self.ef,
         )
 
-    def add_documents(self, chunks: list[dict]):
+    def add_documents(self, chunks: list[dict]) -> None:
         """
         Embed and store document chunks.
         Each chunk: { id, text, source_type, source_name, author, timestamp, entities }
@@ -85,6 +118,8 @@ class ChromaService:
         }
         entities = chunk.get("entities", [])
         metadata["entities"] = (
-            json.dumps(entities, sort_keys=True) if not isinstance(entities, str) else entities
+            json.dumps(entities, sort_keys=True)
+            if not isinstance(entities, str)
+            else entities
         )
         return metadata
