@@ -1,10 +1,20 @@
 # MemoryWeave — Project Status
 
 ## Last Updated
-2026-05-28 (Render + Vercel deploy config)
+2026-05-28 (branch: Coral-integration)
 
 ## Current Phase
-Phase 5 — Polish and Deploy
+Phase 6 — Coral integration (Pirates of the Coral-bean hackathon) on branch `Coral-integration`  
+`main` — production demo (Vercel + Render + Aura) remains submission-ready
+
+## Coral integration (in progress)
+See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being added and the target architecture.
+
+- [ ] Coral source specs over Acme demo corpus (Slack, incidents, docs)
+- [ ] SQL-backed read path for Assistant `/query`
+- [ ] Judge-visible cross-source SQL demo (Patel / payment / incidents)
+- [ ] MCP or CLI integration documented for local reproduction
+- [ ] Submission README section for Coral-bean
 
 ## What's Been Built
 ### Frontend
@@ -43,7 +53,7 @@ Phase 5 — Polish and Deploy
 - [x] Production Chroma in-memory + startup auto-populate (`CHROMA_MODE=inmemory`)
 
 ## What's In Progress
-- Render Web Service + Aura seed + Vercel frontend (`docs/DEPLOY.md`)
+- **Coral-integration branch** — Coral SQL read layer for cross-source queries (`docs/CORAL_INTEGRATION.md`)
 
 ## What's Next
 1. Create AuraDB instance and seed graph against production URI

@@ -93,5 +93,6 @@ Input (Slack / GitHub / Incidents / Docs)
 - [FIXES_AND_LEARNINGS.md](docs/FIXES_AND_LEARNINGS.md) — debugging notes
 - [LOCAL_SETUP.md](docs/LOCAL_SETUP.md) — local dev guide
 - [DEPLOY.md](docs/DEPLOY.md) — Render + Vercel production deploy
+- [CORAL_INTEGRATION.md](docs/CORAL_INTEGRATION.md) — Coral hackathon integration (branch `Coral-integration`)
 
 

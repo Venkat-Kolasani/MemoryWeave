@@ -1,5 +1,26 @@
 # MemoryWeave — Fixes & Learnings
 
+## Coral Integration Branch — Strategy Doc
+**Date:** 2026-05-28
+**Phase:** Phase 6 — Coral-bean hackathon
+
+### What Happened
+Started `Coral-integration` branch to add [Coral](https://withcoral.com) as the cross-source SQL read layer for MemoryWeave while keeping `main` stable for the live Vercel + Render demo.
+
+### Root Cause
+N/A — planned enhancement for a second submission track (Pirates of the Coral-bean).
+
+### How It Was Fixed
+N/A — documented approach in `docs/CORAL_INTEGRATION.md`; implementation follows in subsequent prompts on this branch.
+
+### What I Learned
+MemoryWeave’s Neo4j graph UI and Patel bus-factor story are the product differentiator; Coral strengthens the **Assistant** and judge demo with one SQL join across Slack, incidents, and org data — aligned with hackathon scoring for MCP and cross-source queries.
+
+### Relevant for Interview
+Shows how to extend an existing MVP for a sponsor hackathon without forking the entire architecture: additive read path, branch isolation, clear “why Coral” narrative.
+
+---
+
 ## Initial Entry — Log Created
 **Date:** 2026-05-26
 **Phase:** Phase 1
