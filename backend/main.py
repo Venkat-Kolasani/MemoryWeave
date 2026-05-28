@@ -100,12 +100,24 @@ def _ensure_chroma_seeded() -> None:
         print(f"[chroma] Startup populate skipped or failed: {exc}")
 
 
+def _ensure_coral_on_startup() -> None:
+    """Register Coral SQL sources (production: Render/Docker env vars)."""
+    try:
+        from services.coral_setup import ensure_coral_sources
+
+        result = ensure_coral_sources()
+        print(f"[coral] setup {result.get('status')}: {result.get('reason', result.get('detail', ''))}")
+    except Exception as exc:
+        print(f"[coral] setup skipped or failed: {exc}")
+
+
 @app.on_event("startup")
 async def on_startup() -> None:
-    """Log startup, verify Neo4j, optionally seed Chroma."""
+    """Log startup, verify Neo4j, optionally seed Chroma, register Coral sources."""
     print("MemoryWeave backend starting...")
     _verify_neo4j_on_startup()
     _ensure_chroma_seeded()
+    _ensure_coral_on_startup()
 
 
 @app.get("/")
@@ -141,10 +153,26 @@ async def health() -> dict:
     except Exception:
         pass
 
+    coral_status = "unavailable"
+    try:
+        from services.coral_service import CoralService
+
+        coral_svc = CoralService()
+        if coral_svc.available:
+            coral_status = "ok"
+            _ = coral_svc.query(
+                "SELECT COUNT(*) AS n FROM memoryweave_demo.slack_messages"
+            )
+        else:
+            coral_status = "cli_not_found"
+    except Exception as exc:
+        coral_status = f"error: {exc}"
+
     return {
         "status": "ok",
         "neo4j": neo4j_status,
         "neo4j_nodes": node_count,
         "chroma_chunks": chroma_count,
         "chroma_startup_populate": _neo4j_env("CHROMA_STARTUP_POPULATE", "true"),
+        "coral": coral_status,
     }

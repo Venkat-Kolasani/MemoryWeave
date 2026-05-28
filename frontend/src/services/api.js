@@ -71,29 +71,90 @@ export async function fetchStats() {
 }
 
 /**
- * Sends a natural-language query to the AI assistant.
- * Maps backend `answer` field to frontend `content` for AssistantPage.
- * @param {string} question
- * @returns {Promise<{ type: string, content: string, steps?: string[], related?: object, sources?: object[] }>}
+ * Maps Coral or legacy query JSON to AssistantPage message shape.
+ * @param {object} data
+ * @returns {{ type: string, content: string, steps?: string[], related?: object, sources?: unknown, coral_sql?: string, coral_rows?: number, retrieval_method?: string }}
  */
-export async function sendQuery(question) {
-  const res = await fetch(`${BASE}/query`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question }),
-  })
-  if (!res.ok) throw new Error(`/query failed: ${res.status}`)
-
-  const data = await res.json()
+function mapQueryResponse(data) {
   const steps = data.steps ?? null
-
   return {
     type: steps && steps.length > 0 ? 'structured' : 'text',
     content: data.answer || data.content || '',
     steps: steps || undefined,
     related: data.related,
     sources: data.sources,
+    coral_sql: data.coral_sql,
+    coral_rows: data.coral_rows,
+    retrieval_method: data.retrieval_method,
   }
+}
+
+/**
+ * Legacy retrieval: Chroma + Neo4j + Fireworks (`POST /query`).
+ * @param {string} question
+ */
+async function sendLegacyQuery(question) {
+  const res = await fetch(`${BASE}/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  })
+  if (!res.ok) throw new Error(`/query failed: ${res.status}`)
+  return mapQueryResponse(await res.json())
+}
+
+/**
+ * Primary assistant path: Coral SQL cross-source JOIN + Fireworks (`POST /coral-query`).
+ * Falls back to `/query` if Coral is unavailable (503).
+ * @param {string} question
+ */
+export async function sendQuery(question) {
+  try {
+    const res = await fetch(`${BASE}/coral-query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    })
+    if (res.ok) {
+      return mapQueryResponse(await res.json())
+    }
+    if (res.status !== 503) {
+      throw new Error(`/coral-query failed: ${res.status}`)
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('/coral-query failed')) {
+      throw err
+    }
+    console.warn('[api] Coral query unavailable, falling back to /query', err)
+  }
+
+  return sendLegacyQuery(question)
+}
+
+/**
+ * Explicit Coral-only query (no fallback). For Reports / debug.
+ * @param {string} question
+ */
+export async function sendCoralQuery(question) {
+  const res = await fetch(`${BASE}/coral-query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  })
+  if (!res.ok) throw new Error(`/coral-query failed: ${res.status}`)
+  return mapQueryResponse(await res.json())
+}
+
+export async function fetchCoralSchema() {
+  const res = await fetch(`${BASE}/coral-schema`)
+  if (!res.ok) throw new Error(`/coral-schema failed: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchCoralReport() {
+  const res = await fetch(`${BASE}/coral-report`)
+  if (!res.ok) throw new Error(`/coral-report failed: ${res.status}`)
+  return res.json()
 }
 
 /**

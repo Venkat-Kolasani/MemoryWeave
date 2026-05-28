@@ -26,6 +26,22 @@ from typing import Any, Optional
 
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent
 CORAL_CLI = os.environ.get("CORAL_CLI_PATH", "coral")
+
+
+def _coral_env() -> dict[str, str]:
+    """Subprocess env: config dir + PATH for Render/Docker Coral binary."""
+    env = os.environ.copy()
+    config_dir = os.getenv("CORAL_CONFIG_DIR", str(_BACKEND_ROOT / ".coral_config"))
+    env["CORAL_CONFIG_DIR"] = config_dir
+    extra = os.pathsep.join(
+        [
+            str(Path.home() / ".local" / "bin"),
+            "/usr/local/bin",
+            env.get("PATH", ""),
+        ]
+    )
+    env["PATH"] = extra
+    return env
 _QUERY_TIMEOUT_SEC = 45
 _SCHEMA_TIMEOUT_SEC = 20
 
@@ -45,6 +61,7 @@ class CoralService:
                 text=True,
                 timeout=5,
                 cwd=str(_BACKEND_ROOT),
+                env=_coral_env(),
             )
             return result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -74,7 +91,7 @@ class CoralService:
                 text=True,
                 timeout=_QUERY_TIMEOUT_SEC,
                 cwd=str(_BACKEND_ROOT),
-                env=os.environ.copy(),
+                env=_coral_env(),
             )
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError("Coral query timed out after 45 seconds") from exc

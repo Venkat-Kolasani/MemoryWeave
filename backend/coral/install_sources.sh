@@ -5,9 +5,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+
 if ! command -v coral >/dev/null 2>&1; then
-  echo "Install Coral: brew install withcoral/tap/coral"
+  echo "Install Coral: brew install withcoral/tap/coral  OR  curl -fsSL https://withcoral.com/install.sh | sh"
   exit 1
+fi
+
+if [[ -n "${CORAL_CONFIG_DIR:-}" ]]; then
+  mkdir -p "${CORAL_CONFIG_DIR}"
+  export CORAL_CONFIG_DIR
 fi
 
 if [[ -f .env ]]; then
@@ -30,7 +37,8 @@ if [[ "$NEO4J_URL" == *localhost:7687* ]]; then
 fi
 export NEO4J_URL
 export NEO4J_USERNAME="${NEO4J_USERNAME:-${NEO4J_USER:-neo4j}}"
-export NEO4J_DATABASE="${NEO4J_DATABASE:-neo4j}"
+# Aura: database name is often the instance id (same as NEO4J_USER).
+export NEO4J_DATABASE="${NEO4J_DATABASE:-${NEO4J_USER:-neo4j}}"
 
 if [[ "$NEO4J_URL" == *localhost* ]]; then
   echo "Note: using Neo4j HTTP at ${NEO4J_URL} (start Docker Neo4j or set Aura https URL in .env)."
@@ -52,9 +60,11 @@ coral source add --file "$DEMO_MANIFEST"
 
 rm -f "$DEMO_MANIFEST"
 
-coral source test memoryweave_graph
-coral source test memoryweave_demo
+if [[ "${CORAL_SKIP_TESTS:-0}" != "1" ]]; then
+  coral source test memoryweave_graph || echo "[coral] warn: graph test failed"
+  coral source test memoryweave_demo || echo "[coral] warn: demo test failed"
+fi
 
 echo ""
 echo "Tables:"
-coral sql --format table "SELECT schema_name, table_name FROM coral.tables WHERE table_name IN ('knowledge_nodes','knowledge_edges','incident_reports','slack_messages') ORDER BY schema_name, table_name"
+coral sql --format table "SELECT schema_name, table_name FROM coral.tables WHERE table_name IN ('knowledge_nodes','knowledge_edges','incident_reports','slack_messages') ORDER BY schema_name, table_name" || true

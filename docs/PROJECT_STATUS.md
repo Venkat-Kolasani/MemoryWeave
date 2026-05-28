@@ -12,7 +12,9 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being adde
 
 - [x] Coral source specs over Acme demo corpus (Slack JSONL, incidents JSONL, Neo4j graph manifests)
 - [x] `coral_service.py` + `/coral-query`, `/coral-schema`, `/coral-report` (existing `/query` unchanged)
-- [ ] Frontend wired to `/coral-query`
+- [x] Frontend `sendQuery` → `/coral-query` with `/query` fallback
+- [x] Production Docker + Coral CLI install (`backend/Dockerfile`, `render.yaml`)
+- [x] Boot-time Coral source registration (`coral_setup.py`, `CORAL_AUTO_SETUP`)
 - [ ] Judge-visible cross-source SQL demo (Patel / payment / incidents)
 - [ ] MCP or CLI integration documented for local reproduction
 - [ ] Submission README section for Coral-powered narrative

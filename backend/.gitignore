@@ -1,4 +1,5 @@
 coral/.env.coral
+.coral_config/
 __pycache__/
 *.pyc
 .venv/

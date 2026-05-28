@@ -51,6 +51,18 @@ Deploy **backend** on [Render](https://render.com) and **frontend** on [Vercel](
 Aura’s download file labels the user as `NEO4J_USERNAME`; this app also accepts that name if you prefer to copy-paste exactly.
 | `CHROMA_MODE` | `inmemory` |
 | `CHROMA_STARTUP_POPULATE` | `false` (required on free tier — avoids OOM) |
+| `NEO4J_DATABASE` | Aura instance id (same as `NEO4J_USER` if unsure) |
+| `CORAL_AUTO_SETUP` | `true` (registers Coral sources on boot) |
+| `CORAL_SKIP_TESTS` | `1` (faster cold start on free tier) |
+| `CORAL_CONFIG_DIR` | `/app/.coral_config` (Docker) |
+
+**Coral (required for Assistant):** Production uses **Docker** (`backend/Dockerfile`) so the Coral CLI is installed at build time. The Assistant calls `POST /coral-query` (Coral SQL + Fireworks). After deploy, `GET /health` should include `"coral": "ok"`.
+
+If your Render service was created as **Python** (not Docker), switch it manually:
+1. Render dashboard → your web service → **Settings**
+2. Change **Runtime** to **Docker**
+3. **Dockerfile Path:** `Dockerfile` (Root Directory = `backend`)
+4. Redeploy
 
 Optional (after Vercel deploy):
 
@@ -58,9 +70,16 @@ Optional (after Vercel deploy):
 |----------|--------|
 | `ALLOWED_ORIGINS` | `https://your-app.vercel.app,http://localhost:5173` |
 
-On Render **free (512MB)**, set `CHROMA_STARTUP_POPULATE=false`. Indexing downloads ~79MB of embedding models at startup and can OOM-kill the service before it binds a port. Graph and Risk use Neo4j only and work without Chroma. Assistant `/query` uses graph context when Chroma is empty; full semantic search needs local `populate_chroma.py` or a larger Render plan.
+On Render **free (512MB)**, set `CHROMA_STARTUP_POPULATE=false`. Indexing downloads ~79MB of embedding models at startup and can OOM-kill the service before it binds a port. Graph and Risk use Neo4j only and work without Chroma. The Assistant prefers **Coral SQL** (`/coral-query`); legacy `/query` is fallback if Coral fails.
 
-After deploy, check logs for `[neo4j] Connected OK — 15 nodes`. If you see `Connection FAILED` / `Unauthorized`, re-copy Aura credentials (no quotes, no trailing spaces). Verify with `curl https://your-service.onrender.com/health`.
+After deploy, check logs for `[neo4j] Connected OK — 15 nodes` and `[coral] setup ok`. Verify:
+
+```bash
+curl https://your-service.onrender.com/health
+curl -X POST https://your-service.onrender.com/coral-query \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What breaks if Patel is out Monday?"}'
+```
 
 ### Step 5 — Seed Neo4j (once, from your machine)
 

@@ -1,16 +1,21 @@
-# Render Blueprint — MemoryWeave API
+# Render Blueprint — MemoryWeave API (Coral + Python)
 # https://render.com/docs/blueprint-spec
 services:
   - type: web
     name: memoryweave-api
-    runtime: python
+    runtime: docker
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: Dockerfile
     envVars:
       - key: CHROMA_MODE
         value: inmemory
       - key: CHROMA_STARTUP_POPULATE
         value: "false"
+      - key: CORAL_AUTO_SETUP
+        value: "true"
+      - key: CORAL_SKIP_TESTS
+        value: "1"
+      - key: CORAL_CONFIG_DIR
+        value: /app/.coral_config
       - key: PYTHON_VERSION
         value: "3.11.9"
