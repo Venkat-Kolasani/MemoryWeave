@@ -162,3 +162,20 @@ Phase 1–2 mock-first implementation left placeholder stats and simplified grap
 
 ### Relevant for Interview
 Demonstrates moving from mock-first UI to production-honest dashboard behavior without rewriting the design system.
+
+## Dense Knowledge Graph Clutter (45+ Nodes)
+**Date:** 2026-05-28
+**Phase:** Phase 5
+**Severity:** Medium
+
+### What Happened
+After ingest, the graph page showed ~45 nodes with overlapping circles and unreadable labels in a fixed 720×400 viewport.
+
+### Root Cause
+Backend auto-layout placed all nodes of a type on one row with spacing `(740-100)/(n-1)` (~40px for 17 systems), smaller than node diameter. Every node rendered an inner label plus sublabel from ingest metadata.
+
+### How It Was Fixed
+Added `frontend/src/utils/graphLayout.js` (88px min gap, four type rows). GraphPage uses dynamic `viewBox`, hides labels until click on dense graphs, truncates display labels, and hides weak edges when `nodes > 24` until a node is selected.
+
+### Relevant for Interview
+UX scaling: when data grows past demo size, adjust layout + progressive disclosure instead of cramming more into the seed viewport.
