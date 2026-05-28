@@ -23,25 +23,26 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
 try:
-    from coral.queries import FULL_OPERATIONAL_CONTEXT
-    from services.coral_service import CoralService
+    from coral.queries import FULL_OPERATIONAL_CONTEXT, OPERATIONAL_CONTEXT_OVERVIEW
+    from services.coral_service import get_coral_service, sanitize_sql_param
     from services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
 except ModuleNotFoundError:
-    from backend.coral.queries import FULL_OPERATIONAL_CONTEXT
-    from backend.services.coral_service import CoralService
+    from backend.coral.queries import FULL_OPERATIONAL_CONTEXT, OPERATIONAL_CONTEXT_OVERVIEW
+    from backend.services.coral_service import get_coral_service, sanitize_sql_param
     from backend.services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
 
 router = APIRouter(tags=["coral"])
-coral = CoralService()
-client = OpenAI(**fireworks_client_kwargs())
+coral = get_coral_service()
 MODEL = get_fireworks_model("query")
+
+_fireworks_client: Optional[OpenAI] = None
 
 KNOWN_ENTITIES = [
     "patel",
@@ -67,20 +68,51 @@ STOP_WORDS = {
     "how",
     "when",
     "where",
+    "why",
+    "which",
     "is",
     "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
     "do",
     "does",
+    "did",
     "the",
     "a",
     "an",
+    "and",
+    "or",
+    "but",
+    "for",
+    "with",
+    "from",
+    "into",
+    "on",
+    "at",
+    "to",
+    "of",
+    "in",
+    "it",
+    "its",
     "if",
     "about",
     "tell",
     "me",
     "us",
+    "we",
+    "you",
     "can",
     "will",
+    "would",
+    "should",
+    "could",
+    "this",
+    "that",
+    "these",
+    "those",
 }
 
 
@@ -136,8 +168,20 @@ If warnings are not applicable, return "warnings": [].
 Always include at least 1 item in "sources"."""
 
 
-def _extract_keyword(question: str) -> str:
-    """Extract the most likely entity keyword from the question."""
+def _get_query_client() -> OpenAI:
+    """Lazy Fireworks client — avoids crashing app import when API key is unset."""
+    global _fireworks_client
+    if _fireworks_client is None:
+        _fireworks_client = OpenAI(**fireworks_client_kwargs())
+    return _fireworks_client
+
+
+def _extract_keyword(question: str) -> Optional[str]:
+    """
+    Extract the most likely entity keyword from the question.
+
+    Returns None when no entity or content token is found (caller uses broad overview query).
+    """
     lower = question.lower()
     for entity in KNOWN_ENTITIES:
         if entity in lower:
@@ -145,9 +189,9 @@ def _extract_keyword(question: str) -> str:
     words = [
         w
         for w in re.sub(r"[^\w\s]", "", lower).split()
-        if w not in STOP_WORDS
+        if w not in STOP_WORDS and len(w) > 1
     ]
-    return words[0] if words else "payment"
+    return words[0] if words else None
 
 
 def _format_coral_context(rows: list[dict[str, Any]], max_rows: int = 30) -> str:
@@ -177,17 +221,38 @@ async def coral_query(req: CoralQueryRequest) -> CoralQueryResponse:
             detail="Coral CLI not available. Install: brew install withcoral/tap/coral",
         )
 
+    try:
+        client = _get_query_client()
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
+
     keyword = _extract_keyword(req.question)
-    safe_keyword = re.sub(r"[{}]", "", keyword)
-    sql_used = FULL_OPERATIONAL_CONTEXT.format(keyword=safe_keyword)
+    used_broad_context = keyword is None
 
     try:
-        rows = coral.full_context(keyword)
+        if keyword:
+            safe_keyword = sanitize_sql_param(keyword)
+            rows = coral.full_context(safe_keyword)
+            sql_used = FULL_OPERATIONAL_CONTEXT.format(keyword=safe_keyword)
+        else:
+            rows = coral.operational_overview()
+            sql_used = OPERATIONAL_CONTEXT_OVERVIEW
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=f"Coral query failed: {exc}") from exc
 
     context = _format_coral_context(rows)
     raw = ""
+
+    user_context_note = (
+        "No specific entity keyword matched — using highest-risk graph overview."
+        if used_broad_context
+        else f"Keyword filter: {keyword}"
+    )
 
     try:
         completion = client.chat.completions.create(
@@ -200,6 +265,7 @@ async def coral_query(req: CoralQueryRequest) -> CoralQueryResponse:
                     "role": "user",
                     "content": (
                         f"Question: {req.question}\n\n"
+                        f"{user_context_note}\n\n"
                         f"Coral SQL context ({len(rows)} rows across knowledge graph, "
                         f"incidents, and Slack):\n{context}"
                     ),
@@ -221,6 +287,15 @@ async def coral_query(req: CoralQueryRequest) -> CoralQueryResponse:
     related = result.get("related", _empty_related())
     if not isinstance(related, dict):
         related = _empty_related()
+
+    if used_broad_context:
+        warnings = related.get("warnings")
+        if not isinstance(warnings, list):
+            warnings = []
+        warnings.append(
+            "No entity keyword matched your question — answer uses org-wide high-risk context."
+        )
+        related["warnings"] = warnings
 
     return CoralQueryResponse(
         answer=result.get("answer", ""),

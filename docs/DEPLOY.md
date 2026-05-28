@@ -76,6 +76,9 @@ After deploy, check logs for `[neo4j] Connected OK — 15 nodes` and `[coral] se
 
 ```bash
 curl https://your-service.onrender.com/health
+# Optional deep Coral SQL smoke test (slow — do not use as liveness probe):
+curl https://your-service.onrender.com/health/deep
+
 curl -X POST https://your-service.onrender.com/coral-query \
   -H "Content-Type: application/json" \
   -d '{"question":"What breaks if Patel is out Monday?"}'
