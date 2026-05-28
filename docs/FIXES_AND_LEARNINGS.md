@@ -1,14 +1,40 @@
 # MemoryWeave — Fixes & Learnings
 
+## Coral CLI install and source spec format (CORAL-01)
+**Date:** 2026-05-28
+**Phase:** Phase 6 — Coral integration
+**Severity:** Medium
+
+### What Happened
+Step 1 used `npm install -g @coraldata/coral` (404). Step 4 used `coral schema --sources` (subcommand removed in Coral 0.4.1). The draft `sources.yaml` bulk `sources:` list is not valid DSL v3.
+
+### Root Cause
+Coral ships as a Homebrew cask (`withcoral/tap/coral`), not an npm package. v0.4.1 uses per-source `manifest.yaml` files (`backend: http|file`), validated with `coral source lint` and installed via `coral source add --file`. Schema discovery is `SELECT … FROM coral.tables`.
+
+### How It Was Fixed
+- Installed CLI: `brew install withcoral/tap/coral` → `coral 0.4.1`
+- Added `backend/coral/manifests/memoryweave_graph.yaml` (Neo4j HTTP → `knowledge_nodes`, `knowledge_edges`)
+- Added `backend/coral/manifests/memoryweave_demo.yaml` (file/jsonl → `slack_messages`, `incident_reports`)
+- Generated `backend/coral/data/*.jsonl` from demo corpus; `backend/coral/install_sources.sh` substitutes `file://` paths (handles spaces in paths)
+- `queries.py` uses qualified names (`memoryweave_graph.knowledge_nodes`, etc.)
+
+### What I Learned
+Match the tool’s actual packaging and CLI surface before writing integration docs; lint manifests early with `coral source lint`.
+
+### Relevant for Interview
+Shows adapting a prompt/spec to real tool constraints without blocking the product narrative.
+
+---
+
 ## Coral Integration Branch — Strategy Doc
 **Date:** 2026-05-28
-**Phase:** Phase 6 — Coral-bean hackathon
+**Phase:** Phase 6 — Coral integration
 
 ### What Happened
 Started `Coral-integration` branch to add [Coral](https://withcoral.com) as the cross-source SQL read layer for MemoryWeave while keeping `main` stable for the live Vercel + Render demo.
 
 ### Root Cause
-N/A — planned enhancement for a second submission track (Pirates of the Coral-bean).
+N/A — planned enhancement 
 
 ### How It Was Fixed
 N/A — documented approach in `docs/CORAL_INTEGRATION.md`; implementation follows in subsequent prompts on this branch.
@@ -17,7 +43,7 @@ N/A — documented approach in `docs/CORAL_INTEGRATION.md`; implementation follo
 MemoryWeave’s Neo4j graph UI and Patel bus-factor story are the product differentiator; Coral strengthens the **Assistant** and judge demo with one SQL join across Slack, incidents, and org data — aligned with hackathon scoring for MCP and cross-source queries.
 
 ### Relevant for Interview
-Shows how to extend an existing MVP for a sponsor hackathon without forking the entire architecture: additive read path, branch isolation, clear “why Coral” narrative.
+Shows how to extend an existing MVP for multiple submissions without forking the entire architecture: additive read path, branch isolation, clear “why Coral” narrative.
 
 ---
 

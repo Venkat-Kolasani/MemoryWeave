@@ -1,0 +1,6 @@
+coral/.env.coral
+__pycache__/
+*.pyc
+.venv/
+.env
+.agents/

@@ -1,13 +1,12 @@
 # MemoryWeave × Coral — Integration Plan
 
 ## Branch
-`Coral-integration` — hackathon work for **Pirates of the Coral-bean** without destabilizing `main` (live Vercel + Render demo).
+`Coral-integration` — Coral-powered read layer on a separate branch, without destabilizing `main` (live Vercel + Render demo).
 
-## Hackathon context
-- **Event:** Pirates of the Coral-bean (WeMakeDevs × Coral)
+## Context
 - **Product:** [Coral](https://withcoral.com) — local-first SQL over APIs, files, and databases; MCP for agents
 - **Goal:** Treat operational sources as queryable tables; answer cross-source questions with **one SQL join**, not many bespoke API tools
-- **Tracks:** Enterprise Agent (org “smart crew”) · Personal Agent — MemoryWeave fits **Enterprise**
+- **Fit:** MemoryWeave as enterprise organizational memory; Coral as the cross-source query engine underneath the Assistant
 
 ## Why Coral integration is useful for MemoryWeave
 
@@ -33,7 +32,7 @@ Today we answer that with:
 Demo line:
 > *"What breaks when Patel doesn't come in Monday?"* → Coral SQL joins **people**, **incidents**, and **Slack** evidence → Neo4j risk + LLM synthesis → structured answer with warnings.
 
-This matches hackathon examples (Coding Agent Debugger: GitHub + Sentry + Slack in one query).
+This matches Coral’s core use case: join evidence from chat, incidents, and systems in one query instead of many API calls.
 
 ### What we are **not** doing
 - Replacing Neo4j graph UI — the SVG graph stays the visual differentiator
@@ -66,14 +65,13 @@ Chroma — optional; Coral may reduce reliance on Chroma for cross-source reads 
    - Keep Neo4j `hybrid_retrieve` graph + risk context
    - Merge → existing Fireworks structured JSON response
 3. **Demo SQL** — one visible cross-source query for judges (Patel + payment + P-4021)
-4. **README / submission** — dual narrative: live product URLs + Coral as core read technology
-5. **Local-first** — Coral runs locally per hackathon rules; production Render may stay Neo4j-first until optional Coral sidecar is documented
+4. **README / submission** — live product URLs + Coral as core read technology (wording adaptable per event)
+5. **Local-first** — Coral runs locally for demos; production Render may stay Neo4j-first until optional Coral sidecar is documented
 
-## Rules & constraints (hackathon)
-- Star [withcoral/coral](https://github.com/withcoral/coral) repo + join Coral Discord (manual)
-- Coral runs **local-first** — document how judges reproduce SQL demo
-- Check eligibility: fresh build vs fork — this branch extends MemoryWeave; confirm current rules before final submit
-- Advanced scoring: MCP integration, schema learning, caching — aim for at least MCP or documented SQL sources
+## Constraints
+- Coral runs **local-first** — document how reviewers reproduce the SQL demo locally
+- This branch extends MemoryWeave; confirm each submission’s eligibility rules independently
+- Prefer MCP integration or documented Coral source specs where sponsor criteria apply
 
 ## Repo conventions (`.cursorrules`)
 - All API calls remain in `frontend/src/services/api.js`
@@ -86,10 +84,12 @@ Chroma — optional; Coral may reduce reliance on Chroma for cross-source reads 
 | Item | Status |
 |------|--------|
 | Branch `Coral-integration` | Created |
-| Coral installed / sources defined | Not started |
+| Coral CLI installed (`brew install withcoral/tap/coral`) | Done |
+| Coral manifests + `coral/install_sources.sh` | Done |
+| `coral schema` (use `coral.tables` / `install_sources.sh`) | Done (4 tables) |
 | `/query` Coral path | Not started |
 | MCP wiring | Not started |
-| Submission README section | Not started |
+| Submission README section (Coral narrative) | Not started |
 
 ## References
 - Coral: https://withcoral.com · https://github.com/withcoral/coral

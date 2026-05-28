@@ -4,17 +4,18 @@
 2026-05-28 (branch: Coral-integration)
 
 ## Current Phase
-Phase 6 — Coral integration (Pirates of the Coral-bean hackathon) on branch `Coral-integration`  
+Phase 6 — Coral integration on branch `Coral-integration`  
 `main` — production demo (Vercel + Render + Aura) remains submission-ready
 
 ## Coral integration (in progress)
 See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being added and the target architecture.
 
-- [ ] Coral source specs over Acme demo corpus (Slack, incidents, docs)
-- [ ] SQL-backed read path for Assistant `/query`
+- [x] Coral source specs over Acme demo corpus (Slack JSONL, incidents JSONL, Neo4j graph manifests)
+- [x] `coral_service.py` + `/coral-query`, `/coral-schema`, `/coral-report` (existing `/query` unchanged)
+- [ ] Frontend wired to `/coral-query`
 - [ ] Judge-visible cross-source SQL demo (Patel / payment / incidents)
 - [ ] MCP or CLI integration documented for local reproduction
-- [ ] Submission README section for Coral-bean
+- [ ] Submission README section for Coral-powered narrative
 
 ## What's Been Built
 ### Frontend

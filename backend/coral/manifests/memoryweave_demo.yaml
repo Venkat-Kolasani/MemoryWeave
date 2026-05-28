@@ -1,0 +1,72 @@
+name: memoryweave_demo
+version: 0.1.0
+dsl_version: 3
+backend: file
+description: >-
+  Query Acme Corp demo Slack messages and incident postmortems from local JSONL
+  exports. Exposes slack_messages and incident_reports for cross-source SQL joins.
+
+tables:
+  - name: slack_messages
+    description: >-
+      Slack export — operational discussions, escalations, on-call threads.
+      Columns timestamp, author, channel, text.
+    format: jsonl
+    source:
+      location: file://__MEMORYWEAVE_CORAL_DATA__/
+      glob: slack_messages.jsonl
+    columns:
+      - name: timestamp
+        type: Utf8
+        nullable: true
+        description: ISO-8601 message time.
+      - name: author
+        type: Utf8
+        nullable: true
+        description: Message author display name.
+      - name: channel
+        type: Utf8
+        nullable: true
+        description: Slack channel name.
+      - name: text
+        type: Utf8
+        nullable: true
+        description: Message body.
+
+  - name: incident_reports
+    description: >-
+      Incident postmortem records derived from demo markdown files.
+      Columns incident_id, severity, resolved_by, systems_affected, duration_min, content.
+    format: jsonl
+    source:
+      location: file://__MEMORYWEAVE_CORAL_DATA__/
+      glob: incident_reports.jsonl
+    columns:
+      - name: incident_id
+        type: Utf8
+        nullable: false
+        description: Incident id (e.g. P-4021).
+      - name: severity
+        type: Utf8
+        nullable: true
+        description: P0/P1/P2 severity.
+      - name: resolved_by
+        type: Utf8
+        nullable: true
+        description: Primary resolver.
+      - name: systems_affected
+        type: Utf8
+        nullable: true
+        description: Systems impacted.
+      - name: duration_min
+        type: Utf8
+        nullable: true
+        description: Incident duration text.
+      - name: content
+        type: Utf8
+        nullable: true
+        description: Full postmortem markdown.
+
+test_queries:
+  - SELECT * FROM memoryweave_demo.slack_messages LIMIT 3
+  - SELECT * FROM memoryweave_demo.incident_reports LIMIT 3

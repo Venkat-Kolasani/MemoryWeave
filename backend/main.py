@@ -20,6 +20,7 @@ _BACKEND_DIR = Path(__file__).resolve().parent
 load_dotenv(_BACKEND_DIR / ".env", override=True)
 
 from routers import graph, ingest, query, risk
+from routers.coral_query import router as coral_router
 
 app = FastAPI(
     title="MemoryWeave API",
@@ -42,6 +43,7 @@ app.include_router(graph.router)
 app.include_router(risk.router)
 app.include_router(query.router)
 app.include_router(ingest.router)
+app.include_router(coral_router)
 
 
 def _neo4j_env(key: str, default: str = "") -> str:
