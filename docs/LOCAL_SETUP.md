@@ -101,12 +101,18 @@ curl -X POST http://localhost:8000/query \
 
 ```bash
 cd frontend
-cp .env.example .env
+cp .env.example .env   # VITE_API_URL=http://localhost:8000
 npm install
 npm run dev
 ```
 
-App: http://localhost:5173
+App: http://localhost:5173 — dashboard pages fetch live data from the backend on mount.
+
+**End-to-end check:**
+1. http://localhost:5173/graph — Neo4j nodes (15 after seed)
+2. http://localhost:5173/risk — Payment API / A. Patel critical risk
+3. http://localhost:5173/assistant — ask "How do we recover payment failures?"
+4. http://localhost:5173/dashboard — live node count in stats
 
 ## Quick reference
 

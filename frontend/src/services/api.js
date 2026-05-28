@@ -1,104 +1,81 @@
 /**
  * api.js
  *
- * All backend API calls for MemoryWeave. Phase 1 returns mock data;
- * Phase 4 switches to real fetch — no component changes required.
+ * All backend API calls. Single source of truth for HTTP communication.
+ * Functions match the shapes expected by Zustand store actions.
  *
  * Used by: appStore.js async actions
  */
 
-import {
-  MOCK_GRAPH_NODES,
-  MOCK_GRAPH_EDGES,
-  MOCK_RISK_ITEMS,
-  MOCK_HEATMAP,
-  MOCK_BOTTLENECKS,
-  MOCK_STATS,
-  MOCK_QUERY_RESPONSE,
-} from '../data/mockData.js'
-
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
-/** Simulates network latency for mock responses. */
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 /**
  * Fetches the full knowledge graph for visualization.
- * @returns {Promise<{ nodes: typeof MOCK_GRAPH_NODES, edges: typeof MOCK_GRAPH_EDGES }>}
+ * @returns {Promise<{ nodes: import('../data/mockData.js').MOCK_GRAPH_NODES, edges: import('../data/mockData.js').MOCK_GRAPH_EDGES }>}
  */
 export async function fetchGraph() {
-  // MOCK: replace with real fetch calls in Phase 4
-  // const res = await fetch(`${BASE}/graph`)
-  // if (!res.ok) throw new Error('Failed to fetch graph')
-  // return res.json()
-  await delay(100)
-  return { nodes: MOCK_GRAPH_NODES, edges: MOCK_GRAPH_EDGES }
+  const res = await fetch(`${BASE}/graph`)
+  if (!res.ok) throw new Error(`/graph failed: ${res.status}`)
+  return res.json()
 }
 
 /**
  * Fetches bus-factor risk report with heatmap and bottlenecks.
- * @returns {Promise<{ risks: typeof MOCK_RISK_ITEMS, heatmap: typeof MOCK_HEATMAP, bottlenecks: typeof MOCK_BOTTLENECKS }>}
+ * @returns {Promise<{ risks: unknown[], heatmap: unknown[], bottlenecks: unknown[] }>}
  */
 export async function fetchRiskReport() {
-  // MOCK: replace with real fetch calls in Phase 4
-  // const res = await fetch(`${BASE}/risk-report`)
-  // if (!res.ok) throw new Error('Failed to fetch risk report')
-  // return res.json()
-  await delay(100)
-  return {
-    risks: MOCK_RISK_ITEMS,
-    heatmap: MOCK_HEATMAP,
-    bottlenecks: MOCK_BOTTLENECKS,
-  }
+  const res = await fetch(`${BASE}/risk-report`)
+  if (!res.ok) throw new Error(`/risk-report failed: ${res.status}`)
+  return res.json()
 }
 
 /**
  * Fetches dashboard stat numbers.
- * @returns {Promise<typeof MOCK_STATS>}
+ * @returns {Promise<{ nodes: number, undocumented: number, risks: number, queries: number }>}
  */
 export async function fetchStats() {
-  // MOCK: replace with real fetch calls in Phase 4
-  // const res = await fetch(`${BASE}/stats`)
-  // if (!res.ok) throw new Error('Failed to fetch stats')
-  // return res.json()
-  await delay(100)
-  return MOCK_STATS
+  const res = await fetch(`${BASE}/stats`)
+  if (!res.ok) throw new Error(`/stats failed: ${res.status}`)
+  return res.json()
 }
 
 /**
  * Sends a natural-language query to the AI assistant.
+ * Maps backend `answer` field to frontend `content` for AssistantPage.
  * @param {string} question
- * @returns {Promise<{ type: string, content: string, steps: string[], related: object }>}
+ * @returns {Promise<{ type: string, content: string, steps?: string[], related?: object, sources?: object[] }>}
  */
 export async function sendQuery(question) {
-  // MOCK: replace with real fetch calls in Phase 4
-  // const res = await fetch(`${BASE}/query`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ question }),
-  // })
-  // if (!res.ok) throw new Error('Failed to send query')
-  // return res.json()
-  await delay(1500)
+  const res = await fetch(`${BASE}/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  })
+  if (!res.ok) throw new Error(`/query failed: ${res.status}`)
+
+  const data = await res.json()
+  const steps = data.steps ?? null
+
   return {
-    ...MOCK_QUERY_RESPONSE,
-    content: `Based on your organization's operational data, here is what I found regarding "${question}":`,
+    type: steps && steps.length > 0 ? 'structured' : 'text',
+    content: data.answer || data.content || '',
+    steps: steps || undefined,
+    related: data.related,
+    sources: data.sources,
   }
 }
 
 /**
  * Uploads a file and triggers the ingestion pipeline.
  * @param {File} file
- * @returns {Promise<{ status: string, job_id: string }>}
+ * @returns {Promise<{ status: string, job_id: string, filename?: string, source_type?: string, message?: string }>}
  */
 export async function ingestFile(file) {
-  // MOCK: replace with real fetch calls in Phase 4
-  // const res = await fetch(`${BASE}/ingest`, { method: 'POST', body: formData })
-  void file
-  await delay(800)
-  return { status: 'processing', job_id: 'demo-001' }
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch(`${BASE}/ingest`, { method: 'POST', body: form })
+  if (!res.ok) throw new Error(`/ingest failed: ${res.status}`)
+  return res.json()
 }
 
 export { BASE }

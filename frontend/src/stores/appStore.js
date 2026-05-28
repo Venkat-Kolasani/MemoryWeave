@@ -11,38 +11,23 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import * as api from '../services/api.js'
-import { MOCK_INITIAL_MESSAGES, MOCK_STATS } from '../data/mockData.js'
+import {
+  MOCK_INITIAL_MESSAGES,
+  MOCK_STATS,
+  MOCK_GRAPH_NODES,
+  MOCK_GRAPH_EDGES,
+} from '../data/mockData.js'
 
 /** @typedef {'all' | 'person' | 'system' | 'incident' | 'workflow'} FilterType */
 /** @typedef {null | 'processing' | 'complete' | 'error'} IngestionStatus */
 
-/**
- * @typedef {Object} GraphNode
- * @property {string} id
- * @property {number} x
- * @property {number} y
- * @property {number} r
- * @property {string} type
- * @property {string} label
- * @property {string} [sublabel]
- * @property {string} color
- * @property {Record<string, unknown>} [details]
- */
-
-/**
- * @typedef {Object} GraphEdge
- * @property {string} from
- * @property {string} to
- * @property {number} weight
- */
-
 const useAppStore = create(
   immer((set) => ({
-    // Graph
+    // Graph — seed with mocks so UI is never blank before/after failed fetch
     selectedNode: null,
     filterType: 'all',
-    graphNodes: [],
-    graphEdges: [],
+    graphNodes: [...MOCK_GRAPH_NODES],
+    graphEdges: [...MOCK_GRAPH_EDGES],
 
     // Assistant
     messages: [...MOCK_INITIAL_MESSAGES],
@@ -100,7 +85,7 @@ const useAppStore = create(
           state.graphEdges = data.edges
         })
       } catch (err) {
-        console.error('fetchGraph failed:', err)
+        console.error('[store] fetchGraph failed:', err)
       }
     },
 
@@ -113,7 +98,7 @@ const useAppStore = create(
           state.riskBottlenecks = data.bottlenecks
         })
       } catch (err) {
-        console.error('fetchRiskReport failed:', err)
+        console.error('[store] fetchRiskReport failed:', err)
       }
     },
 
@@ -124,7 +109,7 @@ const useAppStore = create(
           state.knowledgeStats = stats
         })
       } catch (err) {
-        console.error('fetchStats failed:', err)
+        console.error('[store] fetchStats failed:', err)
       }
     },
 
@@ -158,8 +143,15 @@ const useAppStore = create(
           state.isLoading = false
         })
       } catch (err) {
-        console.error('sendMessage failed:', err)
+        console.error('[store] sendMessage failed:', err)
         set((state) => {
+          state.messages.push({
+            id: `a-${Date.now()}`,
+            role: 'assistant',
+            type: 'text',
+            content:
+              'Sorry, I could not retrieve an answer. Please check the backend is running.',
+          })
           state.isLoading = false
         })
       }
