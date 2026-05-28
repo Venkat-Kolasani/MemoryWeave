@@ -12,14 +12,6 @@ import useAppStore from '../stores/appStore.js'
 import DashboardShell from '../components/layout/DashboardShell.jsx'
 import Badge from '../components/atoms/Badge.jsx'
 import Icon from '../components/atoms/Icon.jsx'
-import {
-  graphViewBox,
-  layoutGraphNodes,
-  nodeDisplayLabel,
-} from '../utils/graphLayout.js'
-
-/** When the graph exceeds this size, hide weak edges until a node is selected. */
-const DENSE_GRAPH_NODE_THRESHOLD = 24
 
 const FILTERS = [
   { label: 'All', value: 'all' },
@@ -90,15 +82,6 @@ export default function GraphPage() {
 
   const isLoading = isGraphLoading || graphNodes.length === 0
 
-  const laidOutNodes = useMemo(
-    () => layoutGraphNodes(graphNodes),
-    [graphNodes],
-  )
-
-  const viewBox = useMemo(() => graphViewBox(laidOutNodes), [laidOutNodes])
-
-  const isDenseGraph = laidOutNodes.length > DENSE_GRAPH_NODE_THRESHOLD
-
   const graphSubtitle = isLoading
     ? 'Loading graph…'
     : `${graphNodes.length} nodes · ${graphEdges.length} edges · Updated just now`
@@ -108,16 +91,16 @@ export default function GraphPage() {
     () =>
       Object.keys(TYPE_LABELS).reduce((counts, type) => {
         if (filterType === 'all') {
-          counts[type] = laidOutNodes.filter((node) => node.type === type).length
+          counts[type] = graphNodes.filter((node) => node.type === type).length
         } else {
           counts[type] =
             type === filterType
-              ? laidOutNodes.filter((node) => node.type === type).length
+              ? graphNodes.filter((node) => node.type === type).length
               : 0
         }
         return counts
       }, {}),
-    [laidOutNodes, filterType],
+    [graphNodes, filterType],
   )
 
   const filterButtons = (
@@ -160,31 +143,10 @@ export default function GraphPage() {
       <div className="flex overflow-hidden" style={{ height: '100%' }}>
         {/* SVG canvas */}
         <div className="relative min-w-0 flex-1 overflow-hidden">
-          {!isLoading && isDenseGraph && !selectedNode && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                zIndex: 2,
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '8px 12px',
-                boxShadow: 'var(--shadow-sm)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: 'var(--text-secondary)',
-                letterSpacing: '0.02em',
-              }}
-            >
-              Click a node for labels · weak edges hidden
-            </div>
-          )}
           <svg
             width="100%"
             height="100%"
-            viewBox={`${viewBox.minX} ${viewBox.minY} ${viewBox.width} ${viewBox.height}`}
+            viewBox="0 0 720 400"
             preserveAspectRatio="xMidYMid meet"
             style={{ display: 'block', background: 'var(--bg)' }}
           >
@@ -204,18 +166,12 @@ export default function GraphPage() {
               </pattern>
             </defs>
 
-            <rect
-              x={viewBox.minX}
-              y={viewBox.minY}
-              width={viewBox.width}
-              height={viewBox.height}
-              fill={`url(#${gridPatternId})`}
-            />
+            <rect width="720" height="400" fill={`url(#${gridPatternId})`} />
 
             {!isLoading &&
               graphEdges.map((edge, index) => {
-                const fromNode = laidOutNodes.find((node) => node.id === edge.from)
-                const toNode = laidOutNodes.find((node) => node.id === edge.to)
+                const fromNode = graphNodes.find((node) => node.id === edge.from)
+                const toNode = graphNodes.find((node) => node.id === edge.to)
                 if (!fromNode || !toNode) return null
 
                 const bothVisible =
@@ -224,14 +180,6 @@ export default function GraphPage() {
 
                 const edgeWeight = edge.weight ?? 1
                 const isWeak = edgeWeight < 1.5 || edge.dashed
-                const touchesSelection =
-                  selectedNode &&
-                  (edge.from === selectedNode.id || edge.to === selectedNode.id)
-
-                const hideWeak =
-                  isDenseGraph && isWeak && !touchesSelection && filterType === 'all'
-
-                if (hideWeak) return null
 
                 return (
                   <line
@@ -245,18 +193,16 @@ export default function GraphPage() {
                     strokeDasharray={isWeak ? '4,4' : 'none'}
                     style={{
                       transition: 'stroke 0.3s ease, stroke-opacity 0.3s ease',
-                      opacity: bothVisible ? (isWeak && isDenseGraph ? 0.45 : 1) : 0,
+                      opacity: bothVisible ? 1 : 0,
                     }}
                   />
                 )
               })}
 
             {!isLoading &&
-              laidOutNodes.map((node, index) => {
+              graphNodes.map((node, index) => {
                 const isVisible = filterType === 'all' || node.type === filterType
                 const isSelected = selectedNode?.id === node.id
-                const showLabels =
-                  isSelected || (!isDenseGraph && (node.r ?? 12) >= 16)
 
                 return (
                   <g
@@ -266,7 +212,7 @@ export default function GraphPage() {
                       cursor: 'pointer',
                       opacity: isVisible ? 1 : 0.08,
                       transition: 'opacity 0.3s',
-                      animation: `nodeAppear 0.4s ease ${Math.min(index * 0.02, 0.4)}s both`,
+                      animation: `nodeAppear 0.4s ease ${index * 0.04}s both`,
                     }}
                   >
                     {isSelected && (
@@ -293,24 +239,22 @@ export default function GraphPage() {
                       stroke={node.color}
                       strokeWidth={isSelected ? 2 : 1.5}
                     />
-                    {showLabels && (
-                      <text
-                        x={node.x}
-                        y={node.y + 1}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{
-                          fontSize: node.r > 15 ? 8 : 7,
-                          fontFamily: 'var(--font-mono)',
-                          fill: node.color,
-                          pointerEvents: 'none',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {nodeDisplayLabel(node)}
-                      </text>
-                    )}
-                    {isSelected && node.sublabel && (
+                    <text
+                      x={node.x}
+                      y={node.y + 1}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      style={{
+                        fontSize: node.r > 15 ? 8 : 7,
+                        fontFamily: 'var(--font-mono)',
+                        fill: node.color,
+                        pointerEvents: 'none',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {node.label.split(' ')[0]}
+                    </text>
+                    {node.sublabel && (
                       <text
                         x={node.x}
                         y={node.y + node.r + 11}
@@ -322,7 +266,7 @@ export default function GraphPage() {
                           pointerEvents: 'none',
                         }}
                       >
-                        {String(node.sublabel).slice(0, 28)}
+                        {node.sublabel}
                       </text>
                     )}
                   </g>

@@ -556,19 +556,18 @@ class Neo4jService:
             return node["x"], node["y"]
 
         row_y = {
-            "person": 100,
-            "system": 280,
-            "incident": 460,
-            "workflow": 620,
+            "person": 140,
+            "system": 230,
+            "incident": 320,
+            "workflow": 320,
         }.get(node_type, 320)
-
-        min_gap = 88
-        padding = 100
         if row_count <= 1:
-            return 400, row_y
+            return 420, row_y
 
-        x = padding + row_index * min_gap
-        return round(x), row_y
+        left = 100
+        right = 740
+        spacing = (right - left) / (row_count - 1)
+        return round(left + row_index * spacing), row_y
 
     @staticmethod
     def _radius(node_type: str, node: dict) -> int:
