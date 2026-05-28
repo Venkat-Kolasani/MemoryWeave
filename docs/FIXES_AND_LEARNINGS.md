@@ -1,5 +1,27 @@
 # MemoryWeave — Fixes & Learnings
 
+## Render Coral — Aura HTTP database path 403
+**Date:** 2026-05-28
+**Phase:** Phase 6 — Coral integration
+**Severity:** Critical
+
+### What Happened
+Production `/coral-query` failed with `Source request was rejected (403)` against `https://7459e09d.databases.neo4j.io/db/7459e09d/tx/commit`.
+
+### Root Cause
+Coral uses Neo4j's HTTP transactional endpoint, where Aura expects the database path to be `/db/neo4j/tx/commit`. The install script defaulted `NEO4J_DATABASE` to the Aura username/instance id, producing `/db/<instance-id>/tx/commit`.
+
+### How It Was Fixed
+Changed the Coral install script default to `NEO4J_DATABASE=neo4j` and updated `/health/deep` to smoke-test `memoryweave_graph.knowledge_nodes` instead of only the local demo JSONL source.
+
+### What I Learned
+Aura's Bolt username and HTTP transactional database path are different concerns; a green CLI/schema check does not prove graph-source queryability.
+
+### Relevant for Interview
+Good example of testing the actual integration path, not only dependency availability.
+
+---
+
 ## Render Docker — Coral binary required GLIBC_2.39
 **Date:** 2026-05-28
 **Phase:** Phase 6 — Coral integration

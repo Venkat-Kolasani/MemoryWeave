@@ -73,7 +73,7 @@ def probe_coral_health(*, run_sql_smoke_test: bool = False) -> str:
     if run_sql_smoke_test:
         try:
             svc.query(
-                "SELECT COUNT(*) AS n FROM memoryweave_demo.slack_messages",
+                "SELECT COUNT(*) AS n FROM memoryweave_graph.knowledge_nodes",
                 timeout_sec=10,
             )
         except Exception as exc:

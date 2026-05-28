@@ -37,8 +37,9 @@ if [[ "$NEO4J_URL" == *localhost:7687* ]]; then
 fi
 export NEO4J_URL
 export NEO4J_USERNAME="${NEO4J_USERNAME:-${NEO4J_USER:-neo4j}}"
-# Aura: database name is often the instance id (same as NEO4J_USER).
-export NEO4J_DATABASE="${NEO4J_DATABASE:-${NEO4J_USER:-neo4j}}"
+# Aura HTTP transactional endpoint usually uses the database name "neo4j".
+# Do not default to NEO4J_USER/instance id; Aura rejects /db/<instance-id>/tx/commit with 403.
+export NEO4J_DATABASE="${NEO4J_DATABASE:-neo4j}"
 
 if [[ "$NEO4J_URL" == *localhost* ]]; then
   echo "Note: using Neo4j HTTP at ${NEO4J_URL} (start Docker Neo4j or set Aura https URL in .env)."
