@@ -9,9 +9,24 @@
 
 import { useEffect, useId, useMemo } from 'react'
 import useAppStore from '../stores/appStore.js'
+import { useGraphViewport } from '../hooks/useGraphViewport.js'
 import DashboardShell from '../components/layout/DashboardShell.jsx'
 import Badge from '../components/atoms/Badge.jsx'
 import Icon from '../components/atoms/Icon.jsx'
+
+const ZOOM_CONTROL_BTN = {
+  width: 36,
+  height: 36,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  cursor: 'pointer',
+  boxShadow: 'var(--shadow-xs)',
+  color: 'var(--text-secondary)',
+}
 
 const FILTERS = [
   { label: 'All', value: 'all' },
@@ -63,9 +78,30 @@ function formatDetailValue(value) {
   return String(value)
 }
 
-/** Interactive full-page knowledge graph with filters and node detail panel. */
+/** Small icon button for graph zoom / pan toolbar. */
+function GraphToolButton({ label, active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      style={{
+        ...ZOOM_CONTROL_BTN,
+        background: active ? 'var(--accent-light)' : 'var(--surface)',
+        borderColor: active ? 'var(--accent)' : 'var(--border)',
+        color: active ? 'var(--accent-text)' : 'var(--text-secondary)',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+/** Interactive full-page knowledge graph with filters, pan/zoom, and detail panel. */
 export default function GraphPage() {
   const gridPatternId = useId()
+  const viewport = useGraphViewport()
 
   const graphNodes = useAppStore((s) => s.graphNodes)
   const graphEdges = useAppStore((s) => s.graphEdges)
@@ -142,13 +178,59 @@ export default function GraphPage() {
     >
       <div className="flex overflow-hidden" style={{ height: '100%' }}>
         {/* SVG canvas */}
-        <div className="relative min-w-0 flex-1 overflow-hidden">
+        <div
+          className="relative min-w-0 flex-1 overflow-hidden"
+          style={{ cursor: viewport.canvasCursor }}
+          onWheel={viewport.handleWheel}
+        >
+          {/* Zoom + pan toolbar */}
+          {!isLoading && (
+            <div
+              className="flex flex-col"
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                zIndex: 3,
+                gap: 6,
+              }}
+            >
+              <GraphToolButton label="Zoom in" onClick={viewport.zoomIn}>
+                <Icon name="plus" size={16} />
+              </GraphToolButton>
+              <GraphToolButton label="Zoom out" onClick={viewport.zoomOut}>
+                <Icon name="minus" size={16} />
+              </GraphToolButton>
+              <GraphToolButton
+                label="Pan (hand tool)"
+                active={viewport.panMode}
+                onClick={viewport.togglePanMode}
+              >
+                <Icon
+                  name="hand"
+                  size={16}
+                  color={viewport.panMode ? 'var(--accent-text)' : 'currentColor'}
+                />
+              </GraphToolButton>
+            </div>
+          )}
+
           <svg
+            ref={viewport.svgRef}
             width="100%"
             height="100%"
-            viewBox="0 0 720 400"
+            viewBox={viewport.viewBoxString}
             preserveAspectRatio="xMidYMid meet"
-            style={{ display: 'block', background: 'var(--bg)' }}
+            style={{
+              display: 'block',
+              background: 'var(--bg)',
+              touchAction: viewport.panMode ? 'none' : 'auto',
+            }}
+            onPointerDown={viewport.handlePointerDown}
+            onPointerMove={viewport.handlePointerMove}
+            onPointerUp={viewport.handlePointerUp}
+            onPointerLeave={viewport.handlePointerUp}
+            onPointerCancel={viewport.handlePointerUp}
           >
             <defs>
               <pattern
@@ -166,7 +248,12 @@ export default function GraphPage() {
               </pattern>
             </defs>
 
-            <rect width="720" height="400" fill={`url(#${gridPatternId})`} />
+            <rect
+              width={720}
+              height={400}
+              fill={`url(#${gridPatternId})`}
+              style={{ pointerEvents: viewport.panMode ? 'all' : 'none' }}
+            />
 
             {!isLoading &&
               graphEdges.map((edge, index) => {
@@ -194,6 +281,7 @@ export default function GraphPage() {
                     style={{
                       transition: 'stroke 0.3s ease, stroke-opacity 0.3s ease',
                       opacity: bothVisible ? 1 : 0,
+                      pointerEvents: viewport.panMode ? 'none' : 'stroke',
                     }}
                   />
                 )
@@ -207,12 +295,16 @@ export default function GraphPage() {
                 return (
                   <g
                     key={node.id}
-                    onClick={() => setSelectedNode(isSelected ? null : node)}
+                    onClick={() => {
+                      if (viewport.panMode) return
+                      setSelectedNode(isSelected ? null : node)
+                    }}
                     style={{
-                      cursor: 'pointer',
+                      cursor: viewport.panMode ? 'inherit' : 'pointer',
                       opacity: isVisible ? 1 : 0.08,
                       transition: 'opacity 0.3s',
                       animation: `nodeAppear 0.4s ease ${index * 0.04}s both`,
+                      pointerEvents: viewport.panMode ? 'none' : 'auto',
                     }}
                   >
                     {isSelected && (
