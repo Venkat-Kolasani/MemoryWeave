@@ -22,7 +22,7 @@ import {
 /** @typedef {null | 'processing' | 'complete' | 'error'} IngestionStatus */
 
 const useAppStore = create(
-  immer((set) => ({
+  immer((set, get) => ({
     // Graph — seed with mocks so UI is never blank before/after failed fetch
     selectedNode: null,
     filterType: 'all',
@@ -33,6 +33,8 @@ const useAppStore = create(
     // Assistant
     messages: [...MOCK_INITIAL_MESSAGES],
     isLoading: false,
+    /** Default true — Coral SQL is the primary retrieval path. */
+    useCoralQuery: true,
 
     // Dashboard & risk
     knowledgeStats: { ...MOCK_STATS },
@@ -73,6 +75,13 @@ const useAppStore = create(
     setIngestionStatus: (status) => {
       set((state) => {
         state.ingestionStatus = status
+      })
+    },
+
+    /** Toggle Assistant retrieval: false = /query, true = /coral-query. */
+    toggleCoralQuery: () => {
+      set((state) => {
+        state.useCoralQuery = !state.useCoralQuery
       })
     },
 
@@ -143,12 +152,42 @@ const useAppStore = create(
       if (!shouldSend) return
 
       try {
-        const response = await api.sendQuery(text)
+        const preferCoral = get().useCoralQuery
+        let response
+        let usedCoral = false
+        let fellBackToRag = false
+
+        if (preferCoral) {
+          try {
+            response = await api.sendCoralQuery(text)
+            usedCoral = true
+          } catch (coralErr) {
+            console.warn('[store] Coral query failed, falling back to /query:', coralErr)
+            response = await api.sendQuery(text)
+            fellBackToRag = true
+          }
+        } else {
+          response = await api.sendQuery(text)
+        }
+
         set((state) => {
           state.messages.push({
             id: `a-${Date.now()}`,
             role: 'assistant',
-            ...response,
+            type:
+              response.type === 'structured' || response.steps
+                ? 'structured'
+                : response.type,
+            content: response.content,
+            steps: response.steps,
+            related: response.related,
+            sources: response.sources,
+            retrieval_method:
+              response.retrieval_method ||
+              (usedCoral ? 'coral_sql_join' : 'hybrid_rag'),
+            coral_sql: response.coral_sql || null,
+            coral_rows: response.coral_rows ?? null,
+            retrieval_fallback: fellBackToRag || undefined,
           })
           state.isLoading = false
         })

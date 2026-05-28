@@ -1,10 +1,23 @@
 # MemoryWeave — Project Status
 
 ## Last Updated
-2026-05-28 (Render + Vercel deploy config)
+2026-05-28 (branch: Coral-integration)
 
 ## Current Phase
-Phase 5 — Polish and Deploy
+Phase 6 — Coral integration on branch `Coral-integration`  
+`main` — production demo (Vercel + Render + Aura) remains submission-ready
+
+## Coral integration (in progress)
+See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being added and the target architecture.
+
+- [x] Coral source specs over Acme demo corpus (Slack JSONL, incidents JSONL, Neo4j graph manifests)
+- [x] `coral_service.py` + `/coral-query`, `/coral-schema`, `/coral-report` (existing `/query` unchanged)
+- [x] Assistant: Coral SQL primary (default on), auto-fallback to `/query`, SQL metadata on bubbles
+- [x] Production Docker + Coral CLI install (`backend/Dockerfile`, `render.yaml`)
+- [x] Boot-time Coral source registration (`coral_setup.py`, `CORAL_AUTO_SETUP`)
+- [ ] Judge-visible cross-source SQL demo (Patel / payment / incidents)
+- [ ] MCP or CLI integration documented for local reproduction
+- [ ] Submission README section for Coral-powered narrative
 
 ## What's Been Built
 ### Frontend
@@ -24,7 +37,8 @@ Phase 5 — Polish and Deploy
 - [x] AssistantPage.jsx — chat UI with live `/query` + error fallback
 - [x] SourcesPage.jsx — 8 source cards with status badges and stats
 - [x] WorkflowsPage.jsx — Acme Corp workflow cards (hardcoded demo data)
-- [ ] ReportsPage, SettingsPage — DashboardShell placeholders
+- [x] ReportsPage.jsx — Coral `/coral-report` analytics (bus factor, teams, incidents, workflows)
+- [x] SettingsPage.jsx — Coral `/coral-schema` table registry + JOIN demo
 - [x] `frontend/vercel.json` — SPA rewrites (Vercel Root Directory = `frontend`)
 - [x] All navigation + routing verified end-to-end
 
@@ -43,7 +57,7 @@ Phase 5 — Polish and Deploy
 - [x] Production Chroma in-memory + startup auto-populate (`CHROMA_MODE=inmemory`)
 
 ## What's In Progress
-- Render Web Service + Aura seed + Vercel frontend (`docs/DEPLOY.md`)
+- **Coral-integration branch** — Coral SQL read layer for cross-source queries (`docs/CORAL_INTEGRATION.md`)
 
 ## What's Next
 1. Create AuraDB instance and seed graph against production URI

@@ -1,0 +1,158 @@
+name: memoryweave_graph
+version: 0.1.0
+dsl_version: 3
+backend: http
+description: >-
+  Query Acme Corp knowledge graph nodes and edges from Neo4j Aura via the HTTP
+  transactional API. Exposes knowledge_nodes and knowledge_edges for cross-source SQL.
+
+inputs:
+  NEO4J_URL:
+    kind: variable
+    hint: |
+      Neo4j HTTP base URL (https://<id>.databases.neo4j.io). Convert NEO4J_URI:
+      replace neo4j+s:// or bolt:// with https:// or http://.
+  NEO4J_USERNAME:
+    kind: variable
+    default: neo4j
+    hint: Neo4j username (Aura instance id or neo4j).
+  NEO4J_PASSWORD:
+    kind: secret
+    hint: Neo4j password from Aura or local Docker.
+  NEO4J_DATABASE:
+    kind: variable
+    default: neo4j
+    hint: Database name (Aura default is often the instance id).
+
+base_url: "{{input.NEO4J_URL}}"
+
+auth:
+  type: BasicAuth
+  username: "{{input.NEO4J_USERNAME}}"
+  password: "{{input.NEO4J_PASSWORD}}"
+
+test_queries:
+  - SELECT * FROM memoryweave_graph.knowledge_nodes LIMIT 5
+  - SELECT * FROM memoryweave_graph.knowledge_edges LIMIT 5
+
+tables:
+  - name: knowledge_nodes
+    description: >-
+      Knowledge graph nodes — people, systems, incidents, workflows.
+      Schema id, name, type, risk_score, team, role, criticality.
+    guide: >
+      Full graph node export for MemoryWeave. No filter required.
+      Join with knowledge_edges or memoryweave_demo tables in SQL.
+    request:
+      method: POST
+      path: /db/{{input.NEO4J_DATABASE}}/tx/commit
+      headers:
+        - name: Content-Type
+          from: literal
+          value: application/json
+        - name: Accept
+          from: literal
+          value: application/json
+      body:
+        format: text
+        content:
+          from: literal
+          value: >-
+            {"statements":[{"statement":"MATCH (n) RETURN {rows:collect({id:n.id,name:COALESCE(n.name,''),type:head(labels(n)),risk_score:COALESCE(n.risk_score,0.0),team:COALESCE(n.team,''),role:COALESCE(n.role,''),criticality:COALESCE(n.criticality,'')})} AS x"}]}
+    response:
+      rows_path: [results, "0", data, "0", row, "0", rows]
+    columns:
+      - name: id
+        type: Utf8
+        nullable: false
+        description: Node id (e.g. p1, s1).
+        expr: {kind: path, path: [id]}
+      - name: name
+        type: Utf8
+        nullable: true
+        description: Display name.
+        expr: {kind: path, path: [name]}
+      - name: type
+        type: Utf8
+        nullable: true
+        description: Primary label (Person, System, Incident, Workflow).
+        expr: {kind: path, path: [type]}
+      - name: risk_score
+        type: Float64
+        nullable: true
+        description: Bus-factor / risk score.
+        expr: {kind: path, path: [risk_score]}
+      - name: team
+        type: Utf8
+        nullable: true
+        description: Team name for people.
+        expr: {kind: path, path: [team]}
+      - name: role
+        type: Utf8
+        nullable: true
+        description: Role for people.
+        expr: {kind: path, path: [role]}
+      - name: criticality
+        type: Utf8
+        nullable: true
+        description: Criticality for systems/workflows.
+        expr: {kind: path, path: [criticality]}
+
+  - name: knowledge_edges
+    description: >-
+      Directed relationships between graph entities.
+      Schema from_id, from_name, from_type, rel_type, weight, to_id, to_name, to_type.
+    guide: >
+      All relationships in the Acme demo graph. rel_type values include
+      OWNS, KNOWS, RESOLVES, AFFECTS, DEPENDS_ON.
+    request:
+      method: POST
+      path: /db/{{input.NEO4J_DATABASE}}/tx/commit
+      headers:
+        - name: Content-Type
+          from: literal
+          value: application/json
+        - name: Accept
+          from: literal
+          value: application/json
+      body:
+        format: text
+        content:
+          from: literal
+          value: >-
+            {"statements":[{"statement":"MATCH (a)-[r]->(b) RETURN {rows:collect({from_id:a.id,from_name:COALESCE(a.name,''),from_type:head(labels(a)),rel_type:type(r),weight:COALESCE(r.weight,COALESCE(r.confidence,1.0)),to_id:b.id,to_name:COALESCE(b.name,''),to_type:head(labels(b))})} AS x"}]}
+    response:
+      rows_path: [results, "0", data, "0", row, "0", rows]
+    columns:
+      - name: from_id
+        type: Utf8
+        nullable: true
+        expr: {kind: path, path: [from_id]}
+      - name: from_name
+        type: Utf8
+        nullable: true
+        expr: {kind: path, path: [from_name]}
+      - name: from_type
+        type: Utf8
+        nullable: true
+        expr: {kind: path, path: [from_type]}
+      - name: rel_type
+        type: Utf8
+        nullable: true
+        expr: {kind: path, path: [rel_type]}
+      - name: weight
+        type: Float64
+        nullable: true
+        expr: {kind: path, path: [weight]}
+      - name: to_id
+        type: Utf8
+        nullable: true
+        expr: {kind: path, path: [to_id]}
+      - name: to_name
+        type: Utf8
+        nullable: true
+        expr: {kind: path, path: [to_name]}
+      - name: to_type
+        type: Utf8
+        nullable: true
+        expr: {kind: path, path: [to_type]}

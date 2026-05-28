@@ -1,0 +1,46 @@
+# MemoryWeave Coral Data Sources
+# Each entry becomes a SQL table queryable via: SELECT * FROM <schema>.<name>
+# Coral handles auth, pagination, caching, and schema learning automatically.
+#
+# Coral 0.4.1 uses DSL v3 manifests (one backend per source). Install with:
+#   cd backend
+#   set -a && source .env && set +a
+#   export NEO4J_URL="${NEO4J_URL:-$(echo "$NEO4J_URI" | sed 's|^neo4j+s://|https://|;s|^bolt://|http://|')}"
+#   export NEO4J_USERNAME="${NEO4J_USERNAME:-$NEO4J_USER}"
+#   coral source lint ./coral/manifests/memoryweave_graph.yaml
+#   coral source lint ./coral/manifests/memoryweave_demo.yaml
+#   coral source add --file ./coral/manifests/memoryweave_graph.yaml
+#   coral source add --file ./coral/manifests/memoryweave_demo.yaml
+#   coral source test memoryweave_graph
+#   coral source test memoryweave_demo
+#   coral sql "SELECT schema_name, table_name FROM coral.tables WHERE table_name IN ('knowledge_nodes','knowledge_edges','incident_reports','slack_messages')"
+
+sources:
+
+  # Table: memoryweave_graph.knowledge_nodes
+  # Schema: id, name, type, risk_score, team, role, criticality
+  - name: knowledge_nodes
+    manifest: ./coral/manifests/memoryweave_graph.yaml
+    table: knowledge_nodes
+    description: "Knowledge graph nodes — people, systems, incidents, workflows from Acme Corp"
+
+  # Table: memoryweave_graph.knowledge_edges
+  # Schema: from_id, from_name, from_type, rel_type, weight, to_id, to_name, to_type
+  - name: knowledge_edges
+    manifest: ./coral/manifests/memoryweave_graph.yaml
+    table: knowledge_edges
+    description: "Relationships between entities — OWNS, KNOWS, RESOLVES, AFFECTS, DEPENDS_ON"
+
+  # Table: memoryweave_demo.incident_reports
+  # Schema: incident_id, severity, resolved_by, systems_affected, duration_min, content
+  - name: incident_reports
+    manifest: ./coral/manifests/memoryweave_demo.yaml
+    table: incident_reports
+    description: "Incident postmortem files — P0/P1/P2 incidents with resolution steps"
+
+  # Table: memoryweave_demo.slack_messages
+  # Schema: timestamp, author, channel, text
+  - name: slack_messages
+    manifest: ./coral/manifests/memoryweave_demo.yaml
+    table: slack_messages
+    description: "Slack export — operational discussions, escalations, on-call threads"
