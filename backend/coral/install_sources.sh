@@ -46,20 +46,22 @@ if [[ "$NEO4J_URL" == *localhost* ]]; then
 fi
 
 DATA_URI="$(python3 -c "from pathlib import Path; print((Path('${ROOT}') / 'coral/data').resolve().as_uri() + '/')")"
+GRAPH_MANIFEST="$(mktemp)"
 DEMO_MANIFEST="$(mktemp)"
+sed "s|file://__MEMORYWEAVE_CORAL_DATA__/|${DATA_URI}|g" coral/manifests/memoryweave_graph.yaml > "$GRAPH_MANIFEST"
 sed "s|file://__MEMORYWEAVE_CORAL_DATA__/|${DATA_URI}|g" coral/manifests/memoryweave_demo.yaml > "$DEMO_MANIFEST"
 
 echo "Coral CLI: $(coral --version)"
-coral source lint coral/manifests/memoryweave_graph.yaml
+coral source lint "$GRAPH_MANIFEST"
 coral source lint "$DEMO_MANIFEST"
 
 coral source remove memoryweave_graph 2>/dev/null || true
 coral source remove memoryweave_demo 2>/dev/null || true
 
-coral source add --file coral/manifests/memoryweave_graph.yaml
+coral source add --file "$GRAPH_MANIFEST"
 coral source add --file "$DEMO_MANIFEST"
 
-rm -f "$DEMO_MANIFEST"
+rm -f "$GRAPH_MANIFEST" "$DEMO_MANIFEST"
 
 if [[ "${CORAL_SKIP_TESTS:-0}" != "1" ]]; then
   coral source test memoryweave_graph || echo "[coral] warn: graph test failed"

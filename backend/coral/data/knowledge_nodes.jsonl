@@ -1,0 +1,15 @@
+{"id": "p1", "name": "A. Patel", "type": "Person", "risk_score": 95.0, "team": "Engineering", "role": "Eng Lead", "criticality": ""}
+{"id": "p2", "name": "R. Chen", "type": "Person", "risk_score": 78.0, "team": "Engineering", "role": "Backend Eng", "criticality": ""}
+{"id": "p3", "name": "M. Kim", "type": "Person", "risk_score": 64.0, "team": "Data", "role": "Data Eng", "criticality": ""}
+{"id": "p4", "name": "T. Walsh", "type": "Person", "risk_score": 41.0, "team": "Infrastructure", "role": "DevOps", "criticality": ""}
+{"id": "p5", "name": "J. Brooks", "type": "Person", "risk_score": 28.0, "team": "Infrastructure", "role": "SRE", "criticality": ""}
+{"id": "s1", "name": "Payment API", "type": "System", "risk_score": 0.0, "team": "", "role": "", "criticality": "P0"}
+{"id": "s2", "name": "Auth Service", "type": "System", "risk_score": 0.0, "team": "", "role": "", "criticality": "P0"}
+{"id": "s3", "name": "Data Bus", "type": "System", "risk_score": 0.0, "team": "", "role": "", "criticality": "P1"}
+{"id": "s4", "name": "Deploy System", "type": "System", "risk_score": 0.0, "team": "", "role": "", "criticality": "P1"}
+{"id": "s5", "name": "Analytics", "type": "System", "risk_score": 0.0, "team": "", "role": "", "criticality": "P2"}
+{"id": "w1", "name": "Deploy Flow", "type": "Workflow", "risk_score": 0.0, "team": "", "role": "", "criticality": ""}
+{"id": "w2", "name": "Rollback Proc", "type": "Workflow", "risk_score": 0.0, "team": "", "role": "", "criticality": ""}
+{"id": "w3", "name": "Incident Resp", "type": "Workflow", "risk_score": 0.0, "team": "", "role": "", "criticality": ""}
+{"id": "i1", "name": "P-4021", "type": "Incident", "risk_score": 0.0, "team": "", "role": "", "criticality": "P0"}
+{"id": "i2", "name": "P-3882", "type": "Incident", "risk_score": 0.0, "team": "", "role": "", "criticality": "P1"}

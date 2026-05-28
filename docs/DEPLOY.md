@@ -51,7 +51,7 @@ Deploy **backend** on [Render](https://render.com) and **frontend** on [Vercel](
 Aura’s download file labels the user as `NEO4J_USERNAME`; this app also accepts that name if you prefer to copy-paste exactly.
 | `CHROMA_MODE` | `inmemory` |
 | `CHROMA_STARTUP_POPULATE` | `false` (required on free tier — avoids OOM) |
-| `NEO4J_DATABASE` | `neo4j` (Aura HTTP transaction endpoint; do **not** use the instance id here) |
+| `NEO4J_DATABASE` | Optional for app defaults; `neo4j` if set |
 | `CORAL_AUTO_SETUP` | `true` (registers Coral sources on boot) |
 | `CORAL_SKIP_TESTS` | `1` (faster cold start on free tier) |
 | `CORAL_CONFIG_DIR` | `/app/.coral_config` (Docker) |
@@ -72,9 +72,9 @@ Optional (after Vercel deploy):
 |----------|--------|
 | `ALLOWED_ORIGINS` | `https://your-app.vercel.app,http://localhost:5173` |
 
-On Render **free (512MB)**, set `CHROMA_STARTUP_POPULATE=false`. Indexing downloads ~79MB of embedding models at startup and can OOM-kill the service before it binds a port. Graph and Risk use Neo4j only and work without Chroma. The Assistant prefers **Coral SQL** (`/coral-query`); legacy `/query` is fallback if Coral fails.
+On Render **free (512MB)**, set `CHROMA_STARTUP_POPULATE=false`. Indexing downloads ~79MB of embedding models at startup and can OOM-kill the service before it binds a port. Graph and Risk use Neo4j only and work without Chroma. The Assistant prefers **Coral SQL** (`/coral-query`); legacy `/query` is fallback if Coral fails. Coral's graph source uses packaged JSONL snapshots so it does not depend on Aura's HTTP transactional API.
 
-After deploy, check logs for `[neo4j] Connected OK — 15 nodes` and `[coral] setup ok`. If `/coral-query` returns a 403 for `/db/<instance-id>/tx/commit`, set Render `NEO4J_DATABASE=neo4j` and redeploy so Coral uses `/db/neo4j/tx/commit`. Verify:
+After deploy, check logs for `[neo4j] Connected OK — 15 nodes` and `[coral] setup ok`. Verify:
 
 ```bash
 curl https://your-service.onrender.com/health

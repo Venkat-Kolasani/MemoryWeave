@@ -1,5 +1,27 @@
 # MemoryWeave — Fixes & Learnings
 
+## Render Coral — Aura HTTP API blocked by administrative rules
+**Date:** 2026-05-29
+**Phase:** Phase 6 — Coral integration
+**Severity:** Critical
+
+### What Happened
+Even after setting the database path to `/db/neo4j/tx/commit`, production Coral graph queries failed with `403 Forbidden` from Neo4j Aura's HTTP transactional endpoint.
+
+### Root Cause
+Aura accepted Bolt connections for the app, but rejected the HTTP transactional endpoint used by Coral's HTTP source. Coral schema discovery still passed because the local demo JSONL source worked, masking graph-source failures until `/health/deep` and `/coral-query`.
+
+### How It Was Fixed
+Changed `memoryweave_graph` from a Neo4j HTTP source to packaged JSONL graph snapshots (`knowledge_nodes.jsonl`, `knowledge_edges.jsonl`). The app UI still reads the live Neo4j graph; Coral SQL now has a reliable production read layer for the hackathon demo.
+
+### What I Learned
+When a third-party API blocks a transport, preserve the product path with a stable snapshot source rather than burning demo time on infrastructure edge cases.
+
+### Relevant for Interview
+Shows pragmatic incident response: isolate the failing integration boundary, keep user-facing behavior intact, and document the tradeoff.
+
+---
+
 ## Render Coral — Aura HTTP database path 403
 **Date:** 2026-05-28
 **Phase:** Phase 6 — Coral integration
