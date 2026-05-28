@@ -11,7 +11,7 @@ This is intentional — Coral's MCP integration also works via subprocess/CLI.
 Graceful degradation: if Coral CLI is not found, available = False.
 All callers check coral.available before calling query methods.
 
-Used by: routers/coral_query.py
+Used by: routers/coral_query.py, main.py
 Depends on: coral/queries.py, installed Coral sources (coral/install_sources.sh)
 """
 
@@ -26,6 +26,63 @@ from typing import Any, Optional
 
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent
 CORAL_CLI = os.environ.get("CORAL_CLI_PATH", "coral")
+
+_QUERY_TIMEOUT_SEC = 45
+_SCHEMA_TIMEOUT_SEC = 20
+_VERSION_TIMEOUT_SEC = 5
+
+# Cached at startup — /health reads this instead of spawning Coral per request.
+_coral_health_status: str = "unknown"
+_coral_instance: Optional["CoralService"] = None
+
+# Reject SQL injection patterns in user-supplied literals (Coral CLI has no --param).
+_UNSAFE_SQL_PARAM = re.compile(r"[;]|--|/\*|\*/|\\|\x00")
+_SAFE_PARAM_CHARS = re.compile(r"^[\w\s\-\.]+$", re.UNICODE)
+
+
+def get_coral_health_status() -> str:
+    """Last-known Coral status from startup probe (ok | cli_not_found | error: …)."""
+    return _coral_health_status
+
+
+def set_coral_health_status(status: str) -> None:
+    """Update cached Coral status (called from startup and optional deep health)."""
+    global _coral_health_status
+    _coral_health_status = status
+
+
+def get_coral_service() -> "CoralService":
+    """Module-level singleton — avoids re-running `coral --version` on every request."""
+    global _coral_instance
+    if _coral_instance is None:
+        _coral_instance = CoralService()
+    return _coral_instance
+
+
+def probe_coral_health(*, run_sql_smoke_test: bool = False) -> str:
+    """
+    Check Coral CLI once (optionally run a lightweight SQL smoke test).
+    Intended for startup and /health/deep — not per-request /health.
+    """
+    svc = get_coral_service()
+    if not svc.available:
+        status = "cli_not_found"
+        set_coral_health_status(status)
+        return status
+
+    if run_sql_smoke_test:
+        try:
+            svc.query(
+                "SELECT COUNT(*) AS n FROM memoryweave_demo.slack_messages",
+                timeout_sec=10,
+            )
+        except Exception as exc:
+            status = f"error: {exc}"
+            set_coral_health_status(status)
+            return status
+
+    set_coral_health_status("ok")
+    return "ok"
 
 
 def _coral_env() -> dict[str, str]:
@@ -42,8 +99,31 @@ def _coral_env() -> dict[str, str]:
     )
     env["PATH"] = extra
     return env
-_QUERY_TIMEOUT_SEC = 45
-_SCHEMA_TIMEOUT_SEC = 20
+
+
+def sanitize_sql_param(value: str, *, max_len: int = 64) -> str:
+    """
+    Escape a value embedded in a SQL string literal.
+
+    Rejects comment sequences, semicolons, and non-alphanumeric entity tokens.
+    Single quotes are doubled per SQL standard.
+    """
+    if not value or not isinstance(value, str):
+        raise ValueError("empty SQL parameter")
+
+    cleaned = value.strip()[:max_len]
+    if _UNSAFE_SQL_PARAM.search(cleaned):
+        raise ValueError("invalid SQL parameter: forbidden characters")
+    if not _SAFE_PARAM_CHARS.fullmatch(cleaned):
+        raise ValueError("invalid SQL parameter: unsupported characters")
+
+    return cleaned.replace("'", "''")
+
+
+def _apply_sql_params(sql: str, params: dict[str, Any]) -> str:
+    """Substitute named placeholders with sanitized string literals."""
+    safe = {key: sanitize_sql_param(str(val)) for key, val in params.items()}
+    return sql.format(**safe)
 
 
 class CoralService:
@@ -59,7 +139,7 @@ class CoralService:
                 [CORAL_CLI, "--version"],
                 capture_output=True,
                 text=True,
-                timeout=5,
+                timeout=_VERSION_TIMEOUT_SEC,
                 cwd=str(_BACKEND_ROOT),
                 env=_coral_env(),
             )
@@ -67,7 +147,13 @@ class CoralService:
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
 
-    def query(self, sql: str, params: Optional[dict[str, Any]] = None) -> list[dict[str, Any]]:
+    def query(
+        self,
+        sql: str,
+        params: Optional[dict[str, Any]] = None,
+        *,
+        timeout_sec: int = _QUERY_TIMEOUT_SEC,
+    ) -> list[dict[str, Any]]:
         """
         Execute a SQL query via Coral CLI.
 
@@ -79,7 +165,7 @@ class CoralService:
             )
 
         if params:
-            sql = sql.format(**params)
+            sql = _apply_sql_params(sql, params)
 
         sql = sql.strip()
         cmd = [CORAL_CLI, "sql", "--format", "json", sql]
@@ -89,12 +175,14 @@ class CoralService:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=_QUERY_TIMEOUT_SEC,
+                timeout=timeout_sec,
                 cwd=str(_BACKEND_ROOT),
                 env=_coral_env(),
             )
         except subprocess.TimeoutExpired as exc:
-            raise RuntimeError("Coral query timed out after 45 seconds") from exc
+            raise RuntimeError(
+                f"Coral query timed out after {timeout_sec} seconds"
+            ) from exc
 
         if result.returncode != 0:
             stderr = (result.stderr or result.stdout or "").strip()
@@ -134,14 +222,16 @@ class CoralService:
                 "SELECT schema_name, table_name, description "
                 "FROM coral.tables "
                 "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
-                "ORDER BY schema_name, table_name"
+                "ORDER BY schema_name, table_name",
+                timeout_sec=_SCHEMA_TIMEOUT_SEC,
             )
             columns = self.query(
                 "SELECT schema_name, table_name, column_name, data_type, description "
                 "FROM coral.columns "
                 "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
                 "ORDER BY schema_name, table_name, ordinal_position "
-                "LIMIT 500"
+                "LIMIT 500",
+                timeout_sec=_SCHEMA_TIMEOUT_SEC,
             )
             return {
                 "available": True,
@@ -159,8 +249,7 @@ class CoralService:
 
     def person_context(self, name: str) -> list[dict[str, Any]]:
         queries = self._load_queries()
-        safe = re.sub(r"[{}]", "", name)
-        return self.query(queries.PERSON_FULL_CONTEXT, {"person_name": safe})
+        return self.query(queries.PERSON_FULL_CONTEXT, {"person_name": name})
 
     def system_risks(self) -> list[dict[str, Any]]:
         queries = self._load_queries()
@@ -176,8 +265,12 @@ class CoralService:
 
     def full_context(self, keyword: str) -> list[dict[str, Any]]:
         queries = self._load_queries()
-        safe = re.sub(r"[{}]", "", keyword)
-        return self.query(queries.FULL_OPERATIONAL_CONTEXT, {"keyword": safe})
+        return self.query(queries.FULL_OPERATIONAL_CONTEXT, {"keyword": keyword})
+
+    def operational_overview(self) -> list[dict[str, Any]]:
+        """Broad graph context when no entity keyword is extracted from the question."""
+        queries = self._load_queries()
+        return self.query(queries.OPERATIONAL_CONTEXT_OVERVIEW)
 
     def team_concentration(self) -> list[dict[str, Any]]:
         queries = self._load_queries()

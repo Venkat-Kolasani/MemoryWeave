@@ -6,7 +6,7 @@ These replace the fragmented: Cypher to Neo4j + embedding search to ChromaDB + m
 Coral executes cross-source JOINs internally — data resolves inside Coral, not inside our agent.
 
 All queries use table names registered in sources.yaml (Coral schemas: memoryweave_graph.*, memoryweave_demo.*).
-Parameter substitution uses Python .format(**params) — safe because we own all templates.
+Parameter substitution uses coral_service.sanitize_sql_param before .format(**params).
 """
 
 
@@ -114,6 +114,25 @@ LEFT JOIN memoryweave_graph.knowledge_edges e
 WHERE LOWER(n.name) LIKE LOWER('%{keyword}%')
    OR LOWER(e.to_name) LIKE LOWER('%{keyword}%')
    OR LOWER(e.from_name) LIKE LOWER('%{keyword}%')
+ORDER BY n.risk_score DESC, e.weight DESC
+LIMIT 50
+"""
+
+
+# ─── Query 5b: Overview when no keyword matches the question ─────────────────
+# Used when _extract_keyword returns None — avoids biasing toward "payment".
+OPERATIONAL_CONTEXT_OVERVIEW = """
+SELECT
+    n.name            AS entity_name,
+    n.type            AS entity_type,
+    n.risk_score      AS risk_score,
+    e.rel_type        AS relationship,
+    e.to_name         AS related_entity,
+    e.to_type         AS related_type,
+    e.weight          AS strength
+FROM memoryweave_graph.knowledge_nodes n
+LEFT JOIN memoryweave_graph.knowledge_edges e
+    ON n.id = e.from_id OR n.id = e.to_id
 ORDER BY n.risk_score DESC, e.weight DESC
 LIMIT 50
 """

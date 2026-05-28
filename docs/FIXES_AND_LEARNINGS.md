@@ -1,5 +1,31 @@
 # MemoryWeave — Fixes & Learnings
 
+## /health Coral probe caused probe timeouts (code review)
+**Date:** 2026-05-28
+**Phase:** Phase 6 — Coral integration
+**Severity:** High
+
+### What Happened
+`/health` instantiated `CoralService` and ran a full `coral sql` query on every request. Render liveness probes hit `/health` frequently; each call spawned subprocesses with up to 45s timeout risk.
+
+### Root Cause
+Health check mixed “is the process up?” with “can Coral run SQL?”. Module-level `OpenAI(**fireworks_client_kwargs())` in `coral_query.py` also crashed app import when `FIREWORKS_API_KEY` was unset.
+
+### How It Was Fixed
+- Cached Coral status at startup via `probe_coral_health()`; `/health` reads `get_coral_health_status()` only.
+- Added `/health/deep` for optional SQL smoke test (thread pool).
+- Singleton `get_coral_service()`; lazy Fireworks client on request.
+- `_extract_keyword` returns `None` → `OPERATIONAL_CONTEXT_OVERVIEW` instead of defaulting to `"payment"`.
+- `sanitize_sql_param()` before SQL `.format()`; Settings page neutral loading state.
+
+### What I Learned
+Liveness endpoints must be O(1) and side-effect free; deep readiness checks belong on a separate route.
+
+### Relevant for Interview
+Production hygiene: probe design, lazy init, and separating fast vs slow health checks.
+
+---
+
 ## Coral CLI install and source spec format (CORAL-01)
 **Date:** 2026-05-28
 **Phase:** Phase 6 — Coral integration

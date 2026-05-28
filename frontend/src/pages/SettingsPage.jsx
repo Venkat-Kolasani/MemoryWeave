@@ -145,7 +145,8 @@ export default function SettingsPage() {
     }
   }, [])
 
-  const coralAvailable = schema?.available === true
+  const coralAvailable = !loading && schema?.available === true
+  const coralOffline = !loading && schema?.available !== true
   const tables = useMemo(
     () => mergeLiveColumns(CORAL_TABLES, schema),
     [schema],
@@ -183,8 +184,10 @@ export default function SettingsPage() {
           />
           <StatCard
             label="Coral Status"
-            value={loading ? '…' : coralAvailable ? 'Live' : 'Offline'}
-            sublabel={coralAvailable ? 'CLI connected' : 'install required'}
+            value={loading ? '…' : coralAvailable ? 'Live' : coralOffline ? 'Offline' : '…'}
+            sublabel={
+              loading ? 'checking connection' : coralAvailable ? 'CLI connected' : 'install required'
+            }
             delay={120}
           />
           <StatCard label="Cache TTL" value="300s" sublabel="schema learning active" delay={180} />
@@ -193,8 +196,14 @@ export default function SettingsPage() {
         <div
           style={{
             padding: '16px 20px',
-            background: coralAvailable ? 'var(--accent-light)' : 'var(--bg-secondary)',
-            border: `1px solid ${coralAvailable ? 'var(--border)' : 'var(--danger)'}`,
+            background: loading
+              ? 'var(--bg-secondary)'
+              : coralAvailable
+                ? 'var(--accent-light)'
+                : 'var(--bg-secondary)',
+            border: `1px solid ${
+              loading ? 'var(--border)' : coralAvailable ? 'var(--border)' : 'var(--danger)'
+            }`,
             borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
@@ -207,13 +216,18 @@ export default function SettingsPage() {
               height: 8,
               borderRadius: '50%',
               flexShrink: 0,
-              background: coralAvailable ? 'var(--success)' : 'var(--danger)',
+              background: loading
+                ? 'var(--text-tertiary)'
+                : coralAvailable
+                  ? 'var(--success)'
+                  : 'var(--danger)',
               animation: coralAvailable ? 'pulse-dot 1.5s ease-in-out infinite' : 'none',
             }}
           />
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: 13, fontWeight: 600 }}>
-              Coral CLI {coralAvailable ? 'Connected' : 'Not Found'}
+              Coral CLI{' '}
+              {loading ? 'Checking…' : coralAvailable ? 'Connected' : 'Not Found'}
             </span>
             <p
               style={{
@@ -223,12 +237,14 @@ export default function SettingsPage() {
                 marginTop: 2,
               }}
             >
-              {coralAvailable
-                ? 'All 4 data sources are registered and queryable as SQL tables via Coral.'
-                : 'Install Coral to enable cross-source SQL: brew install withcoral/tap/coral'}
+              {loading
+                ? 'Verifying Coral CLI and registered SQL sources…'
+                : coralAvailable
+                  ? 'All 4 data sources are registered and queryable as SQL tables via Coral.'
+                  : 'Install Coral to enable cross-source SQL: brew install withcoral/tap/coral'}
             </p>
           </div>
-          {!coralAvailable && (
+          {coralOffline && (
             <Button
               variant="primary"
               size="sm"
