@@ -4,10 +4,10 @@
 
 > AI-powered organizational memory. Makes institutional knowledge queryable before it walks out the door.
 
-**Live Demo:** [your-app.vercel.app](https://your-app.vercel.app)  
-**API:** [your-api.onrender.com](https://your-api.onrender.com)
+**Live Demo:** [memory-weave-ai.vercel.app](https://memory-weave-ai.vercel.app)  
+**API:** [memoryweave.onrender.com](https://memoryweave.onrender.com)
 
-Replace with your Vercel + Render URLs before submitting. Deploy guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**
+Deploy guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**
 
 ---
 
@@ -94,6 +94,4 @@ Input (Slack / GitHub / Incidents / Docs)
 - [LOCAL_SETUP.md](docs/LOCAL_SETUP.md) — local dev guide
 - [DEPLOY.md](docs/DEPLOY.md) — Render + Vercel production deploy
 
----
 
-**Hackathon:** OpenAI × Outskill · React + FastAPI + Neo4j + ChromaDB + Fireworks.ai

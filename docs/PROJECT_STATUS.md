@@ -25,7 +25,7 @@ Phase 5 — Polish and Deploy
 - [x] SourcesPage.jsx — 8 source cards with status badges and stats
 - [x] WorkflowsPage.jsx — Acme Corp workflow cards (hardcoded demo data)
 - [ ] ReportsPage, SettingsPage — DashboardShell placeholders
-- [x] `frontend/vercel.json` — SPA rewrites for React Router
+- [x] `frontend/vercel.json` — SPA rewrites (Vercel Root Directory = `frontend`)
 - [x] All navigation + routing verified end-to-end
 
 ### Backend
