@@ -90,10 +90,10 @@ function mapQueryResponse(data) {
 }
 
 /**
- * Legacy retrieval: Chroma + Neo4j + Fireworks (`POST /query`).
+ * Standard retrieval: Chroma + Neo4j + Fireworks (`POST /query`).
  * @param {string} question
  */
-async function sendLegacyQuery(question) {
+export async function sendQuery(question) {
   const res = await fetch(`${BASE}/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -104,36 +104,9 @@ async function sendLegacyQuery(question) {
 }
 
 /**
- * Primary assistant path: Coral SQL cross-source JOIN + Fireworks (`POST /coral-query`).
- * Falls back to `/query` if Coral is unavailable (503).
+ * Coral SQL cross-source JOIN + Fireworks (`POST /coral-query`).
  * @param {string} question
- */
-export async function sendQuery(question) {
-  try {
-    const res = await fetch(`${BASE}/coral-query`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
-    })
-    if (res.ok) {
-      return mapQueryResponse(await res.json())
-    }
-    if (res.status !== 503) {
-      throw new Error(`/coral-query failed: ${res.status}`)
-    }
-  } catch (err) {
-    if (err instanceof Error && err.message.includes('/coral-query failed')) {
-      throw err
-    }
-    console.warn('[api] Coral query unavailable, falling back to /query', err)
-  }
-
-  return sendLegacyQuery(question)
-}
-
-/**
- * Explicit Coral-only query (no fallback). For Reports / debug.
- * @param {string} question
+ * @returns {Promise<{ answer: string, steps?: string[], related?: object, sources?: unknown, coral_sql?: string, coral_rows?: number, retrieval_method?: string }>}
  */
 export async function sendCoralQuery(question) {
   const res = await fetch(`${BASE}/coral-query`, {

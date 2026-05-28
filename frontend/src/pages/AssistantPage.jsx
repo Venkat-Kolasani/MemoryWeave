@@ -29,6 +29,36 @@ const RECENT_QUERIES = [
 
 const GRID_CATEGORIES = ['systems', 'people', 'incidents']
 
+/** Subtle Coral attribution label for page chrome. */
+function PoweredByCoral() {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        marginLeft: 6,
+        fontSize: 10,
+        fontFamily: 'var(--font-mono)',
+        fontWeight: 500,
+        color: 'var(--accent-text)',
+        letterSpacing: '0.04em',
+      }}
+    >
+      <span
+        style={{
+          width: 5,
+          height: 5,
+          borderRadius: '50%',
+          background: 'var(--accent)',
+          animation: 'pulse-dot 1.5s ease-in-out infinite',
+        }}
+      />
+      Powered by Coral SQL
+    </span>
+  )
+}
+
 /** Renders avatar for user or assistant messages. */
 function MessageAvatar({ role }) {
   const isAssistant = role === 'assistant'
@@ -218,6 +248,56 @@ function ChatMessage({ message }) {
       {isStructured && message.related && (
         <RelatedEntities related={message.related} />
       )}
+
+      {message.coral_sql && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: '10px 14px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 6,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 9,
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 500,
+                color: 'var(--accent-text)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Coral SQL · {message.coral_rows} rows retrieved
+            </span>
+          </div>
+          <code
+            style={{
+              display: 'block',
+              fontSize: 9,
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--text-tertiary)',
+              lineHeight: 1.5,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+              maxHeight: 60,
+              overflow: 'hidden',
+            }}
+          >
+            {message.coral_sql.split('\n').slice(0, 5).join('\n')}
+            {message.coral_sql.split('\n').length > 5 ? '\n...' : ''}
+          </code>
+        </div>
+      )}
     </div>
   )
 }
@@ -259,6 +339,8 @@ export default function AssistantPage() {
   const messages = useAppStore((s) => s.messages)
   const isLoading = useAppStore((s) => s.isLoading)
   const sendMessage = useAppStore((s) => s.sendMessage)
+  const useCoralQuery = useAppStore((s) => s.useCoralQuery)
+  const toggleCoralQuery = useAppStore((s) => s.toggleCoralQuery)
   const knowledgeStats = useAppStore((s) => s.knowledgeStats)
   const fetchStats = useAppStore((s) => s.fetchStats)
 
@@ -315,7 +397,11 @@ export default function AssistantPage() {
   return (
     <DashboardShell
       title="AI Assistant"
-      subtitle="Operational Mentor · Grounded in organizational memory"
+      subtitle={
+        useCoralQuery
+          ? 'Operational Mentor · Cross-source SQL retrieval'
+          : 'Operational Mentor · Grounded in organizational memory'
+      }
       contentPadding={0}
       contentOverflow="hidden"
     >
@@ -442,8 +528,14 @@ export default function AssistantPage() {
                 textAlign: 'center',
               }}
             >
-              Grounded in {knowledgeStats.nodes.toLocaleString()} knowledge nodes · live
-              organizational memory
+              {useCoralQuery ? (
+                'Coral SQL mode · Powered by Coral SQL · cross-source JOINs'
+              ) : (
+                <>
+                  Grounded in {knowledgeStats.nodes.toLocaleString()} knowledge nodes ·
+                  live organizational memory
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -511,6 +603,120 @@ export default function AssistantPage() {
               </div>
             </div>
           ))}
+
+          <div
+            style={{
+              padding: 16,
+              marginLeft: -20,
+              marginRight: -20,
+              borderTop: '1px solid var(--border-subtle)',
+              borderBottom: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 8,
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Retrieval Mode</span>
+              {useCoralQuery && <PoweredByCoral />}
+            </div>
+
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && useCoralQuery) {
+                  toggleCoralQuery()
+                }
+              }}
+              onClick={() => useCoralQuery && toggleCoralQuery()}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                marginBottom: 6,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                border: `1px solid ${!useCoralQuery ? 'var(--accent)' : 'var(--border)'}`,
+                background: !useCoralQuery ? 'var(--accent-light)' : 'transparent',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: !useCoralQuery ? 'var(--accent-text)' : 'var(--text-primary)',
+                }}
+              >
+                Standard RAG
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-tertiary)',
+                  marginTop: 2,
+                }}
+              >
+                ChromaDB + Neo4j Cypher
+              </div>
+            </div>
+
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && !useCoralQuery) {
+                  toggleCoralQuery()
+                }
+              }}
+              onClick={() => !useCoralQuery && toggleCoralQuery()}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                border: `1px solid ${useCoralQuery ? 'var(--accent)' : 'var(--border)'}`,
+                background: useCoralQuery ? 'var(--accent-light)' : 'transparent',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: useCoralQuery ? 'var(--accent-text)' : 'var(--text-primary)',
+                  }}
+                >
+                  Coral SQL JOIN
+                </div>
+                {useCoralQuery && (
+                  <span
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: '50%',
+                      background: 'var(--accent)',
+                      animation: 'pulse-dot 1.2s ease-in-out infinite',
+                    }}
+                  />
+                )}
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-tertiary)',
+                  marginTop: 2,
+                }}
+              >
+                Cross-source SQL · No ETL
+              </div>
+            </div>
+          </div>
 
           <div
             style={{
