@@ -33,13 +33,18 @@ LABEL_TO_TYPE = {
 }
 
 
+def _neo4j_env(key: str, default: str = "") -> str:
+    """Read Neo4j env var with whitespace stripped (avoids Render paste issues)."""
+    return os.getenv(key, default).strip()
+
+
 class Neo4jService:
     def __init__(self):
         self.driver = GraphDatabase.driver(
-            os.getenv("NEO4J_URI", "bolt://localhost:7687"),
+            _neo4j_env("NEO4J_URI", "bolt://localhost:7687"),
             auth=(
-                os.getenv("NEO4J_USER", "neo4j"),
-                os.getenv("NEO4J_PASSWORD", "memoryweave"),
+                _neo4j_env("NEO4J_USER", "neo4j"),
+                _neo4j_env("NEO4J_PASSWORD", "memoryweave"),
             ),
         )
 

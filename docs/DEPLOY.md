@@ -48,6 +48,7 @@ Deploy **backend** on [Render](https://render.com) and **frontend** on [Vercel](
 | `NEO4J_USER` | `neo4j` |
 | `NEO4J_PASSWORD` | Aura password |
 | `CHROMA_MODE` | `inmemory` |
+| `CHROMA_STARTUP_POPULATE` | `false` (required on free tier — avoids OOM) |
 
 Optional (after Vercel deploy):
 
@@ -55,7 +56,9 @@ Optional (after Vercel deploy):
 |----------|--------|
 | `ALLOWED_ORIGINS` | `https://your-app.vercel.app,http://localhost:5173` |
 
-Chroma demo data is **auto-populated on startup** when the collection is empty (no separate Chroma server on Render).
+On Render **free (512MB)**, set `CHROMA_STARTUP_POPULATE=false`. Indexing downloads ~79MB of embedding models at startup and can OOM-kill the service before it binds a port. Graph and Risk use Neo4j only and work without Chroma. Assistant `/query` uses graph context when Chroma is empty; full semantic search needs local `populate_chroma.py` or a larger Render plan.
+
+After deploy, check logs for `[neo4j] Connected OK — 15 nodes`. If you see `Connection FAILED` / `Unauthorized`, re-copy Aura credentials (no quotes, no trailing spaces). Verify with `curl https://your-service.onrender.com/health`.
 
 ### Step 5 — Seed Neo4j (once, from your machine)
 

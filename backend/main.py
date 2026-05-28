@@ -10,6 +10,7 @@ Depends on: routers/graph, risk, query, ingest
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -43,8 +44,42 @@ app.include_router(query.router)
 app.include_router(ingest.router)
 
 
+def _neo4j_env(key: str, default: str = "") -> str:
+    return os.getenv(key, default).strip()
+
+
+def _verify_neo4j_on_startup() -> None:
+    """Log Neo4j connectivity (no secrets). Helps debug Render vs local .env mismatches."""
+    uri = _neo4j_env("NEO4J_URI", "bolt://localhost:7687")
+    user = _neo4j_env("NEO4J_USER", "neo4j")
+    password = _neo4j_env("NEO4J_PASSWORD", "memoryweave")
+
+    host = urlparse(uri).hostname or uri
+    print(f"[neo4j] URI host={host} user={user} password_len={len(password)}")
+
+    try:
+        from services.neo4j_service import Neo4jService
+
+        neo4j = Neo4jService()
+        neo4j.driver.verify_connectivity()
+        with neo4j.driver.session() as session:
+            count = session.run("MATCH (n) RETURN count(n) AS c").single()["c"]
+        neo4j.close()
+        print(f"[neo4j] Connected OK — {count} nodes in database")
+    except Exception as exc:
+        print(f"[neo4j] Connection FAILED: {exc}")
+
+
 def _ensure_chroma_seeded() -> None:
-    """Populate in-memory Chroma on first boot (Render) or empty collection."""
+    """
+    Populate in-memory Chroma on first boot.
+    Disabled when CHROMA_STARTUP_POPULATE=false (required on Render free 512MB —
+    onnx model download during startup causes OOM).
+    """
+    if _neo4j_env("CHROMA_STARTUP_POPULATE", "true").lower() in {"0", "false", "no"}:
+        print("[chroma] Startup populate disabled (CHROMA_STARTUP_POPULATE=false)")
+        return
+
     try:
         from data.populate_chroma import populate
         from services.chroma_service import ChromaService
@@ -63,8 +98,9 @@ def _ensure_chroma_seeded() -> None:
 
 @app.on_event("startup")
 async def on_startup() -> None:
-    """Log startup and seed Chroma when empty (in-memory production mode)."""
+    """Log startup, verify Neo4j, optionally seed Chroma."""
     print("MemoryWeave backend starting...")
+    _verify_neo4j_on_startup()
     _ensure_chroma_seeded()
 
 
@@ -72,3 +108,39 @@ async def on_startup() -> None:
 async def root() -> dict[str, str]:
     """Health check and service metadata."""
     return {"status": "ok", "version": "1.0.0", "service": "MemoryWeave"}
+
+
+@app.get("/health")
+async def health() -> dict:
+    """Extended health — Neo4j node count and Chroma chunk count (no secrets)."""
+    neo4j_status = "error"
+    node_count = 0
+    chroma_count = 0
+
+    try:
+        from services.neo4j_service import Neo4jService
+
+        neo4j = Neo4jService()
+        neo4j.driver.verify_connectivity()
+        with neo4j.driver.session() as session:
+            node_count = session.run("MATCH (n) RETURN count(n) AS c").single()["c"]
+        neo4j.close()
+        neo4j_status = "ok"
+    except Exception as exc:
+        neo4j_status = f"error: {exc}"
+
+    try:
+        from services.chroma_service import ChromaService
+
+        chroma = ChromaService()
+        chroma_count = chroma.collection.count()
+    except Exception:
+        pass
+
+    return {
+        "status": "ok",
+        "neo4j": neo4j_status,
+        "neo4j_nodes": node_count,
+        "chroma_chunks": chroma_count,
+        "chroma_startup_populate": _neo4j_env("CHROMA_STARTUP_POPULATE", "true"),
+    }
