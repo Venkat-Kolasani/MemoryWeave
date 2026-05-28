@@ -44,9 +44,11 @@ Deploy **backend** on [Render](https://render.com) and **frontend** on [Vercel](
 |----------|--------|
 | `FIREWORKS_API_KEY` | Your Fireworks key |
 | `FIREWORKS_MODEL` | `accounts/fireworks/models/kimi-k2p5` (or model your account supports) |
-| `NEO4J_URI` | `neo4j+s://xxx.databases.neo4j.io` |
-| `NEO4J_USER` | `neo4j` |
-| `NEO4J_PASSWORD` | Aura password |
+| `NEO4J_URI` | `neo4j+s://xxx.databases.neo4j.io` (from Aura `.txt` file) |
+| `NEO4J_USER` | Value from Aura’s `NEO4J_USERNAME=` line (often your instance id, **not** `neo4j`) |
+| `NEO4J_PASSWORD` | Aura password (from `.txt`; shown only once at instance creation) |
+
+Aura’s download file labels the user as `NEO4J_USERNAME`; this app also accepts that name if you prefer to copy-paste exactly.
 | `CHROMA_MODE` | `inmemory` |
 | `CHROMA_STARTUP_POPULATE` | `false` (required on free tier — avoids OOM) |
 

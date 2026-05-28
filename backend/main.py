@@ -51,7 +51,9 @@ def _neo4j_env(key: str, default: str = "") -> str:
 def _verify_neo4j_on_startup() -> None:
     """Log Neo4j connectivity (no secrets). Helps debug Render vs local .env mismatches."""
     uri = _neo4j_env("NEO4J_URI", "bolt://localhost:7687")
-    user = _neo4j_env("NEO4J_USER", "neo4j")
+    from services.neo4j_service import neo4j_username
+
+    user = neo4j_username()
     password = _neo4j_env("NEO4J_PASSWORD", "memoryweave")
 
     host = urlparse(uri).hostname or uri

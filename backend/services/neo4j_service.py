@@ -38,12 +38,20 @@ def _neo4j_env(key: str, default: str = "") -> str:
     return os.getenv(key, default).strip()
 
 
+def neo4j_username() -> str:
+    """
+    Aura download files use NEO4J_USERNAME; local Docker uses NEO4J_USER=neo4j.
+  Accept either env var name.
+    """
+    return _neo4j_env("NEO4J_USER") or _neo4j_env("NEO4J_USERNAME", "neo4j")
+
+
 class Neo4jService:
     def __init__(self):
         self.driver = GraphDatabase.driver(
             _neo4j_env("NEO4J_URI", "bolt://localhost:7687"),
             auth=(
-                _neo4j_env("NEO4J_USER", "neo4j"),
+                neo4j_username(),
                 _neo4j_env("NEO4J_PASSWORD", "memoryweave"),
             ),
         )
