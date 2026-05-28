@@ -1,5 +1,6 @@
 # MemoryWeave API — Python + Coral CLI for production SQL retrieval
-FROM python:3.11-slim-bookworm
+# Coral v0.4.1 Linux binary requires GLIBC_2.39+; Debian Bookworm ships 2.36.
+FROM python:3.11-slim-trixie
 
 # GitHub release tags are v-prefixed (e.g. v0.4.1) — 0.4.1 alone 404s the asset URL.
 ARG CORAL_VERSION=v0.4.1

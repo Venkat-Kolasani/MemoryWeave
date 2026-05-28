@@ -1,5 +1,27 @@
 # MemoryWeave — Fixes & Learnings
 
+## Render Docker — Coral binary required GLIBC_2.39
+**Date:** 2026-05-28
+**Phase:** Phase 6 — Coral integration
+**Severity:** Critical
+
+### What Happened
+Docker build installed Coral successfully, but `coral --version` failed with `/lib/x86_64-linux-gnu/libc.so.6: version 'GLIBC_2.39' not found`.
+
+### Root Cause
+The image used `python:3.11-slim-bookworm`, which is Debian Bookworm with glibc 2.36. Coral v0.4.1's Linux binary requires glibc 2.39 or newer.
+
+### How It Was Fixed
+Changed the backend Docker base image to `python:3.11-slim-trixie`, which provides a new enough glibc for Coral.
+
+### What I Learned
+Binary CLI tools can impose OS libc constraints independent of Python dependencies; verifying the binary during Docker build caught this before runtime.
+
+### Relevant for Interview
+Good example of diagnosing native binary compatibility issues in containerized deployments.
+
+---
+
 ## Render Docker — Coral install 404 (wrong CORAL_VERSION tag)
 **Date:** 2026-05-28
 **Phase:** Phase 6 — Coral integration
