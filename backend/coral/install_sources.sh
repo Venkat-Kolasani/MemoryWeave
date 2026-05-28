@@ -24,11 +24,16 @@ for line in Path('.env').read_text().splitlines():
 fi
 
 export NEO4J_URL="${NEO4J_URL:-$(echo "${NEO4J_URI:-}" | sed 's|^neo4j+s://|https://|;s|^bolt://|http://|')}"
+# Docker Neo4j: Bolt is :7687, HTTP transactional API is :7474 (Coral uses HTTP).
+if [[ "$NEO4J_URL" == *localhost:7687* ]]; then
+  NEO4J_URL="${NEO4J_URL/:7687/:7474}"
+fi
+export NEO4J_URL
 export NEO4J_USERNAME="${NEO4J_USERNAME:-${NEO4J_USER:-neo4j}}"
 export NEO4J_DATABASE="${NEO4J_DATABASE:-neo4j}"
 
 if [[ "$NEO4J_URL" == *localhost* ]]; then
-  echo "Note: NEO4J_URI points at localhost. Start Docker Neo4j or set Aura https URL in backend/.env."
+  echo "Note: using Neo4j HTTP at ${NEO4J_URL} (start Docker Neo4j or set Aura https URL in .env)."
 fi
 
 DATA_URI="$(python3 -c "from pathlib import Path; print((Path('${ROOT}') / 'coral/data').resolve().as_uri() + '/')")"
