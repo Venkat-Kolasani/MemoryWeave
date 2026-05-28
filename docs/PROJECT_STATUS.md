@@ -38,7 +38,7 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being adde
 - [x] SourcesPage.jsx — 8 source cards with status badges and stats
 - [x] WorkflowsPage.jsx — Acme Corp workflow cards (hardcoded demo data)
 - [x] ReportsPage.jsx — Coral `/coral-report` analytics (bus factor, teams, incidents, workflows)
-- [ ] SettingsPage — DashboardShell placeholder
+- [x] SettingsPage.jsx — Coral `/coral-schema` table registry + JOIN demo
 - [x] `frontend/vercel.json` — SPA rewrites (Vercel Root Directory = `frontend`)
 - [x] All navigation + routing verified end-to-end
 
