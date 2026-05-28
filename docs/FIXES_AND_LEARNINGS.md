@@ -1,5 +1,28 @@
 # MemoryWeave — Fixes & Learnings
 
+## Render Docker — Coral CLI not on PATH at runtime
+**Date:** 2026-05-28
+**Phase:** Phase 6 — Coral integration
+**Severity:** High
+
+### What Happened
+Render deploy logs showed `[coral] CLI not found` and `[coral] setup error: coral CLI not found` despite a successful Docker build.
+
+### Root Cause
+`install.sh` defaults to `$HOME/.local/bin` (`/root/.local/bin`). The binary was not reliably on PATH at container start, and unpinned `CORAL_VERSION` could fail silently against GitHub API rate limits during build.
+
+### How It Was Fixed
+- Dockerfile: `CORAL_INSTALL_DIR=/usr/local/bin`, pin `CORAL_VERSION=0.4.1`, run `coral --version` in build (fails image if install breaks).
+- `start.sh`: prepend `/usr/local/bin` to PATH; optional runtime install fallback.
+
+### What I Learned
+Install CLI tools to a global path in Docker (`/usr/local/bin`) and verify in the same `RUN` layer.
+
+### Relevant for Interview
+Container PATH and multi-stage/production install gotchas.
+
+---
+
 ## /health Coral probe caused probe timeouts (code review)
 **Date:** 2026-05-28
 **Phase:** Phase 6 — Coral integration
