@@ -141,6 +141,12 @@ Vercel → Project → **Settings** → **Environment Variables**
 
 Redeploy after adding.
 
+### Render cold start (free tier)
+
+The API sleeps after ~15 minutes idle. The frontend **auto-pings** `/` and `/health` as soon as the landing page loads (see `frontend/index.html` + `warmBackend()` in `api.js`), so the instance often wakes while judges read the hero.
+
+For extra reliability before a live demo, use a free monitor (e.g. [UptimeRobot](https://uptimerobot.com)) to hit `https://memoryweave.onrender.com/health` every **10 minutes**.
+
 ### Step 5 — Verify
 
 - [ ] `your-app.vercel.app` — landing page

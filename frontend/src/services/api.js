@@ -9,6 +9,37 @@
 
 const BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
+let backendWarmStarted = false
+
+/** True when API base is local dev — skip Render wake pings. */
+function isLocalApiBase() {
+  return /localhost|127\.0\.0\.1/.test(BASE)
+}
+
+/**
+ * Fire-and-forget pings to wake Render free tier before dashboard API calls.
+ * Safe to call multiple times; only the first invocation sends requests.
+ */
+export function warmBackend() {
+  if (backendWarmStarted || isLocalApiBase()) return
+  backendWarmStarted = true
+
+  const ping = (path) => {
+    fetch(`${BASE}${path}`, { method: 'GET', mode: 'cors', keepalive: true }).catch(
+      () => {},
+    )
+  }
+
+  ping('/')
+  ping('/health')
+
+  // Second wave during typical cold-start window while user reads landing page
+  window.setTimeout(() => {
+    ping('/')
+    ping('/health')
+  }, 8000)
+}
+
 /**
  * Fetches the full knowledge graph for visualization.
  * @returns {Promise<{ nodes: import('../data/mockData.js').MOCK_GRAPH_NODES, edges: import('../data/mockData.js').MOCK_GRAPH_EDGES }>}

@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MemoryWeave — Organizational Memory Intelligence</title>
+    <!-- Wake Render API before React bundle loads (skipped for local VITE_API_URL) -->
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
+    <link rel="dns-prefetch" href="%VITE_API_URL%" />
+    <script>
+      (function () {
+        var api = '%VITE_API_URL%'
+        if (!api || /localhost|127\.0\.0\.1/.test(api)) return
+        var ping = function (path) {
+          fetch(api + path, { mode: 'cors', keepalive: true }).catch(function () {})
+        }
+        ping('/')
+        ping('/health')
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
