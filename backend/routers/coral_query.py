@@ -30,13 +30,37 @@ from openai import OpenAI
 from pydantic import BaseModel, Field
 
 try:
-    from coral.queries import FULL_OPERATIONAL_CONTEXT, OPERATIONAL_CONTEXT_OVERVIEW
+    from coral.queries import (
+        AUTH_PIPELINE_OWNERSHIP,
+        DEPLOYMENT_HISTORY_CONTEXT,
+        FULL_OPERATIONAL_CONTEXT,
+        INCIDENT_DETAIL,
+        OPERATIONAL_CONTEXT_OVERVIEW,
+        PATEL_ABSENCE_RISK,
+        PAYMENT_RECOVERY_CONTEXT,
+        SYSTEMS_WITHOUT_BACKUP,
+    )
     from services.coral_service import get_coral_service, sanitize_sql_param
     from services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
 except ModuleNotFoundError:
-    from backend.coral.queries import FULL_OPERATIONAL_CONTEXT, OPERATIONAL_CONTEXT_OVERVIEW
-    from backend.services.coral_service import get_coral_service, sanitize_sql_param
-    from backend.services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
+    from backend.coral.queries import (
+        AUTH_PIPELINE_OWNERSHIP,
+        DEPLOYMENT_HISTORY_CONTEXT,
+        FULL_OPERATIONAL_CONTEXT,
+        INCIDENT_DETAIL,
+        OPERATIONAL_CONTEXT_OVERVIEW,
+        PATEL_ABSENCE_RISK,
+        PAYMENT_RECOVERY_CONTEXT,
+        SYSTEMS_WITHOUT_BACKUP,
+    )
+    from backend.services.coral_service import (
+        get_coral_service,
+        sanitize_sql_param,
+    )
+    from backend.services.fireworks_config import (
+        fireworks_client_kwargs,
+        get_fireworks_model,
+    )
 
 router = APIRouter(tags=["coral"])
 coral = get_coral_service()
@@ -113,6 +137,65 @@ STOP_WORDS = {
     "that",
     "these",
     "those",
+    "have",
+    "has",
+    "had",
+    "owns",
+    "owned",
+    "whose",
+    "which",
+    "there",
+    "their",
+    "they",
+    "them",
+    "been",
+    "being",
+    "were",
+    "was",
+    "any",
+    "all",
+    "some",
+    "many",
+    "most",
+    "such",
+    "only",
+    "just",
+    "also",
+    "than",
+    "then",
+    "not",
+    "no",
+    "yes",
+    "out",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "weekend",
+    "today",
+    "tomorrow",
+    "yesterday",
+    "happened",
+    "happen",
+    "happens",
+    "pipeline",
+    "service",
+    "services",
+    "system",
+    "systems",
+    "owner",
+    "owners",
+    "backup",
+    "incident",
+    "incidents",
+    "recover",
+    "recovery",
+    "failure",
+    "failures",
+    "history",
 }
 
 
@@ -188,10 +271,111 @@ def _extract_keyword(question: str) -> Optional[str]:
             return entity
     words = [
         w
-        for w in re.sub(r"[^\w\s]", "", lower).split()
+        for w in re.sub(r"[^\w\s-]", "", lower).split()
         if w not in STOP_WORDS and len(w) > 1
     ]
     return words[0] if words else None
+
+
+def _extract_incident_id(question: str) -> Optional[str]:
+    """Pull incident id like P-4021 from natural-language questions."""
+    match = re.search(r"\bp-\d{4}\b", question, flags=re.IGNORECASE)
+    return match.group(0).upper() if match else None
+
+
+def _resolve_coral_query(
+    question: str,
+) -> tuple[list[dict[str, Any]], str, str]:
+    """
+    Map demo/sample questions to dedicated Coral SQL templates.
+
+    Returns (rows, sql_used, context_note).
+    """
+    lower = question.lower()
+
+    if re.search(
+        r"backup\s+owner|no\s+backup|sole\s+owner|single\s+point|bus\s+factor",
+        lower,
+    ):
+        return (
+            coral.systems_without_backup(),
+            SYSTEMS_WITHOUT_BACKUP.strip(),
+            "Intent: systems without a documented backup owner",
+        )
+
+    if re.search(
+        r"recover.*payment|payment.*recover|payment\s+service\s+fail|payment\s+fail",
+        lower,
+    ) or ("payment" in lower and "recover" in lower):
+        return (
+            coral.payment_recovery_context(),
+            PAYMENT_RECOVERY_CONTEXT.strip(),
+            "Intent: payment service recovery (graph + incidents + Slack)",
+        )
+
+    if re.search(r"auth\s+pipeline|owns?\s+.*auth|who\s+owns.*auth", lower) or (
+        "auth" in lower and "own" in lower
+    ):
+        return (
+            coral.auth_pipeline_ownership(),
+            AUTH_PIPELINE_OWNERSHIP.strip(),
+            "Intent: auth pipeline ownership and backup coverage",
+        )
+
+    incident_id = _extract_incident_id(question)
+    if incident_id or re.search(r"what\s+happened.*incident", lower):
+        iid = incident_id or "P-4021"
+        safe_id = sanitize_sql_param(iid)
+        return (
+            coral.incident_detail(safe_id),
+            INCIDENT_DETAIL.format(incident_id=safe_id).strip(),
+            f"Intent: incident detail for {iid}",
+        )
+
+    if re.search(r"deploy|deployment\s+history|q4\s+deploy", lower):
+        return (
+            coral.deployment_history_context(),
+            DEPLOYMENT_HISTORY_CONTEXT.strip(),
+            "Intent: deployment history (Deploy System + Slack)",
+        )
+
+    if re.search(r"patel.*monday|monday.*patel|patel.*out|out.*patel", lower):
+        return (
+            coral.patel_absence_risk(),
+            PATEL_ABSENCE_RISK.strip(),
+            "Intent: Patel absence / bus-factor risk",
+        )
+
+    return [], "", ""
+
+
+def _run_coral_retrieval(
+    question: str,
+) -> tuple[list[dict[str, Any]], str, Optional[str], bool, str]:
+    """
+    Execute Coral SQL for a question.
+
+    Returns (rows, sql_used, keyword_or_none, used_broad_context, context_note).
+    """
+    intent_rows, intent_sql, intent_note = _resolve_coral_query(question)
+    if intent_sql:
+        return intent_rows, intent_sql, None, False, intent_note
+
+    keyword = _extract_keyword(question)
+    if keyword:
+        safe_keyword = sanitize_sql_param(keyword)
+        rows = coral.full_context(safe_keyword)
+        sql_used = FULL_OPERATIONAL_CONTEXT.format(keyword=safe_keyword)
+        return rows, sql_used, keyword, False, f"Keyword filter: {keyword}"
+
+    rows = coral.operational_overview()
+    return (
+        rows,
+        OPERATIONAL_CONTEXT_OVERVIEW.strip(),
+        None,
+        True,
+        "No specific entity keyword matched — using highest-risk graph overview.",
+    )
 
 
 def _format_coral_context(rows: list[dict[str, Any]], max_rows: int = 30) -> str:
@@ -229,17 +413,10 @@ async def coral_query(req: CoralQueryRequest) -> CoralQueryResponse:
             detail=str(exc),
         ) from exc
 
-    keyword = _extract_keyword(req.question)
-    used_broad_context = keyword is None
-
     try:
-        if keyword:
-            safe_keyword = sanitize_sql_param(keyword)
-            rows = coral.full_context(safe_keyword)
-            sql_used = FULL_OPERATIONAL_CONTEXT.format(keyword=safe_keyword)
-        else:
-            rows = coral.operational_overview()
-            sql_used = OPERATIONAL_CONTEXT_OVERVIEW
+        rows, sql_used, keyword, used_broad_context, user_context_note = (
+            _run_coral_retrieval(req.question)
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -247,12 +424,6 @@ async def coral_query(req: CoralQueryRequest) -> CoralQueryResponse:
 
     context = _format_coral_context(rows)
     raw = ""
-
-    user_context_note = (
-        "No specific entity keyword matched — using highest-risk graph overview."
-        if used_broad_context
-        else f"Keyword filter: {keyword}"
-    )
 
     try:
         completion = client.chat.completions.create(

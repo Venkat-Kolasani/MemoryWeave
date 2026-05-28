@@ -44,6 +44,18 @@ tables:
         type: Utf8
         nullable: true
         description: Criticality for systems or incident severity.
+      - name: primary_owner
+        type: Utf8
+        nullable: true
+        description: Primary on-call or system owner (systems/workflows).
+      - name: backup_owner
+        type: Utf8
+        nullable: true
+        description: Documented backup owner; empty when none assigned.
+      - name: has_backup_owner
+        type: Utf8
+        nullable: true
+        description: "'true' or 'false' — whether backup coverage is documented."
 
   - name: knowledge_edges
     description: >-

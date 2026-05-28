@@ -176,6 +176,170 @@ WHERE w.type = 'Workflow'
 ORDER BY w.risk_score DESC, e.weight DESC
 """
 
+# ─── Query 8: Systems without a documented backup owner ─────────────────────
+# Answers: "Which systems have no backup owner?"
+SYSTEMS_WITHOUT_BACKUP = """
+SELECT
+    bf.system_name,
+    n.criticality,
+    n.risk_score      AS system_risk_score,
+    bf.owner_count,
+    bf.max_ownership_weight
+FROM (
+    SELECT
+        e.to_name                     AS system_name,
+        COUNT(DISTINCT e.from_name)   AS owner_count,
+        MAX(e.weight)                 AS max_ownership_weight
+    FROM memoryweave_graph.knowledge_edges e
+    WHERE e.rel_type IN ('OWNS', 'KNOWS')
+      AND e.to_type = 'System'
+    GROUP BY e.to_name
+    HAVING COUNT(DISTINCT e.from_name) = 1
+) bf
+LEFT JOIN memoryweave_graph.knowledge_nodes n
+    ON n.name = bf.system_name
+    AND n.type = 'System'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM memoryweave_graph.knowledge_edges b
+    WHERE b.to_name = bf.system_name
+      AND b.rel_type = 'BACKUP_FOR'
+)
+ORDER BY
+    CASE n.criticality
+        WHEN 'P0' THEN 1
+        WHEN 'P1' THEN 2
+        WHEN 'P2' THEN 3
+        ELSE 4
+    END,
+    bf.system_name
+"""
+
+
+# ─── Query 9: Payment service recovery (graph + incidents + Slack) ─────────
+PAYMENT_RECOVERY_CONTEXT = """
+SELECT
+    n.name            AS entity_name,
+    n.type            AS entity_type,
+    e.rel_type        AS relationship,
+    e.to_name         AS related_entity,
+    i.incident_id     AS incident_id,
+    i.severity        AS incident_severity,
+    i.duration_min    AS duration_minutes,
+    i.resolved_by     AS resolved_by,
+    s.text            AS slack_evidence,
+    s.channel         AS slack_channel
+FROM memoryweave_graph.knowledge_nodes n
+LEFT JOIN memoryweave_graph.knowledge_edges e
+    ON n.id = e.from_id OR n.id = e.to_id
+LEFT JOIN memoryweave_demo.incident_reports i
+    ON LOWER(i.systems_affected) LIKE '%payment%'
+    OR LOWER(i.content) LIKE '%payment%'
+LEFT JOIN memoryweave_demo.slack_messages s
+    ON LOWER(s.text) LIKE '%payment%'
+WHERE LOWER(n.name) LIKE '%payment%'
+   OR LOWER(e.to_name) LIKE '%payment%'
+   OR LOWER(e.from_name) LIKE '%payment%'
+   OR i.incident_id IS NOT NULL
+   OR s.text IS NOT NULL
+ORDER BY i.incident_id DESC, s.timestamp DESC
+LIMIT 40
+"""
+
+
+# ─── Query 10: Auth pipeline ownership ───────────────────────────────────────
+AUTH_PIPELINE_OWNERSHIP = """
+SELECT
+    s.name            AS system_name,
+    s.criticality     AS criticality,
+    e.from_name       AS knowledge_holder,
+    e.from_type       AS holder_type,
+    e.rel_type        AS relationship_type,
+    e.weight          AS relationship_strength
+FROM memoryweave_graph.knowledge_nodes s
+LEFT JOIN memoryweave_graph.knowledge_edges e
+    ON s.id = e.to_id
+    AND e.rel_type IN ('KNOWS', 'OWNS', 'BACKUP_FOR')
+WHERE s.type = 'System'
+  AND LOWER(s.name) LIKE '%auth%'
+ORDER BY e.weight DESC
+"""
+
+
+# ─── Query 11: Single incident detail (graph + postmortem) ─────────────────────
+INCIDENT_DETAIL = """
+SELECT
+    n.name            AS incident_name,
+    n.criticality     AS severity,
+    e.from_name       AS resolver,
+    e.rel_type        AS relationship,
+    e.to_name         AS affected_system,
+    i.incident_id     AS incident_id,
+    i.severity        AS report_severity,
+    i.duration_min    AS duration_minutes,
+    i.resolved_by     AS resolved_by,
+    i.systems_affected AS systems_affected
+FROM memoryweave_graph.knowledge_nodes n
+LEFT JOIN memoryweave_graph.knowledge_edges e
+    ON n.id = e.from_id OR n.id = e.to_id
+LEFT JOIN memoryweave_demo.incident_reports i
+    ON LOWER(i.incident_id) = LOWER(n.name)
+    OR LOWER(i.incident_id) = LOWER('{incident_id}')
+WHERE n.type = 'Incident'
+  AND (
+    LOWER(n.name) LIKE LOWER('%{incident_id}%')
+    OR LOWER(i.incident_id) LIKE LOWER('%{incident_id}%')
+  )
+ORDER BY e.weight DESC
+LIMIT 35
+"""
+
+
+# ─── Query 12: Deploy / Q4 deployment context ────────────────────────────────
+DEPLOYMENT_HISTORY_CONTEXT = """
+SELECT
+    n.name            AS entity_name,
+    n.type            AS entity_type,
+    e.rel_type        AS relationship,
+    e.to_name         AS related_entity,
+    s.text            AS slack_evidence,
+    s.channel         AS slack_channel,
+    s.timestamp       AS slack_timestamp
+FROM memoryweave_graph.knowledge_nodes n
+LEFT JOIN memoryweave_graph.knowledge_edges e
+    ON n.id = e.from_id OR n.id = e.to_id
+LEFT JOIN memoryweave_demo.slack_messages s
+    ON LOWER(s.text) LIKE '%deploy%'
+    OR LOWER(s.channel) LIKE '%engineering%'
+WHERE LOWER(n.name) LIKE '%deploy%'
+   OR LOWER(e.to_name) LIKE '%deploy%'
+   OR LOWER(e.from_name) LIKE '%deploy%'
+   OR LOWER(s.text) LIKE '%deploy%'
+ORDER BY s.timestamp DESC
+LIMIT 35
+"""
+
+
+# ─── Query 13: Patel bus-factor / absence risk ───────────────────────────────
+PATEL_ABSENCE_RISK = """
+SELECT
+    n.name            AS person_name,
+    n.risk_score      AS risk_score,
+    n.team            AS team,
+    e.rel_type        AS relationship,
+    e.to_name         AS owned_entity,
+    e.to_type         AS entity_type,
+    e.weight          AS strength
+FROM memoryweave_graph.knowledge_nodes n
+LEFT JOIN memoryweave_graph.knowledge_edges e
+    ON n.id = e.from_id
+WHERE n.type = 'Person'
+  AND LOWER(n.name) LIKE '%patel%'
+ORDER BY e.weight DESC
+LIMIT 30
+"""
+
+
 # ─── Cross-source demo: graph + Slack + incidents (Patel / payment) ─────────
 PATEL_CROSS_SOURCE = """
 SELECT

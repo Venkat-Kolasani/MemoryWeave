@@ -220,6 +220,19 @@ INCIDENTS = [
         "r": 11,
         "systems": "Auth Service",
     },
+    {
+        "id": "i3",
+        "external_id": "P-3722",
+        "title": "Payment Service Timeout",
+        "severity": "P0",
+        "date": "2024-03-10",
+        "duration": 31,
+        "resolved_by": "A. Patel",
+        "x": 300,
+        "y": 200,
+        "r": 11,
+        "systems": "Payment API",
+    },
 ]
 
 
@@ -332,6 +345,8 @@ def seed() -> dict:
         service.link_people_work_together("p3", "p2", weight=0.8)
         service.link_system_depends_on("s4", "s1", weight=1.2, dashed=True)
         service.link_person_resolves_incident("p5", "i1", weight=0.8, dashed=True)
+        service.link_person_resolves_incident("p1", "i3", weight=1.7)
+        service.link_incident_affects_system("i3", "s1", weight=1.4)
 
         counts = service.count_nodes_and_relationships()
         risk = service.get_risk_data()
@@ -350,7 +365,7 @@ def seed() -> dict:
 def print_summary(summary: dict) -> None:
     print("MemoryWeave Acme Corp seed complete")
     print("-----------------------------------")
-    print("Nodes seeded: 15 (5 people, 5 systems, 3 workflows, 2 incidents)")
+    print("Nodes seeded: 16 (5 people, 5 systems, 3 workflows, 3 incidents)")
     print(f"Relationships: {summary['relationships']}")
     print(
         f"A. Patel risk score: {summary['patel_risk_score']:.0f} (should be highest)"

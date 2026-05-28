@@ -279,3 +279,27 @@ class CoralService:
     def undocumented_workflows(self) -> list[dict[str, Any]]:
         queries = self._load_queries()
         return self.query(queries.UNDOCUMENTED_WORKFLOW_RISK)
+
+    def systems_without_backup(self) -> list[dict[str, Any]]:
+        queries = self._load_queries()
+        return self.query(queries.SYSTEMS_WITHOUT_BACKUP)
+
+    def payment_recovery_context(self) -> list[dict[str, Any]]:
+        queries = self._load_queries()
+        return self.query(queries.PAYMENT_RECOVERY_CONTEXT)
+
+    def auth_pipeline_ownership(self) -> list[dict[str, Any]]:
+        queries = self._load_queries()
+        return self.query(queries.AUTH_PIPELINE_OWNERSHIP)
+
+    def incident_detail(self, incident_id: str) -> list[dict[str, Any]]:
+        queries = self._load_queries()
+        return self.query(queries.INCIDENT_DETAIL, {"incident_id": incident_id})
+
+    def deployment_history_context(self) -> list[dict[str, Any]]:
+        queries = self._load_queries()
+        return self.query(queries.DEPLOYMENT_HISTORY_CONTEXT)
+
+    def patel_absence_risk(self) -> list[dict[str, Any]]:
+        queries = self._load_queries()
+        return self.query(queries.PATEL_ABSENCE_RISK)

@@ -19,12 +19,17 @@ const SUGGESTIONS = [
   'Who owns the auth pipeline?',
   'What happened in incident P-4021?',
   'Which systems have no backup owner?',
+  'What breaks if Patel is out Monday?',
+  'Show bus factor on Payment API',
+  'Who resolved incident P-3722?',
+  'Q4 deployment history for Deploy System',
 ]
 
 const RECENT_QUERIES = [
-  'How do we recover payment failures?',
-  'Who owns auth pipeline?',
-  'Q4 deployment history',
+  'Payment recovery after P-4021',
+  'Systems without backup owner',
+  'Auth pipeline ownership',
+  'Patel bus factor risk',
 ]
 
 const GRID_CATEGORIES = ['systems', 'people', 'incidents']
