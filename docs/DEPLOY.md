@@ -89,9 +89,24 @@ Copy your Render URL (e.g. `https://memoryweave-api.onrender.com`) for the front
 
 Do this **after** the Render backend URL is live.
 
-### Step 1 — `frontend/vercel.json`
+### Step 1 — `frontend/vercel.json` (Option B: frontend as root)
 
-Already committed — SPA rewrites so `/graph`, `/risk`, etc. do not 404 on refresh.
+Committed in the repo — SPA rewrites so `/graph`, `/risk`, etc. do not 404 on refresh.
+
+**Vercel project settings (required):**
+
+| Setting | Value |
+|---------|--------|
+| **Root Directory** | `frontend` |
+| **Build Command** | `npm run build` (default) |
+| **Output Directory** | `dist` (default) |
+| **Framework Preset** | Vite |
+
+Do **not** use a `vercel.json` at the repo root when Root Directory is `frontend` — Vercel only reads config inside the root directory.
+
+After changing settings or merging `frontend/vercel.json`, **push to GitHub** and **Redeploy** production.
+
+> **If `/graph` still 404:** `frontend/vercel.json` is probably not on the branch Vercel builds. Run `git push origin main` and confirm the file appears on GitHub under `frontend/vercel.json`.
 
 ### Step 2 — Test build locally
 
