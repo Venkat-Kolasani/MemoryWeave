@@ -77,6 +77,26 @@ uvicorn main:app --reload --port 8000
 
 Health check: http://localhost:8000/
 
+Live endpoints (as of 2026-05-28):
+- `GET /graph` — Neo4j (requires seeded graph)
+- `GET /stats` — Neo4j node count
+- `POST /ingest` — Fireworks extraction → Neo4j + Chroma (requires `FIREWORKS_API_KEY`, Chroma running)
+- `GET /risk-report` — Neo4j + NetworkX bus-factor scoring
+- `POST /query` — Chroma semantic search + Neo4j graph context + Fireworks synthesis path
+
+Test graph: `curl http://localhost:8000/graph | python -m json.tool | head`
+Test risk report: `curl http://localhost:8000/risk-report | python -m json.tool`
+Test query:
+
+```bash
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question":"How do we recover payment service failures?"}' \
+  | python -m json.tool
+```
+
+> If Fireworks returns `Model not found`, `Unauthorized`, or another provider error, `/query` returns a grounded retrieval fallback for the demo questions. Fix `FIREWORKS_API_KEY` / model access before treating LLM synthesis as production-ready.
+
 ## 5. Frontend
 
 ```bash

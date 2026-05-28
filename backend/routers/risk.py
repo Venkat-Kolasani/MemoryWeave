@@ -2,20 +2,28 @@
 risk.py
 
 Bus-factor risk analytics and dashboard stats endpoints.
-Returns demo seed data matching frontend mockData.js.
+Risk report is computed from live Neo4j data.
 
 Used by: main.py
-Depends on: data/demo/loader.py, risk_report.json, stats.json
+Depends on: services/neo4j_service.py, services/risk_scorer.py
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 try:
-    from data.demo.loader import load_demo_json
     from services.neo4j_service import Neo4jService
+    from services.risk_scorer import (
+        compute_all_risk_scores,
+        compute_team_heatmap,
+        get_bottlenecks,
+    )
 except ModuleNotFoundError:
-    from backend.data.demo.loader import load_demo_json
     from backend.services.neo4j_service import Neo4jService
+    from backend.services.risk_scorer import (
+        compute_all_risk_scores,
+        compute_team_heatmap,
+        get_bottlenecks,
+    )
 
 router = APIRouter(tags=["risk"])
 
@@ -26,8 +34,32 @@ async def get_risk_report() -> dict:
     Return bus-factor analysis with heatmap and bottlenecks.
     Shape: { risks: [...], heatmap: [...], bottlenecks: [...] }
     """
-    # CODEX: replace this with real implementation (NetworkX bus-factor scoring)
-    return load_demo_json("risk_report.json")
+    neo4j = Neo4jService()
+    try:
+        risks = compute_all_risk_scores(neo4j)
+        heatmap = compute_team_heatmap(neo4j)
+        bottlenecks = get_bottlenecks(neo4j)
+
+        critical = sum(1 for risk in risks if risk["level"] == "critical")
+        high = sum(1 for risk in risks if risk["level"] == "high")
+        undoc = sum(1 for risk in risks if risk["undoc"])
+        total = len(risks) or 1
+
+        return {
+            "risks": risks,
+            "heatmap": heatmap,
+            "bottlenecks": bottlenecks,
+            "stats": {
+                "critical": critical,
+                "high": high,
+                "undocumented_pct": int(undoc / total * 100),
+                "single_points": critical,
+            },
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    finally:
+        neo4j.close()
 
 
 @router.get("/stats")
