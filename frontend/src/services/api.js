@@ -90,7 +90,20 @@ function mapQueryResponse(data) {
 }
 
 /**
- * Standard retrieval: Chroma + Neo4j + Fireworks (`POST /query`).
+ * Primary Assistant path: Coral SQL JOIN, then legacy RAG if Coral is unavailable.
+ * @param {string} question
+ */
+export async function sendAssistantQuery(question) {
+  try {
+    return await sendCoralQuery(question)
+  } catch (coralErr) {
+    console.warn('[api] Coral unavailable, using /query fallback:', coralErr)
+    return sendQuery(question)
+  }
+}
+
+/**
+ * Legacy retrieval: Chroma + Neo4j + Fireworks (`POST /query`).
  * @param {string} question
  */
 export async function sendQuery(question) {

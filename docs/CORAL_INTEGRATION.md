@@ -66,7 +66,7 @@ Chroma — optional; Coral may reduce reliance on Chroma for cross-source reads 
    - Merge → existing Fireworks structured JSON response
 3. **Demo SQL** — one visible cross-source query for judges (Patel + payment + P-4021)
 4. **README / submission** — live product URLs + Coral as core read technology (wording adaptable per event)
-5. **Production** — `backend/Dockerfile` installs Coral CLI; startup runs `coral/install_sources.sh` via `CORAL_AUTO_SETUP`. Frontend uses `/coral-query` first.
+5. **Production** — `backend/Dockerfile` installs Coral CLI; startup runs `coral/install_sources.sh` via `CORAL_AUTO_SETUP`. Assistant defaults to Coral SQL (`/coral-query`) with automatic `/query` fallback.
 
 ## Constraints
 - Coral runs **local-first** — document how reviewers reproduce the SQL demo locally

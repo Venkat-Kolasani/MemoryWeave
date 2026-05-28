@@ -33,7 +33,8 @@ const useAppStore = create(
     // Assistant
     messages: [...MOCK_INITIAL_MESSAGES],
     isLoading: false,
-    useCoralQuery: false,
+    /** Default true — Coral SQL is the primary retrieval path. */
+    useCoralQuery: true,
 
     // Dashboard & risk
     knowledgeStats: { ...MOCK_STATS },
@@ -151,10 +152,23 @@ const useAppStore = create(
       if (!shouldSend) return
 
       try {
-        const useCoralQuery = get().useCoralQuery
-        const response = useCoralQuery
-          ? await api.sendCoralQuery(text)
-          : await api.sendQuery(text)
+        const preferCoral = get().useCoralQuery
+        let response
+        let usedCoral = false
+        let fellBackToRag = false
+
+        if (preferCoral) {
+          try {
+            response = await api.sendCoralQuery(text)
+            usedCoral = true
+          } catch (coralErr) {
+            console.warn('[store] Coral query failed, falling back to /query:', coralErr)
+            response = await api.sendQuery(text)
+            fellBackToRag = true
+          }
+        } else {
+          response = await api.sendQuery(text)
+        }
 
         set((state) => {
           state.messages.push({
@@ -170,9 +184,10 @@ const useAppStore = create(
             sources: response.sources,
             retrieval_method:
               response.retrieval_method ||
-              (useCoralQuery ? 'coral_sql_join' : 'hybrid_rag'),
+              (usedCoral ? 'coral_sql_join' : 'hybrid_rag'),
             coral_sql: response.coral_sql || null,
             coral_rows: response.coral_rows ?? null,
+            retrieval_fallback: fellBackToRag || undefined,
           })
           state.isLoading = false
         })

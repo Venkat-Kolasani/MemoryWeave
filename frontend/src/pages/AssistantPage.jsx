@@ -249,6 +249,20 @@ function ChatMessage({ message }) {
         <RelatedEntities related={message.related} />
       )}
 
+      {message.retrieval_fallback && (
+        <p
+          style={{
+            marginTop: 10,
+            fontSize: 10,
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--warning)',
+            letterSpacing: '0.02em',
+          }}
+        >
+          Coral unavailable — answered via Standard RAG fallback
+        </p>
+      )}
+
       {message.coral_sql && (
         <div
           style={{
@@ -629,46 +643,6 @@ export default function AssistantPage() {
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && useCoralQuery) {
-                  toggleCoralQuery()
-                }
-              }}
-              onClick={() => useCoralQuery && toggleCoralQuery()}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                marginBottom: 6,
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                border: `1px solid ${!useCoralQuery ? 'var(--accent)' : 'var(--border)'}`,
-                background: !useCoralQuery ? 'var(--accent-light)' : 'transparent',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: !useCoralQuery ? 'var(--accent-text)' : 'var(--text-primary)',
-                }}
-              >
-                Standard RAG
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontFamily: 'var(--font-mono)',
-                  color: 'var(--text-tertiary)',
-                  marginTop: 2,
-                }}
-              >
-                ChromaDB + Neo4j Cypher
-              </div>
-            </div>
-
-            <div
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
                 if ((e.key === 'Enter' || e.key === ' ') && !useCoralQuery) {
                   toggleCoralQuery()
                 }
@@ -677,6 +651,7 @@ export default function AssistantPage() {
               style={{
                 padding: '8px 12px',
                 borderRadius: 'var(--radius-sm)',
+                marginBottom: 6,
                 cursor: 'pointer',
                 transition: 'all 0.15s',
                 border: `1px solid ${useCoralQuery ? 'var(--accent)' : 'var(--border)'}`,
@@ -713,7 +688,46 @@ export default function AssistantPage() {
                   marginTop: 2,
                 }}
               >
-                Cross-source SQL · No ETL
+                Primary · Cross-source SQL · No ETL
+              </div>
+            </div>
+
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && useCoralQuery) {
+                  toggleCoralQuery()
+                }
+              }}
+              onClick={() => useCoralQuery && toggleCoralQuery()}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                border: `1px solid ${!useCoralQuery ? 'var(--accent)' : 'var(--border)'}`,
+                background: !useCoralQuery ? 'var(--accent-light)' : 'transparent',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: !useCoralQuery ? 'var(--accent-text)' : 'var(--text-primary)',
+                }}
+              >
+                Standard RAG
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-tertiary)',
+                  marginTop: 2,
+                }}
+              >
+                Fallback · ChromaDB + Neo4j Cypher
               </div>
             </div>
           </div>
