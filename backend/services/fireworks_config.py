@@ -2,17 +2,24 @@
 fireworks_config.py
 
 Central Fireworks.ai configuration — single-model default for hackathon credit limits.
-Uses llama-v3p1-70b-instruct for extraction (C3-03) and query (C3-05).
+Uses serverless kimi-k2p5 by default (override via FIREWORKS_MODEL in .env).
 
 Used by: agents/ (Codex), routers/query.py, routers/ingest.py
 Depends on: FIREWORKS_* env vars from .env
 """
 
 import os
+from pathlib import Path
 from typing import Literal, Optional
 
-# Default open model — extraction + query share this to conserve credits
-DEFAULT_MODEL = "accounts/fireworks/models/llama-v3p1-70b-instruct"
+from dotenv import load_dotenv
+
+_BACKEND_ENV = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(_BACKEND_ENV, override=True)
+
+# Default serverless model — must exist on your Fireworks account (list via GET /inference/v1/models).
+# Llama 3.1 70B is not available on all accounts; kimi-k2p5 is a reliable serverless fallback.
+DEFAULT_MODEL = "accounts/fireworks/models/kimi-k2p5"
 DEFAULT_BASE_URL = "https://api.fireworks.ai/inference/v1"
 
 ModelPurpose = Literal["extraction", "query", "default"]
@@ -44,6 +51,27 @@ def get_fireworks_api_key() -> Optional[str]:
     return os.getenv("FIREWORKS_API_KEY")
 
 
+def validate_fireworks_api_key(api_key: Optional[str] = None) -> str:
+    """
+    Ensure FIREWORKS_API_KEY looks like a real dashboard key.
+
+    Fireworks returns 404 "Model not found" for some invalid keys — not 401 —
+    which is easy to misread as a model ID problem.
+    """
+    key = (api_key or get_fireworks_api_key() or "").strip()
+    if not key:
+        raise ValueError(
+            "FIREWORKS_API_KEY is not set. Add your full key to backend/.env "
+            "(from https://fireworks.ai/account/api-keys)."
+        )
+    if len(key) < 20:
+        raise ValueError(
+            f"FIREWORKS_API_KEY looks too short ({len(key)} chars). "
+            "Paste the full key from the Fireworks dashboard — not a placeholder."
+        )
+    return key
+
+
 def fireworks_client_kwargs() -> dict:
     """
     Kwargs for OpenAI client pointed at Fireworks.
@@ -53,9 +81,7 @@ def fireworks_client_kwargs() -> dict:
         client = OpenAI(**fireworks_client_kwargs())
         model = get_fireworks_model("query")
     """
-    api_key = get_fireworks_api_key()
-    if not api_key:
-        raise ValueError("FIREWORKS_API_KEY is not set")
+    api_key = validate_fireworks_api_key()
 
     return {
         "api_key": api_key,

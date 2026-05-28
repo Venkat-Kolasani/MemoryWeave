@@ -15,6 +15,15 @@ pip install -r requirements.txt
 cp .env.example .env   # add FIREWORKS_API_KEY
 ```
 
+**Fireworks model:** Not every account can use Llama 3.1 70B. List models your key can access:
+
+```bash
+cd backend && source .venv/bin/activate
+python scripts/test_fireworks.py   # expect OK for both variants
+```
+
+If you see `404 Model not found`, set `FIREWORKS_MODEL` in `.env` to a model from `GET https://api.fireworks.ai/inference/v1/models` (default in this repo: `accounts/fireworks/models/kimi-k2p5`).
+
 ## 2. Neo4j
 
 **Start (new install):**
@@ -75,7 +84,9 @@ source .venv/bin/activate
 uvicorn main:app --reload --port 8000
 ```
 
-Health check: http://localhost:8000/
+> **Port 8000 conflict:** If another Docker container binds `*:8000`, `curl http://localhost:8000/...` may hit the wrong app (`{"detail":"Not Found"}`). Use **`http://127.0.0.1:8000`** for MemoryWeave (uvicorn binds localhost). Set `VITE_API_URL=http://127.0.0.1:8000` in `frontend/.env`.
+
+Health check: http://127.0.0.1:8000/
 
 Live endpoints (as of 2026-05-28):
 - `GET /graph` — Neo4j (requires seeded graph)
@@ -84,12 +95,12 @@ Live endpoints (as of 2026-05-28):
 - `GET /risk-report` — Neo4j + NetworkX bus-factor scoring
 - `POST /query` — Chroma semantic search + Neo4j graph context + Fireworks synthesis path
 
-Test graph: `curl http://localhost:8000/graph | python -m json.tool | head`
-Test risk report: `curl http://localhost:8000/risk-report | python -m json.tool`
+Test graph: `curl http://127.0.0.1:8000/graph | python -m json.tool | head`
+Test risk report: `curl http://127.0.0.1:8000/risk-report | python -m json.tool`
 Test query:
 
 ```bash
-curl -X POST http://localhost:8000/query \
+curl -X POST http://127.0.0.1:8000/query \
   -H "Content-Type: application/json" \
   -d '{"question":"How do we recover payment service failures?"}' \
   | python -m json.tool
@@ -101,7 +112,7 @@ curl -X POST http://localhost:8000/query \
 
 ```bash
 cd frontend
-cp .env.example .env   # VITE_API_URL=http://localhost:8000
+cp .env.example .env   # VITE_API_URL=http://127.0.0.1:8000
 npm install
 npm run dev
 ```

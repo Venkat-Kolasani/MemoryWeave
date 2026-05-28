@@ -7,7 +7,7 @@
  * Used by: appStore.js async actions
  */
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 /**
  * Fetches the full knowledge graph for visualization.

@@ -1,10 +1,10 @@
 # MemoryWeave — Project Status
 
 ## Last Updated
-2026-05-28
+2026-05-28 (Fireworks + port conflict resolved)
 
 ## Current Phase
-Phase 4 — Frontend wired to live backend
+Phase 5 — Polish and Deploy
 
 ## What's Been Built
 ### Frontend
@@ -12,7 +12,7 @@ Phase 4 — Frontend wired to live backend
 - [x] CSS design tokens + keyframes (`src/index.css`)
 - [x] App.jsx route table (react-router-dom) — all 10 routes wired
 - [x] Zustand store — full data state + async actions (`src/stores/appStore.js`)
-- [x] **API service layer — live fetch** (`src/services/api.js` → `http://localhost:8000`)
+- [x] **API service layer — live fetch** (`src/services/api.js` → `http://127.0.0.1:8000`)
 - [x] mockData.js — fallback seed data when API unavailable
 - [x] Icon, Badge, Button, StatCard atoms
 - [x] DashboardShell, Sidebar, TopBar, Nav layout components
@@ -29,7 +29,7 @@ Phase 4 — Frontend wired to live backend
 ### Backend
 - [x] FastAPI skeleton with CORS (`backend/main.py`)
 - [x] Demo seed JSON + Acme extraction corpus (50 Slack msgs, 3 incidents, 2 runbooks)
-- [x] Fireworks.ai single-model config (`services/fireworks_config.py`, llama-v3p1-70b)
+- [x] Fireworks.ai config (`fireworks_config.py`, default `kimi-k2p5`; live LLM synthesis on `/query`)
 - [x] Neo4j schema + seed script (`neo4j_service.py`, `data/seed.py`)
 - [x] ChromaDB service + populate script (`chroma_service.py`, `data/populate_chroma.py`)
 - [x] **GET /graph → live Neo4j** (`routers/graph.py`)
@@ -39,15 +39,13 @@ Phase 4 — Frontend wired to live backend
 - [x] **POST /query → Chroma + Neo4j hybrid retrieval** (`services/retriever.py`, `routers/query.py`)
 
 ## What's In Progress
-- Fix Fireworks API model/key for full LLM synthesis (fallback works for demo)
-- Compute `/stats` undocumented/risk/query counters from live data
 - Production deploy + Loom demo
 
 ## What's Next
-1. Fix Fireworks credentials/model access
-2. WorkflowsPage full implementation
-3. Deploy (Vercel + Railway)
-4. Node LTS build verification (`npm run build`)
+1. WorkflowsPage full implementation
+2. Deploy (Vercel + Railway) — use `127.0.0.1` or dedicated port locally; set production `VITE_API_URL`
+3. Node LTS build verification (`npm run build`)
+4. Compute `/stats` undocumented/risk/query counters from live data
 5. Automated tests
 
 ## Known Issues / Blockers
@@ -73,7 +71,7 @@ Phase 4 — Frontend wired to live backend
 | `python backend/data/populate_chroma.py` | Verified | 58 chunks indexed |
 
 ## Environment
-- Frontend: http://localhost:5173 (`VITE_API_URL=http://localhost:8000`)
-- Backend: http://localhost:8000
+- Frontend: http://localhost:5173 (`VITE_API_URL=http://127.0.0.1:8000`)
+- Backend: http://127.0.0.1:8000 (avoid `localhost:8000` if Docker binds that port)
 - Neo4j: http://localhost:7474
 - ChromaDB: http://localhost:8001

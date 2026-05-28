@@ -1,7 +1,7 @@
 """
 extractor.py
 Fireworks.ai-powered entity and relationship extraction.
-Uses llama-v3p1-70b-instruct via OpenAI-compatible SDK.
+Uses Fireworks serverless model via OpenAI-compatible SDK (see fireworks_config.py).
 Single model handles all 3 extraction passes.
 """
 
@@ -15,15 +15,17 @@ from typing import Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+from services.fireworks_config import get_fireworks_model, validate_fireworks_api_key, get_fireworks_base_url
+
+_env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(_env_path, override=True)
 
 # Fireworks uses OpenAI SDK with a different base_url and API key.
 client = OpenAI(
-    base_url="https://api.fireworks.ai/inference/v1",
-    api_key=os.getenv("FIREWORKS_API_KEY"),
+    base_url=get_fireworks_base_url(),
+    api_key=validate_fireworks_api_key(),
 )
-MODEL = "accounts/fireworks/models/llama-v3p1-70b-instruct"
+MODEL = get_fireworks_model("extraction")
 
 
 def call_llm(system: str, user: str, max_tokens: int = 1000) -> str:

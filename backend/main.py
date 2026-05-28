@@ -9,13 +9,17 @@ Used by: uvicorn (e.g. uvicorn main:app --reload --port 8000)
 Depends on: routers/graph, risk, query, ingest
 """
 
+from pathlib import Path
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import graph, ingest, query, risk
+_BACKEND_DIR = Path(__file__).resolve().parent
+# Always load backend/.env (uvicorn may be started from repo root).
+load_dotenv(_BACKEND_DIR / ".env", override=True)
 
-load_dotenv()
+from routers import graph, ingest, query, risk
 
 app = FastAPI(
     title="MemoryWeave API",
