@@ -1,5 +1,27 @@
 # MemoryWeave — Fixes & Learnings
 
+## Frontend fetch failures from missing Vercel CORS origin
+**Date:** 2026-05-29
+**Phase:** Phase 6 — Production verification
+**Severity:** Critical
+
+### What Happened
+Direct API checks passed, but the Vercel frontend showed blank Risk cards, Reports `Failed to fetch`, and Settings `Coral CLI Not Found`.
+
+### Root Cause
+Render `ALLOWED_ORIGINS` did not include `https://memory-weave-ai.vercel.app`, so browser preflight requests returned `400 Disallowed CORS origin`. Server-to-server curl checks were misleading because they bypass CORS.
+
+### How It Was Fixed
+The backend now always includes the deployed Vercel origin and localhost in its CORS allowlist, then merges any extra `ALLOWED_ORIGINS` from Render. The deploy docs now use the exact Vercel URL.
+
+### What I Learned
+Production verification must test browser-origin CORS preflight, not only direct endpoint responses.
+
+### Relevant for Interview
+Shows full-stack debugging across frontend browser behavior, backend middleware, and deployment environment.
+
+---
+
 ## Render Coral — Aura HTTP API blocked by administrative rules
 **Date:** 2026-05-29
 **Phase:** Phase 6 — Coral integration

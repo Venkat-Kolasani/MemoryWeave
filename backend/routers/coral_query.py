@@ -316,8 +316,8 @@ async def coral_schema() -> dict[str, Any]:
     """
     schema = coral.get_schema()
     schema["sources_registered"] = [
-        "knowledge_nodes (Neo4j)",
-        "knowledge_edges (Neo4j)",
+        "knowledge_nodes (Graph snapshot JSONL)",
+        "knowledge_edges (Graph snapshot JSONL)",
         "incident_reports (Markdown → JSONL)",
         "slack_messages (JSON export)",
     ]

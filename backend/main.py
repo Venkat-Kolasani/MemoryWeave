@@ -28,13 +28,25 @@ app = FastAPI(
     version="1.0.0",
 )
 
-_allowed = os.getenv("ALLOWED_ORIGINS", "*").strip()
-_cors_origins = ["*"] if _allowed == "*" else [o.strip() for o in _allowed.split(",") if o.strip()]
+DEFAULT_ALLOWED_ORIGINS = {
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://memory-weave-ai.vercel.app",
+}
+
+_allowed = os.getenv("ALLOWED_ORIGINS", "").strip()
+if _allowed == "*":
+    _cors_origins = ["*"]
+    _cors_allow_credentials = False
+else:
+    configured_origins = {o.strip() for o in _allowed.split(",") if o.strip()}
+    _cors_origins = sorted(DEFAULT_ALLOWED_ORIGINS | configured_origins)
+    _cors_allow_credentials = True
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_credentials=True,
+    allow_credentials=_cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

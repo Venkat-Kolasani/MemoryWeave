@@ -70,7 +70,7 @@ Optional (after Vercel deploy):
 
 | Variable | Value |
 |----------|--------|
-| `ALLOWED_ORIGINS` | `https://your-app.vercel.app,http://localhost:5173` |
+| `ALLOWED_ORIGINS` | `https://memory-weave-ai.vercel.app,http://localhost:5173` |
 
 On Render **free (512MB)**, set `CHROMA_STARTUP_POPULATE=false`. Indexing downloads ~79MB of embedding models at startup and can OOM-kill the service before it binds a port. Graph and Risk use Neo4j only and work without Chroma. The Assistant prefers **Coral SQL** (`/coral-query`); legacy `/query` is fallback if Coral fails. Coral's graph source uses packaged JSONL snapshots so it does not depend on Aura's HTTP transactional API.
 

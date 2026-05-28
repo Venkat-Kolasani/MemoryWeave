@@ -21,8 +21,8 @@ const CORAL_TABLES = [
   {
     name: 'knowledge_nodes',
     schema: 'memoryweave_graph',
-    source: 'Neo4j AuraDB',
-    type: 'Graph Database',
+    source: 'Graph Snapshot',
+    type: 'File (JSONL)',
     icon: 'graph',
     status: 'active',
     description: 'People, systems, incidents, and workflows as SQL rows',
@@ -33,8 +33,8 @@ const CORAL_TABLES = [
   {
     name: 'knowledge_edges',
     schema: 'memoryweave_graph',
-    source: 'Neo4j AuraDB',
-    type: 'Graph Database',
+    source: 'Graph Snapshot',
+    type: 'File (JSONL)',
     icon: 'workflow',
     status: 'active',
     description: 'Relationships between entities — OWNS, KNOWS, RESOLVES, AFFECTS',
