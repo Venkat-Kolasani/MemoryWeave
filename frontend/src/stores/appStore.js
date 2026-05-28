@@ -26,8 +26,9 @@ const useAppStore = create(
     // Graph — seed with mocks so UI is never blank before/after failed fetch
     selectedNode: null,
     filterType: 'all',
-    graphNodes: [...MOCK_GRAPH_NODES],
-    graphEdges: [...MOCK_GRAPH_EDGES],
+    graphNodes: [],
+    graphEdges: [],
+    isGraphLoading: true,
 
     // Assistant
     messages: [...MOCK_INITIAL_MESSAGES],
@@ -78,14 +79,23 @@ const useAppStore = create(
     // ─── Async actions ─────────────────────────────────────────────────────
 
     fetchGraph: async () => {
+      set((state) => {
+        state.isGraphLoading = true
+      })
       try {
         const data = await api.fetchGraph()
         set((state) => {
           state.graphNodes = data.nodes
           state.graphEdges = data.edges
+          state.isGraphLoading = false
         })
       } catch (err) {
         console.error('[store] fetchGraph failed:', err)
+        set((state) => {
+          state.graphNodes = [...MOCK_GRAPH_NODES]
+          state.graphEdges = [...MOCK_GRAPH_EDGES]
+          state.isGraphLoading = false
+        })
       }
     },
 

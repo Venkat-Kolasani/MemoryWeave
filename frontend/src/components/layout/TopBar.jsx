@@ -41,6 +41,7 @@ export default function TopBar({ title, subtitle, actions }) {
             style={{
               fontSize: 11,
               fontFamily: 'var(--font-mono)',
+              letterSpacing: '0.04em',
               color: 'var(--text-tertiary)',
               marginTop: 1,
             }}

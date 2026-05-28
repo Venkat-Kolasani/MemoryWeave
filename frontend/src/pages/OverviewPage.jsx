@@ -106,7 +106,11 @@ export default function OverviewPage() {
         <div className="grid grid-cols-4" style={{ gap: 16 }}>
           <StatCard
             label="Knowledge Nodes"
-            value={knowledgeStats.nodes.toLocaleString()}
+            value={
+              knowledgeStats.nodes
+                ? knowledgeStats.nodes.toLocaleString()
+                : '—'
+            }
             delta={12}
             sublabel="vs last month"
             delay={0}

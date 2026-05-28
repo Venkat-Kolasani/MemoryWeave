@@ -314,7 +314,10 @@ export default function LandingPage() {
         </ScrollReveal>
 
         <ScrollReveal style={{ marginTop: 32, textAlign: 'center' }}>
-          <div className="flex flex-wrap justify-center" style={{ gap: 8 }}>
+          <div
+            className="flex flex-wrap justify-center"
+            style={{ gap: 8, maxWidth: '100%', padding: '0 8px' }}
+          >
             {INTEGRATIONS.map((name) => (
               <span
                 key={name}
@@ -1185,12 +1188,22 @@ export default function LandingPage() {
 
         <div className="flex flex-wrap" style={{ gap: 20 }}>
           {FOOTER_LINKS.map((link) => (
-            <span
+            <button
               key={link}
-              style={{ fontSize: 13, color: 'var(--text-tertiary)', cursor: 'pointer' }}
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              style={{
+                fontSize: 13,
+                color: 'var(--text-tertiary)',
+                cursor: 'pointer',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                fontFamily: 'var(--font-sans)',
+              }}
             >
               {link}
-            </span>
+            </button>
           ))}
         </div>
 

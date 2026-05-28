@@ -69,6 +69,7 @@ export default function GraphPage() {
 
   const graphNodes = useAppStore((s) => s.graphNodes)
   const graphEdges = useAppStore((s) => s.graphEdges)
+  const isGraphLoading = useAppStore((s) => s.isGraphLoading)
   const filterType = useAppStore((s) => s.filterType)
   const selectedNode = useAppStore((s) => s.selectedNode)
   const fetchGraph = useAppStore((s) => s.fetchGraph)
@@ -79,15 +80,27 @@ export default function GraphPage() {
     fetchGraph()
   }, [fetchGraph])
 
-  const isLoading = graphNodes.length === 0
+  const isLoading = isGraphLoading || graphNodes.length === 0
 
+  const graphSubtitle = isLoading
+    ? 'Loading graph…'
+    : `${graphNodes.length} nodes · ${graphEdges.length} edges · Updated just now`
+
+  /** Legend counts reflect the active filter, not the full graph totals. */
   const typeCounts = useMemo(
     () =>
       Object.keys(TYPE_LABELS).reduce((counts, type) => {
-        counts[type] = graphNodes.filter((node) => node.type === type).length
+        if (filterType === 'all') {
+          counts[type] = graphNodes.filter((node) => node.type === type).length
+        } else {
+          counts[type] =
+            type === filterType
+              ? graphNodes.filter((node) => node.type === type).length
+              : 0
+        }
         return counts
       }, {}),
-    [graphNodes],
+    [graphNodes, filterType],
   )
 
   const filterButtons = (
@@ -122,7 +135,7 @@ export default function GraphPage() {
   return (
     <DashboardShell
       title="Knowledge Graph"
-      subtitle="856 nodes · 1,204 edges · Updated 4 min ago"
+      subtitle={graphSubtitle}
       actions={filterButtons}
       contentPadding={0}
       contentOverflow="hidden"
@@ -163,8 +176,10 @@ export default function GraphPage() {
 
                 const bothVisible =
                   filterType === 'all' ||
-                  fromNode.type === filterType ||
-                  toNode.type === filterType
+                  (fromNode.type === filterType && toNode.type === filterType)
+
+                const edgeWeight = edge.weight ?? 1
+                const isWeak = edgeWeight < 1.5 || edge.dashed
 
                 return (
                   <line
@@ -174,9 +189,12 @@ export default function GraphPage() {
                     x2={toNode.x}
                     y2={toNode.y}
                     stroke={bothVisible ? 'var(--border)' : 'transparent'}
-                    strokeWidth={edge.weight || 1}
-                    strokeDasharray={edge.dashed ? '4,4' : 'none'}
-                    style={{ transition: 'stroke 0.3s' }}
+                    strokeWidth={edgeWeight >= 1.5 ? 1.5 : 1}
+                    strokeDasharray={isWeak ? '4,4' : 'none'}
+                    style={{
+                      transition: 'stroke 0.3s ease, stroke-opacity 0.3s ease',
+                      opacity: bothVisible ? 1 : 0,
+                    }}
                   />
                 )
               })}

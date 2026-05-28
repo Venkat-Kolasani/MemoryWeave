@@ -47,6 +47,7 @@ export default function StatCard({ label, value, delta, sublabel, delay = 0 }) {
 
       <div
         style={{
+          fontFamily: 'var(--font-sans)',
           fontSize: 32,
           fontWeight: 600,
           letterSpacing: '-0.03em',

@@ -65,6 +65,7 @@ export default function Sidebar() {
           </div>
           <span
             style={{
+              fontFamily: 'var(--font-sans)',
               fontWeight: 600,
               fontSize: 14,
               color: 'oklch(100% 0 0)',
@@ -112,6 +113,7 @@ export default function Sidebar() {
               />
               <span
                 style={{
+                  fontFamily: 'var(--font-sans)',
                   fontSize: 13.5,
                   fontWeight: isActive ? 500 : 400,
                   color: isActive ? 'oklch(100% 0 0)' : 'rgba(255,255,255,0.5)',

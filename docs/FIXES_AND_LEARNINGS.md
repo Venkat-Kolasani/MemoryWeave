@@ -101,3 +101,64 @@ Added weighted ownership graph construction from `KNOWS`, incident `RESOLVES`/`A
 
 ### What I Learned
 For hackathon demos, retrieval fallbacks are worth the extra hour: they keep the product demonstrable when provider credentials or model access fail, while still making the dependency problem visible in logs and docs.
+
+## Fireworks 404 Misdiagnosed as Wrong Model
+**Date:** 2026-05-28
+**Phase:** Phase 4 — pre-deploy verification
+**Severity:** High
+
+### What Happened
+`/query` and `test_fireworks.py` returned `404 Model not found` for every Llama model ID, including valid Fireworks catalog names.
+
+### Root Cause
+Two separate issues stacked: (1) `backend/.env` on disk still held a 12-character placeholder key while the editor showed an unsaved `fw_…` key; (2) after the real key was saved, the account only had access to serverless models like `kimi-k2p5`, not `llama-v3p1-70b-instruct`.
+
+### How It Was Fixed
+Added `validate_fireworks_api_key()`, `scripts/test_fireworks.py`, and switched default model to `accounts/fireworks/models/kimi-k2p5` in `fireworks_config.py` and `.env.example`.
+
+### What I Learned
+Fireworks often returns 404 (not 401) for bad keys or inaccessible models — always list models with `GET /inference/v1/models` before blaming the model string.
+
+### Relevant for Interview
+Shows systematic API debugging: verify env load → verify auth → list allowed resources → then change config.
+
+## localhost:8000 Routed to Wrong Docker App
+**Date:** 2026-05-28
+**Phase:** Phase 4
+**Severity:** High
+
+### What Happened
+`curl http://localhost:8000/query` returned `{"detail":"Not Found"}` while uvicorn logged MemoryWeave as running.
+
+### Root Cause
+Another Docker container bound `*:8000`; MemoryWeave uvicorn bound `127.0.0.1:8000`. macOS routed `localhost` to the Docker service, not uvicorn.
+
+### How It Was Fixed
+Set `VITE_API_URL=http://127.0.0.1:8000` in `frontend/.env` / `.env.example` and documented the conflict in `LOCAL_SETUP.md`.
+
+### Relevant for Interview
+Classic local dev port collision — always compare `lsof -i :8000` and test both `localhost` vs `127.0.0.1`.
+
+## Phase 5 UI Verification Pass
+**Date:** 2026-05-28
+**Phase:** Phase 5 — polish
+**Severity:** Medium
+
+### What Happened
+Pre-deploy checklist found several UI/UX gaps: graph legend showed total counts during filters, edges used OR-filter logic (orphan edges visible), risk stat cards were hardcoded, assistant warnings rendered inside the badge grid, graph loading skeleton never appeared, and font stack included `system-ui`.
+
+### Root Cause
+Phase 1–2 mock-first implementation left placeholder stats and simplified graph filter logic; Zustand seeded `MOCK_GRAPH_NODES` on boot so `graphNodes.length === 0` was never true.
+
+### How It Was Fixed
+- **Graph:** `isGraphLoading` flag; empty initial graph; edge visibility requires both endpoints to match filter; legend counts scoped to active filter; dynamic subtitle from live node/edge counts.
+- **Risk:** Stat cards derive from live `riskItems`; table sorted by score descending.
+- **Assistant:** Warnings moved to full-width red alert boxes below the related-entity grid; context panel reads `knowledgeStats` from `/stats`.
+- **Global:** Removed `system-ui` from `--font-sans`; added oklch hex fallback comments; `inherit` font on form controls.
+
+### Verification
+- `npm run build` succeeded (Vite 6, 66 modules).
+- Manual curl to `http://127.0.0.1:8000/query` returns structured LLM JSON without `llm_error`.
+
+### Relevant for Interview
+Demonstrates moving from mock-first UI to production-honest dashboard behavior without rewriting the design system.

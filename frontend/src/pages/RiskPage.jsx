@@ -108,6 +108,17 @@ export default function RiskPage() {
 
   const criticalCount = riskItems.filter((item) => item.level === 'critical').length
   const highCount = riskItems.filter((item) => item.level === 'high').length
+  const undocCount = riskItems.filter((item) => item.undoc).length
+  const undocPct =
+    riskItems.length > 0
+      ? `${Math.round((undocCount / riskItems.length) * 100)}%`
+      : '—'
+  const singlePointCount = riskItems.filter((item) => item.score >= 85).length
+
+  const sortedRisks = useMemo(
+    () => [...filteredRisks].sort((a, b) => b.score - a.score),
+    [filteredRisks],
+  )
 
   return (
     <DashboardShell
@@ -124,27 +135,26 @@ export default function RiskPage() {
         <div className="grid grid-cols-4" style={{ gap: 16 }}>
           <StatCard
             label="Critical Risks"
-            value="3"
+            value={String(criticalCount || '—')}
             sublabel="immediate action"
             delay={0}
           />
           <StatCard
             label="High Risks"
-            value="11"
+            value={String(highCount || '—')}
             sublabel="monitoring"
             delay={60}
           />
           <StatCard
             label="Undocumented"
-            value="47%"
-            delta={-5}
-            sublabel="vs last quarter"
+            value={undocPct}
+            sublabel="of inventoried deps"
             delay={120}
           />
           <StatCard
             label="Single Points"
-            value="8"
-            sublabel="people-system deps"
+            value={String(singlePointCount || '—')}
+            sublabel="score ≥ 85"
             delay={180}
           />
         </div>
@@ -231,7 +241,7 @@ export default function RiskPage() {
               ))}
             </div>
 
-            {filteredRisks.map((risk, index) => (
+            {sortedRisks.map((risk, index) => (
               <div
                 key={risk.id ?? risk.name}
                 style={{
@@ -239,7 +249,7 @@ export default function RiskPage() {
                   gridTemplateColumns: TABLE_COLUMNS,
                   padding: '14px 20px',
                   borderBottom:
-                    index < filteredRisks.length - 1
+                    index < sortedRisks.length - 1
                       ? '1px solid var(--border-subtle)'
                       : 'none',
                   alignItems: 'center',

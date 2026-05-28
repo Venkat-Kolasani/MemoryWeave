@@ -27,14 +27,7 @@ const RECENT_QUERIES = [
   'Q4 deployment history',
 ]
 
-const CONTEXT_STATS = [
-  { label: 'Active Sources', value: '8', icon: 'database' },
-  { label: 'Nodes', value: '2,847', icon: 'graph' },
-  { label: 'Incidents', value: '89', icon: 'alert' },
-  { label: 'Workflows', value: '134', icon: 'workflow' },
-]
-
-const RELATED_CATEGORIES = ['systems', 'people', 'incidents', 'warnings']
+const GRID_CATEGORIES = ['systems', 'people', 'incidents']
 
 /** Renders avatar for user or assistant messages. */
 function MessageAvatar({ role }) {
@@ -60,9 +53,11 @@ function MessageAvatar({ role }) {
   )
 }
 
-/** Renders structured related-entity grid below assistant steps. */
+/** Renders related entities grid plus full-width warning alert boxes (not badges). */
 function RelatedEntities({ related }) {
   if (!related) return null
+
+  const warnings = related.warnings || []
 
   return (
     <div
@@ -70,52 +65,33 @@ function RelatedEntities({ related }) {
         borderTop: '1px solid var(--border)',
         paddingTop: 14,
         marginTop: 14,
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 12,
       }}
     >
-      {RELATED_CATEGORIES.map((category) => {
-        const values = related[category]
-        if (!values?.length) return null
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 12,
+        }}
+      >
+        {GRID_CATEGORIES.map((category) => {
+          const values = related[category]
+          if (!values?.length) return null
 
-        return (
-          <div key={category}>
-            <div
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: 'var(--text-tertiary)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                marginBottom: 6,
-              }}
-            >
-              {category}
-            </div>
-            {category === 'warnings' ? (
+          return (
+            <div key={category}>
               <div
-                className="flex items-start"
                 style={{
-                  gap: 8,
-                  background: 'oklch(97% 0.04 25)',
-                  border: '1px solid oklch(90% 0.07 25)',
-                  borderRadius: 8,
-                  padding: '8px 10px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  color: 'var(--text-tertiary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  marginBottom: 6,
                 }}
               >
-                <Icon name="alert" size={14} color="var(--danger)" />
-                <span
-                  style={{
-                    fontSize: 12,
-                    color: 'var(--danger)',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {values[0]}
-                </span>
+                {category}
               </div>
-            ) : (
               <div className="flex flex-wrap" style={{ gap: 4 }}>
                 {values.map((item) => (
                   <Badge key={item} variant="default" size="xs">
@@ -123,10 +99,40 @@ function RelatedEntities({ related }) {
                   </Badge>
                 ))}
               </div>
-            )}
-          </div>
-        )
-      })}
+            </div>
+          )
+        })}
+      </div>
+
+      {warnings.length > 0 && (
+        <div className="flex flex-col" style={{ gap: 8, marginTop: 14 }}>
+          {warnings.map((warning) => (
+            <div
+              key={warning}
+              className="flex items-start"
+              style={{
+                gap: 8,
+                background: 'oklch(97% 0.04 25)',
+                border: '1px solid oklch(90% 0.07 25)',
+                borderRadius: 8,
+                padding: '10px 12px',
+              }}
+            >
+              <Icon name="alert" size={14} color="var(--danger)" />
+              <span
+                style={{
+                  fontSize: 12,
+                  color: 'var(--danger)',
+                  lineHeight: 1.45,
+                  fontWeight: 500,
+                }}
+              >
+                {warning}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -253,9 +259,38 @@ export default function AssistantPage() {
   const messages = useAppStore((s) => s.messages)
   const isLoading = useAppStore((s) => s.isLoading)
   const sendMessage = useAppStore((s) => s.sendMessage)
+  const knowledgeStats = useAppStore((s) => s.knowledgeStats)
+  const fetchStats = useAppStore((s) => s.fetchStats)
 
   const [input, setInput] = useState('')
   const scrollRef = useRef(null)
+
+  const contextStats = [
+    { label: 'Active Sources', value: '8', icon: 'database' },
+    {
+      label: 'Nodes',
+      value: knowledgeStats.nodes
+        ? knowledgeStats.nodes.toLocaleString()
+        : '—',
+      icon: 'graph',
+    },
+    {
+      label: 'Critical Risks',
+      value: String(knowledgeStats.risks ?? '—'),
+      icon: 'alert',
+    },
+    {
+      label: 'Undocumented',
+      value: knowledgeStats.undocumented
+        ? knowledgeStats.undocumented.toLocaleString()
+        : '—',
+      icon: 'workflow',
+    },
+  ]
+
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -407,7 +442,8 @@ export default function AssistantPage() {
                 textAlign: 'center',
               }}
             >
-              Grounded in 2,847 knowledge nodes · 134 workflows · 89 incidents
+              Grounded in {knowledgeStats.nodes.toLocaleString()} knowledge nodes · live
+              organizational memory
             </p>
           </div>
         </div>
@@ -436,7 +472,7 @@ export default function AssistantPage() {
             Knowledge Context
           </div>
 
-          {CONTEXT_STATS.map((stat) => (
+          {contextStats.map((stat) => (
             <div
               key={stat.label}
               className="flex items-center"
