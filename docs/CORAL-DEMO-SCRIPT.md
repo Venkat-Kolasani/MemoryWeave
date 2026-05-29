@@ -1,147 +1,212 @@
-# MemoryWeave × Coral — Demo Script
+# MemoryWeave × Coral — Video Demo Script
 
-## Pirates of the Coral-bean Hackathon | Track 1: Enterprise Agent
+**Pirates of the Coral-bean Hackathon | Track 1: Enterprise Agent**
 
-**Live URLs (production)**
+Use this doc when recording your **YouTube submission** (max **3 minutes**) and when demoing live to Coral judges.
+
+---
+
+## YouTube video demo link
+
+**Paste your public YouTube URL here after upload:**
+
+```
+https://youtu.be/YOUR_VIDEO_ID
+```
+
+**Submission checklist**
+
+- [ ] Video is **≤ 3 minutes** (YouTube unlisted or public is fine)
+- [ ] Covers: **About the project**, **Tech stack & architecture**, **Demo**
+- [ ] Optional: **Learning and growth** (30–45s at the end if time allows)
+- [ ] Link added to hackathon form + README if required
+
+---
+
+## Video structure (≤ 3 minutes total)
+
+| Section | Time | Required |
+|---------|------|----------|
+| 1. About the project | 0:00 – 0:40 | Yes |
+| 2. Tech stack and architecture | 0:40 – 1:25 | Yes |
+| 3. Live demo | 1:25 – 2:45 | Yes (strongly recommended) |
+| 4. Learning and growth | 2:45 – 3:00 | Optional |
+
+**Live URLs**
 
 | Service | URL |
 |---------|-----|
 | Frontend | https://memory-weave-ai.vercel.app |
 | Backend API | https://memoryweave-1.onrender.com |
+| GitHub | https://github.com/Venkat-Kolasani/MemoryWeave |
 
 ---
 
-### Pre-recording checklist
+## 1. About the project (~40 seconds)
 
-- [ ] Backend Render URL is live: `GET https://memoryweave-1.onrender.com/health` → `"coral": "ok"`
-- [ ] `GET https://memoryweave-1.onrender.com/coral-schema` → `"available": true`
-- [ ] Frontend Vercel URL loads; **Reports** (`/reports`) shows Coral analytics tables
-- [ ] **Assistant** (`/assistant`): Coral SQL JOIN mode on (default); responses show `coral_sql` + row count in the bubble footer
-- [ ] Browser zoom 100%, DevTools closed, Do Not Disturb on
-- [ ] **Pre-warm:** open `/assistant`, send one query (e.g. *"Which systems have no backup owner?"*), wait for response (Render free tier cold start ~30–60s)
+**What to say**
 
----
+> MemoryWeave is organizational memory for engineering teams. When key people leave, teams lose how incidents were actually resolved, who owns which systems, and which workflows were never written down.
+>
+> We built a demo around **Acme Corp** and **A. Patel** — an engineering lead who resolved most payment outages and holds a **95% bus factor** on the payment stack. The product answers questions like: *What breaks if Patel doesn't come in Monday?*
+>
+> MemoryWeave combines a **knowledge graph**, **risk analytics**, and an **AI assistant** so that context is visible and queryable before it walks out the door.
 
-### 3-minute demo script
+**What to show (optional B-roll)**
 
-**00:00 — Landing page**
+- Landing page (`/`) — hero + “Patel problem” line
+- One stat or risk callout on Overview (`/dashboard`)
 
-> "Modern engineering teams carry a hidden risk — critical knowledge locked inside a few key people. MemoryWeave makes that risk visible and queryable."
+**Key message for judges**
 
-Scroll to **Dashboard Preview**. Click it.
-
-**00:20 — Overview Dashboard**
-
-> "This is MemoryWeave — live organizational memory for Acme Corp. Knowledge nodes, risk signals, and connected sources in one view."
-
-Point to **Critical Risk Signals**. Click **View all →**.
-
-**00:35 — Reports page (`/reports`)**
-
-> "This is the Coral-powered analytics layer."
-
-Point to the **Coral SQL** badge on each section.
-
-> "Every table here — bus factor, team concentration, incident resolver chains, undocumented workflows — is powered by Coral SQL over the knowledge graph, incident postmortems, and Slack exports."
-
-Point to **Bus Factor** table: *"Payment API — sole owner. That's your single point of failure."*
-
-Point to **Incident Resolver Chain**.
-
-> "Multiple sources. One SQL interface. Coral resolves the JOIN internally."
-
-**01:15 — Settings page (`/settings`)**
-
-> "Here are the four SQL tables Coral has registered."
-
-Expand **knowledge_edges** (or **knowledge_nodes**).
-
-> "Normally, graph relationships mean Cypher or custom APIs. With Coral, they're standard SQL tables — joinable with incident reports and Slack in one query."
-
-Show the **Cross-Source JOIN** example block.
-
-**01:45 — AI Assistant (`/assistant`) — Coral mode**
-
-Navigate to `/assistant`.
-
-In the right panel, confirm **Coral SQL JOIN** is selected (pulsing blue dot = primary path).
-
-Click a suggestion pill or type:
-
-> **"What breaks if Patel doesn't come in Monday?"**
-
-Wait for the response.
-
-> "See the metadata footer — that's the exact SQL Coral executed. Not a one-off Cypher script in the app. Not embedding search. Structured rows from a cross-source JOIN, then the LLM grounds the answer in that data."
-
-Point to **`coral_rows`** and the SQL snippet.
-
-Optional second prompt: *"Which systems have no backup owner?"* — should return multiple rows (Payment API, Deploy System, etc.).
-
-**02:20 — Knowledge Graph (`/graph`)**
-
-Navigate to `/graph`. Click **A. Patel**.
-
-> "Every system, incident, and workflow Patel touches — mapped visually. The same graph is also queryable as SQL through Coral."
-
-**02:45 — Close**
-
-Navigate to `/`.
-
-> "MemoryWeave uses Coral to give AI agents one map for all operational data. One SQL interface. Four sources. No ETL warehouse and no hand-rolled merge code in the agent."
-
-Show GitHub: `https://github.com/Venkat-Kolasani/MemoryWeave`
+- Real problem: bus factor / knowledge loss  
+- Clear demo narrative: Patel + payment service  
+- Product outcome: queryable institutional memory  
 
 ---
 
-### What Coral features this demo showcases
+## 2. Tech stack and architecture (~45 seconds)
 
-| Feature | Where in the demo |
-|---------|-------------------|
-| SQL over graph nodes/edges | Reports, Settings, Assistant SQL footer |
-| SQL over Markdown (incidents) | Reports incident chain; Assistant cross-source answers |
-| SQL over JSON (Slack) | Assistant payment / Patel questions |
-| Cross-source JOIN | Reports bus factor; `/coral-query` metadata |
-| Schema learning / catalog | Settings table list (`/coral-schema`) |
-| Caching | Repeat the same Assistant question — faster second response |
-| CLI from FastAPI | Production Docker image installs Coral; `coral_service.py` subprocess |
+**What to say**
 
----
+> **Frontend:** React and Vite on Vercel — custom SVG knowledge graph, no graph libraries.
+>
+> **Backend:** FastAPI on Render, Neo4j Aura for the live graph and risk scoring, ChromaDB for semantic search on the legacy path, and **Fireworks** for LLM synthesis.
+>
+> **Coral** is the retrieval layer for the enterprise agent: instead of separate Cypher and embedding calls merged by hand, we expose **four SQL tables** — graph nodes, graph edges, incident postmortems, and Slack messages — and run **cross-source JOINs** from FastAPI via the Coral CLI.
+>
+> Flow: sources → ingest or seeded demo data → **Coral SQL** → structured rows → LLM answer. The Graph and Risk pages still read **live Neo4j**; Assistant, Reports, and Settings are powered by **Coral**.
 
-### Post-deploy verification (copy-paste)
+**What to show**
 
-Replace URLs if your Render service name differs.
+- Quick architecture slide **or** Settings page (`/settings`) — four registered tables
+- Optional: README architecture block (screen share)
 
-```bash
-# Health + Coral
-curl -sS https://memoryweave-1.onrender.com/health | python3 -m json.tool
+**Architecture (voiceover / on-screen)**
 
-# Schema
-curl -sS https://memoryweave-1.onrender.com/coral-schema | python3 -m json.tool
-
-# Live Coral query (not a canned response — LLM + SQL each time)
-curl -sS -X POST https://memoryweave-1.onrender.com/coral-query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Who resolves payment incidents?"}' | python3 -m json.tool
+```
+Slack / Incidents / Docs
+  → POST /ingest (optional) → LLM extraction → Neo4j + Chroma
+  → Coral SQL layer
+        memoryweave_graph.knowledge_nodes
+        memoryweave_graph.knowledge_edges
+        memoryweave_demo.incident_reports
+        memoryweave_demo.slack_messages
+  → Cross-source JOINs → /coral-query → Fireworks → React UI
 ```
 
-Expected: `"retrieval_method": "coral_sql_join"`, non-empty `"coral_sql"`, `"coral_rows" > 0`, and a grounded `"answer"`.
+**Coral features to name (at least three)**
 
-**Browser**
-
-- https://memory-weave-ai.vercel.app/reports — analytics tables populated  
-- https://memory-weave-ai.vercel.app/settings — four SQL table cards  
-- https://memory-weave-ai.vercel.app/assistant — Coral mode + SQL metadata on new messages  
+- SQL over graph, Markdown-derived incidents, and JSON Slack  
+- Cross-source JOIN (one query, multiple sources)  
+- Schema catalog (`/coral-schema`)  
+- CLI integrated in Docker / FastAPI subprocess  
 
 ---
+
+## 3. Demo (~80 seconds) — recommended flow
+
+**Pre-recording checklist**
+
+- [ ] `GET https://memoryweave-1.onrender.com/health` → `"coral": "ok"`
+- [ ] `GET https://memoryweave-1.onrender.com/coral-schema` → `"available": true`
+- [ ] https://memory-weave-ai.vercel.app/reports loads with data
+- [ ] Assistant: Coral SQL JOIN on (default); send one warm-up query before recording
+- [ ] Browser 100% zoom, DevTools closed, Do Not Disturb on
+
+### Timed demo script
+
+**01:25 — Reports (`/reports`)** (~25s)
+
+> "This analytics page is powered entirely by **Coral SQL** — bus factor, team concentration, incident resolver chains."
+
+- Point to **Coral SQL** badges  
+- Bus factor row: **Payment API — sole owner**  
+
+**01:50 — Settings (`/settings`)** (~20s)
+
+> "Four SQL tables registered in Coral. Graph relationships are plain SQL — joinable with incidents and Slack."
+
+- Expand **knowledge_edges** or show JOIN example block  
+
+**02:10 — Assistant (`/assistant`)** (~35s)
+
+> "I'll ask: *What breaks if Patel doesn't come in Monday?*"
+
+- Send question; wait for response  
+- Point to footer: **`coral_sql`**, **`coral_rows`**, retrieval method  
+
+> "That's the SQL Coral ran — structured rows, then the LLM grounds the answer. Not a hardcoded reply."
+
+**Optional if time** (~10s): Graph (`/graph`) → click **A. Patel** → "Same knowledge, visualized."
+
+**02:45 — Close** (~15s)
+
+> "MemoryWeave: organizational memory on top of Coral — one SQL interface, four sources, no custom ETL in the agent."
+
+- Show live app URL + GitHub  
+
+### What Coral features the demo showcases
+
+| Feature | Where |
+|---------|--------|
+| SQL over graph nodes/edges | Reports, Settings, Assistant |
+| SQL over incident postmortems | Reports, Assistant |
+| SQL over Slack JSON | Assistant, cross-source answers |
+| Cross-source JOIN | `/coral-report`, `/coral-query` |
+| Schema catalog | `/settings`, `/coral-schema` |
+| CLI in production | Render Docker + `coral_service.py` |
 
 ### Judge FAQ: scripted or live?
 
 | What | Scripted? |
 |------|-----------|
-| Opening messages on Assistant (payment recovery example) | **Yes** — static `mockData.js` for first paint only |
-| Every message after you click Send or a suggestion pill | **No** — `POST /coral-query` → Coral SQL → Fireworks LLM |
-| Reports / Settings numbers | **No** — `GET /coral-report` / `coral-schema` at request time |
-| Graph / Risk views | **No** — live Neo4j |
+| First messages on Assistant (on page load) | **Yes** — `mockData.js` polish only |
+| Every new question you send | **No** — Coral SQL + Fireworks |
+| Reports / Settings | **No** — live API at request time |
+| Graph / Risk | **No** — live Neo4j |
 
-Demo **data** is fictional Acme Corp (seeded). Demo **answers** are generated from that data via Coral + AI, not a lookup table of prewritten replies.
+Demo **data** is Acme Corp (seeded). Demo **answers** after Send are generated from that data via Coral + AI.
+
+---
+
+## 4. Learning and growth (~15–30 seconds, optional)
+
+**What to say (pick 2–3)**
+
+> We started with separate Neo4j Cypher and Chroma retrieval and hit real production issues: Aura HTTP blocked for Coral, CORS on Vercel, and keyword routing that returned zero SQL rows for valid questions.
+>
+> Moving the graph read layer to **JSONL snapshots** (same seed as Neo4j) made Coral reliable on Render while keeping the live graph UI on Bolt. **Intent-based SQL templates** fixed empty Assistant results for questions like backup-owner coverage.
+>
+> Biggest lesson: Coral fits best as the **agent read layer** — one JOIN across sources — while Neo4j stays the source of truth for visualization and bus-factor scoring. Next step we'd connect real markdown postmortems and Slack exports through ingest and refresh Coral tables automatically.
+
+---
+
+## Post-deploy verification (copy-paste)
+
+```bash
+curl -sS https://memoryweave-1.onrender.com/health | python3 -m json.tool
+
+curl -sS https://memoryweave-1.onrender.com/coral-schema | python3 -m json.tool
+
+curl -sS -X POST https://memoryweave-1.onrender.com/coral-query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Who resolves payment incidents?"}' | python3 -m json.tool
+```
+
+Expected: `"retrieval_method": "coral_sql_join"`, `"coral_rows" > 0`, non-empty `"coral_sql"` and `"answer"`.
+
+**Browser**
+
+- https://memory-weave-ai.vercel.app/reports  
+- https://memory-weave-ai.vercel.app/settings  
+- https://memory-weave-ai.vercel.app/assistant  
+
+---
+
+## Short-form outline (if you need to cut to 2:30)
+
+1. **About** (25s): Problem + Patel + MemoryWeave one-liner  
+2. **Stack** (35s): React, FastAPI, Neo4j, Coral, Fireworks + architecture diagram  
+3. **Demo** (80s): Reports → Settings → Assistant with SQL footer  
+4. **Learn** (10s): One sentence on Coral as read layer + production lessons  
