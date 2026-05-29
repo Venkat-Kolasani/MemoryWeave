@@ -189,9 +189,10 @@ Use this **tonight** so the backend stays awake through hackathon judging (in ad
 4. **URL:** `https://memoryweave-1.onrender.com/health`  
    (replace with your Render URL if different)
 5. **Monitoring Interval:** **5 minutes** (shortest on free tier)
-6. **Monitor Timeout:** 60 seconds (Render cold start can take 1–4 min on first ping after long sleep — first alert may fail; that’s OK)
-7. **Alert Contacts:** optional email/Telegram if you want down alerts
-8. **Create Monitor**
+6. **HTTP Method:** **GET** preferred (full JSON body). **HEAD** also returns `200` on `/health` if your monitor uses it.
+7. **Monitor Timeout:** 60 seconds (Render cold start can take 1–4 min on first ping after long sleep — first alert may fail; that’s OK)
+8. **Alert Contacts:** optional email/Telegram if you want down alerts
+9. **Create Monitor**
 
 ### 3. Confirm it works
 

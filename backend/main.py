@@ -13,7 +13,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 _BACKEND_DIR = Path(__file__).resolve().parent
@@ -141,6 +141,12 @@ async def root() -> dict[str, str]:
     return {"status": "ok", "version": "1.0.0", "service": "MemoryWeave"}
 
 
+@app.head("/")
+async def root_head() -> Response:
+    """Liveness probe for uptime monitors (UptimeRobot, Render) — no body."""
+    return Response(status_code=200)
+
+
 @app.get("/health")
 async def health() -> dict:
     """Extended health — Neo4j node count and Chroma chunk count (no secrets)."""
@@ -178,6 +184,12 @@ async def health() -> dict:
         "chroma_startup_populate": _neo4j_env("CHROMA_STARTUP_POPULATE", "true"),
         "coral": get_coral_health_status(),
     }
+
+
+@app.head("/health")
+async def health_head() -> Response:
+    """Lightweight liveness — HEAD avoids Neo4j work; use GET /health for full status."""
+    return Response(status_code=200)
 
 
 @app.get("/health/deep")
