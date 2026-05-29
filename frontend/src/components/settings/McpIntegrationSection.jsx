@@ -5,13 +5,13 @@
  * Fetches /coral-mcp-config; falls back to static config when API is unreachable.
  *
  * Used by: SettingsPage
- * Depends on: Badge, Button, api.fetchCoralMcpConfig
+ * Depends on: Badge, Button, useAppStore (coralMcpConfig cache)
  */
 
 import { useState, useEffect } from 'react'
+import useAppStore from '../../stores/appStore.js'
 import Badge from '../atoms/Badge.jsx'
 import Button from '../atoms/Button.jsx'
-import { fetchCoralMcpConfig } from '../../services/api.js'
 
 const MCP_TOOLS = [
   {
@@ -57,32 +57,13 @@ const PLACEHOLDER_MCP_CONFIG = {
  * Coral MCP integration block for Settings — config copy, tools, example query.
  */
 export default function McpIntegrationSection() {
-  const [mcpPayload, setMcpPayload] = useState(null)
+  const mcpPayload = useAppStore((s) => s.coralMcpConfig)
+  const fetchCoralMcpConfig = useAppStore((s) => s.fetchCoralMcpConfig)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    let cancelled = false
-
     fetchCoralMcpConfig()
-      .then((data) => {
-        if (!cancelled) setMcpPayload(data)
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setMcpPayload({
-            available: false,
-            cli_available: false,
-            config: PLACEHOLDER_MCP_CONFIG,
-            instructions:
-              'Could not reach the API — using placeholder paths. Install Coral locally: brew install withcoral/tap/coral',
-          })
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  }, [fetchCoralMcpConfig])
 
   const config = mcpPayload?.config ?? PLACEHOLDER_MCP_CONFIG
   const configJson = JSON.stringify(config, null, 2)
