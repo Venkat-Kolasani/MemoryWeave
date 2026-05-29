@@ -359,6 +359,7 @@ JOIN github.issues gh
 WHERE kn.type = 'Person'
   AND gh.owner = 'Venkat-Kolasani'
   AND gh.repo = 'MemoryWeave'
+  AND gh.state = 'all'
 ORDER BY gh.created_at DESC
 LIMIT 20
 """

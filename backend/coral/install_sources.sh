@@ -81,7 +81,7 @@ if [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "${CORAL_GITHUB_FORCE_FILE:-0}" != "1" ]];
     fi
   fi
   if coral sql --format json \
-    "SELECT number, title FROM github.issues WHERE owner = 'Venkat-Kolasani' AND repo = 'MemoryWeave' LIMIT 1" \
+    "SELECT number, title FROM github.issues WHERE owner = 'Venkat-Kolasani' AND repo = 'MemoryWeave' AND state = 'all' LIMIT 1" \
     2>/dev/null | grep -q number; then
     GITHUB_MODE="api"
     echo "[coral] GitHub live API source registered (github.issues)"

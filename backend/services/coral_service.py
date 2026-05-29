@@ -380,6 +380,7 @@ class CoralService:
                 "SELECT number, title, state, created_at "
                 f"FROM github.issues "
                 f"WHERE owner = '{_GITHUB_OWNER}' AND repo = '{_GITHUB_REPO}' "
+                f"AND state = 'all' "
                 f"ORDER BY created_at DESC LIMIT {int(limit)}"
             )
         return self.query(
