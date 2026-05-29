@@ -163,7 +163,7 @@ Slack / Incidents / Docs
 |------|-----------|
 | First messages on Assistant (on page load) | **Yes** — `mockData.js` polish only |
 | Every new question you send | **No** — Coral SQL + Fireworks |
-| Reports / Settings | **No** — live API at request time |
+| Reports / Settings | **No** for data — live Coral SQL; **first** page visit fetches API; **revisit within 5 min** uses Zustand cache (no reload spinner) |
 | Graph / Risk | **No** — live Neo4j |
 
 Demo **data** is Acme Corp (seeded). Demo **answers** after Send are generated from that data via Coral + AI.

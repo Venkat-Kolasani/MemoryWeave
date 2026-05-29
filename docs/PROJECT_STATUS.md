@@ -1,7 +1,7 @@
 # MemoryWeave — Project Status
 
 ## Last Updated
-2026-05-29 (branch: `main`)
+2026-05-29 — Coral Settings/Reports session cache (Zustand, 5 min TTL)
 
 ## Current Phase
 Phase 6 — **Coral integration complete** on `main`  
@@ -19,13 +19,14 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORA
 - [x] Judge-visible cross-source SQL demo (Reports **Live Cross-Source SQL** card + intent routing)
 - [x] MCP + CLI documented (`docs/CORAL_LOCAL.md`, Settings MCP section, README Coral block)
 - [x] Submission README Coral integration section + [CORAL-DEMO-SCRIPT.md](CORAL-DEMO-SCRIPT.md)
+- [x] **Frontend Coral session cache** — `fetchCoralSchema` / `fetchCoralReport` / `fetchCoralMcpConfig` in Zustand (5 min TTL; no refetch on every route visit)
 
 ## What's Been Built
 ### Frontend
 - [x] Vite + React 18 project (`frontend/`)
 - [x] CSS design tokens + keyframes (`src/index.css`)
 - [x] App.jsx route table (react-router-dom) — all 10 routes wired
-- [x] Zustand store — full data state + async actions (`src/stores/appStore.js`)
+- [x] Zustand store — full data state + async actions (`src/stores/appStore.js`); Coral schema/report/MCP cached 5 min across routes
 - [x] **API service layer — live fetch** (`src/services/api.js` → production Render URL on Vercel)
 - [x] mockData.js — fallback seed data when API unavailable
 - [x] Icon, Badge, Button, StatCard atoms
@@ -38,8 +39,8 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORA
 - [x] AssistantPage.jsx — Coral `/coral-query` primary, `/query` fallback, sample pills
 - [x] SourcesPage.jsx — 8 source cards with status badges and stats
 - [x] WorkflowsPage.jsx — Acme Corp workflow cards (hardcoded demo data)
-- [x] ReportsPage.jsx — **Live Cross-Source SQL** card + `/coral-report` analytics
-- [x] SettingsPage.jsx — `/coral-schema` + **MCP Integration** copy-paste config
+- [x] ReportsPage.jsx — **Live Cross-Source SQL** card + `/coral-report` (store cache; instant revisit within 5 min)
+- [x] SettingsPage.jsx — `/coral-schema` + **MCP Integration** (store cache; no “Checking…” on every tab switch)
 - [x] `frontend/vercel.json` — SPA rewrites (Vercel Root Directory = `frontend`)
 - [x] All navigation + routing verified end-to-end
 
@@ -69,6 +70,7 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORA
 
 ## Known Issues / Blockers
 - `/stats` returns live Neo4j node count but `undocumented`, `risks`, `queries` are placeholder values.
+- **First** visit to Reports/Settings per session still waits on `/coral-report` (slow on Render); revisits within 5 min use Zustand cache (see [FIXES_AND_LEARNINGS.md](FIXES_AND_LEARNINGS.md)).
 - Render free tier cold start (~1–4 min idle); warm `/health` before demos.
 - MCP `available: false` on Render (expected) — MCP for local Claude Desktop; production uses CLI `coral sql`.
 - Graph Coral tables on Render use JSONL snapshots (Aura HTTP blocked); UI graph uses live Bolt.

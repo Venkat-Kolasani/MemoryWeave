@@ -5,17 +5,17 @@
  * Fetches from /coral-report — four Coral queries combined.
  *
  * Used by: App.jsx (route /reports)
- * Depends on: DashboardShell, StatCard, Badge, Button, Icon, api.fetchCoralReport
+ * Depends on: DashboardShell, StatCard, Badge, Button, Icon, useAppStore (coralReport cache)
  */
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import useAppStore from '../stores/appStore.js'
 import DashboardShell from '../components/layout/DashboardShell.jsx'
 import StatCard from '../components/atoms/StatCard.jsx'
 import Badge from '../components/atoms/Badge.jsx'
 import Button from '../components/atoms/Button.jsx'
 import Icon from '../components/atoms/Icon.jsx'
-import { fetchCoralReport } from '../services/api.js'
 import LiveCrossSourceSqlCard, {
   buildGithubCrossJoinPreviewRows,
 } from '../components/reports/LiveCrossSourceSqlCard.jsx'
@@ -56,32 +56,17 @@ function CoralBadge() {
 /** Reports dashboard — Coral cross-source analytics. */
 export default function ReportsPage() {
   const navigate = useNavigate()
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const data = useAppStore((s) => s.coralReport)
+  const coralReportStatus = useAppStore((s) => s.coralReportStatus)
+  const coralReportError = useAppStore((s) => s.coralReportError)
+  const fetchCoralReport = useAppStore((s) => s.fetchCoralReport)
 
   useEffect(() => {
-    let cancelled = false
+    fetchCoralReport().catch(() => {})
+  }, [fetchCoralReport])
 
-    fetchCoralReport()
-      .then((d) => {
-        if (!cancelled) {
-          setData(d)
-          setLoading(false)
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Failed to load report')
-          setLoading(false)
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
+  const loading = coralReportStatus === 'loading' && !data
+  const error = coralReportStatus === 'error' ? coralReportError : null
   const isLive = Boolean(!loading && !error && data?.coral_available)
   const githubMode = data?.github_mode ?? 'file'
   const previewRows = buildGithubCrossJoinPreviewRows(data?.github_knowledge_cross_join)

@@ -20,6 +20,15 @@ import {
 
 /** @typedef {'all' | 'person' | 'system' | 'incident' | 'workflow'} FilterType */
 /** @typedef {null | 'processing' | 'complete' | 'error'} IngestionStatus */
+/** @typedef {'idle' | 'loading' | 'ready' | 'error'} CoralFetchStatus */
+
+/** Coral schema/report TTL — matches Settings “Cache TTL” display. */
+export const CORAL_CACHE_TTL_MS = 5 * 60 * 1000
+
+/** @param {number|null|undefined} fetchedAt */
+function isCoralCacheFresh(fetchedAt) {
+  return Boolean(fetchedAt && Date.now() - fetchedAt < CORAL_CACHE_TTL_MS)
+}
 
 const useAppStore = create(
   immer((set, get) => ({
@@ -45,6 +54,21 @@ const useAppStore = create(
     // Sources & ingestion
     sources: [],
     ingestionStatus: null,
+
+    // Coral (Settings / Reports / MCP) — cached across route changes
+    coralSchema: null,
+    coralSchemaStatus: 'idle',
+    coralSchemaFetchedAt: null,
+    coralSchemaError: null,
+
+    coralReport: null,
+    coralReportStatus: 'idle',
+    coralReportFetchedAt: null,
+    coralReportError: null,
+
+    coralMcpConfig: null,
+    coralMcpStatus: 'idle',
+    coralMcpFetchedAt: null,
 
     // ─── Synchronous actions ───────────────────────────────────────────────
 
@@ -129,6 +153,134 @@ const useAppStore = create(
         })
       } catch (err) {
         console.error('[store] fetchStats failed:', err)
+      }
+    },
+
+    /**
+     * Load /coral-schema with session cache (5 min). Revisit Settings without refetch spinners.
+     * @param {{ force?: boolean }} [options]
+     */
+    fetchCoralSchema: async ({ force = false } = {}) => {
+      const { coralSchema, coralSchemaFetchedAt } = get()
+      if (!force && isCoralCacheFresh(coralSchemaFetchedAt) && coralSchema) {
+        return coralSchema
+      }
+
+      const showLoading = !coralSchema
+      if (showLoading) {
+        set((state) => {
+          state.coralSchemaStatus = 'loading'
+        })
+      }
+
+      try {
+        const data = await api.fetchCoralSchema()
+        set((state) => {
+          state.coralSchema = data
+          state.coralSchemaStatus = 'ready'
+          state.coralSchemaFetchedAt = Date.now()
+          state.coralSchemaError = null
+        })
+        return data
+      } catch (err) {
+        console.error('[store] fetchCoralSchema failed:', err)
+        set((state) => {
+          state.coralSchemaStatus = 'error'
+          state.coralSchemaError =
+            err instanceof Error ? err.message : 'Failed to load schema'
+          state.coralSchemaFetchedAt = Date.now()
+          if (!state.coralSchema) {
+            state.coralSchema = { available: false }
+          }
+        })
+        return get().coralSchema
+      }
+    },
+
+    /**
+     * Load /coral-report with session cache. Reports page keeps data when navigating away.
+     * @param {{ force?: boolean }} [options]
+     */
+    fetchCoralReport: async ({ force = false } = {}) => {
+      const { coralReport, coralReportFetchedAt } = get()
+      if (!force && isCoralCacheFresh(coralReportFetchedAt) && coralReport) {
+        return coralReport
+      }
+
+      const showLoading = !coralReport
+      if (showLoading) {
+        set((state) => {
+          state.coralReportStatus = 'loading'
+        })
+      }
+
+      try {
+        const data = await api.fetchCoralReport()
+        set((state) => {
+          state.coralReport = data
+          state.coralReportStatus = 'ready'
+          state.coralReportFetchedAt = Date.now()
+          state.coralReportError = null
+        })
+        return data
+      } catch (err) {
+        console.error('[store] fetchCoralReport failed:', err)
+        set((state) => {
+          state.coralReportStatus = 'error'
+          state.coralReportError =
+            err instanceof Error ? err.message : 'Failed to load report'
+          state.coralReportFetchedAt = Date.now()
+        })
+        throw err
+      }
+    },
+
+    /** Load /coral-mcp-config once per session (Settings MCP block). */
+    fetchCoralMcpConfig: async ({ force = false } = {}) => {
+      const { coralMcpConfig, coralMcpFetchedAt } = get()
+      if (!force && isCoralCacheFresh(coralMcpFetchedAt) && coralMcpConfig) {
+        return coralMcpConfig
+      }
+
+      const showLoading = !coralMcpConfig
+      if (showLoading) {
+        set((state) => {
+          state.coralMcpStatus = 'loading'
+        })
+      }
+
+      try {
+        const data = await api.fetchCoralMcpConfig()
+        set((state) => {
+          state.coralMcpConfig = data
+          state.coralMcpStatus = 'ready'
+          state.coralMcpFetchedAt = Date.now()
+        })
+        return data
+      } catch (err) {
+        console.error('[store] fetchCoralMcpConfig failed:', err)
+        const fallback = {
+          available: false,
+          cli_available: false,
+          config: {
+            mcpServers: {
+              'memoryweave-coral': {
+                command: 'coral',
+                args: ['mcp', '--sources', 'backend/coral/sources.yaml'],
+                description:
+                  'MemoryWeave Coral SQL layer — query knowledge_nodes, knowledge_edges, incident_reports, slack_messages as SQL tables',
+              },
+            },
+          },
+          instructions:
+            'Could not reach the API — using placeholder paths. Install Coral locally: brew install withcoral/tap/coral',
+        }
+        set((state) => {
+          state.coralMcpConfig = fallback
+          state.coralMcpStatus = 'ready'
+          state.coralMcpFetchedAt = Date.now()
+        })
+        return fallback
       }
     },
 

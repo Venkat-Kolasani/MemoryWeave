@@ -163,6 +163,22 @@ npm install && npm run dev
 
 Open http://localhost:5173/settings and http://localhost:5173/reports.
 
+### Frontend cache (Settings / Reports)
+
+Coral responses are **not** refetched on every route change. The Zustand store caches:
+
+| Endpoint | Store action | TTL |
+|----------|--------------|-----|
+| `GET /coral-schema` | `fetchCoralSchema()` | 5 minutes |
+| `GET /coral-report` | `fetchCoralReport()` | 5 minutes |
+| `GET /coral-mcp-config` | `fetchCoralMcpConfig()` | 5 minutes |
+
+- **First** open of Settings or Reports in a session still hits the API (Reports can be slow on Render).
+- **Return within 5 min** — cached data shows immediately; no “Coral CLI Checking…” or Reports skeletons.
+- After TTL expires, stale data stays visible while a background refresh runs.
+
+Constant: `CORAL_CACHE_TTL_MS` in `frontend/src/stores/appStore.js`. Details: [FIXES_AND_LEARNINGS.md](FIXES_AND_LEARNINGS.md).
+
 ---
 
 ## MCP Setup (Claude Desktop)

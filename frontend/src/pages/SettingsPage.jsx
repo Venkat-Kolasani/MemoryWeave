@@ -5,16 +5,16 @@
  * Fetches from /coral-schema to display registered SQL tables and column metadata.
  *
  * Used by: App.jsx (route /settings)
- * Depends on: DashboardShell, Badge, Button, Icon, StatCard, api.fetchCoralSchema
+ * Depends on: DashboardShell, Badge, Button, Icon, StatCard, useAppStore (coralSchema cache)
  */
 
 import { useState, useEffect, useMemo } from 'react'
+import useAppStore from '../stores/appStore.js'
 import DashboardShell from '../components/layout/DashboardShell.jsx'
 import Badge from '../components/atoms/Badge.jsx'
 import Button from '../components/atoms/Button.jsx'
 import Icon from '../components/atoms/Icon.jsx'
 import StatCard from '../components/atoms/StatCard.jsx'
-import { fetchCoralSchema } from '../services/api.js'
 import McpIntegrationSection from '../components/settings/McpIntegrationSection.jsx'
 
 /** Static registry — aligned with backend/coral manifests; enriched by live /coral-schema. */
@@ -120,34 +120,18 @@ function mergeLiveColumns(tables, schemaPayload) {
 
 /** Coral data source manager — registered SQL tables and schemas. */
 export default function SettingsPage() {
-  const [schema, setSchema] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const schema = useAppStore((s) => s.coralSchema)
+  const coralSchemaStatus = useAppStore((s) => s.coralSchemaStatus)
+  const fetchCoralSchema = useAppStore((s) => s.fetchCoralSchema)
   const [expandedTable, setExpandedTable] = useState(null)
 
   useEffect(() => {
-    let cancelled = false
-
     fetchCoralSchema()
-      .then((d) => {
-        if (!cancelled) {
-          setSchema(d)
-          setLoading(false)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSchema({ available: false })
-          setLoading(false)
-        }
-      })
+  }, [fetchCoralSchema])
 
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const coralAvailable = !loading && schema?.available === true
-  const coralOffline = !loading && schema?.available !== true
+  const loading = coralSchemaStatus === 'loading' && !schema
+  const coralAvailable = Boolean(schema?.available === true)
+  const coralOffline = Boolean(schema && schema.available !== true)
   const tables = useMemo(
     () => mergeLiveColumns(CORAL_TABLES, schema),
     [schema],
