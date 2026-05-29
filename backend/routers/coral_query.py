@@ -3,6 +3,7 @@ coral_query.py
 
 /coral-query  —  Coral-powered hybrid retrieval + Fireworks LLM grounding.
 /coral-schema —  Return registered Coral table schemas (used by Settings page).
+/coral-mcp-config — MCP server block for Claude Desktop / Cursor.
 /coral-report —  Return cross-source analytics for Reports page.
 
 Architecture before Coral:
@@ -40,7 +41,12 @@ try:
         PAYMENT_RECOVERY_CONTEXT,
         SYSTEMS_WITHOUT_BACKUP,
     )
-    from services.coral_service import get_coral_service, sanitize_sql_param
+    from services.coral_service import (
+        check_mcp_available,
+        get_coral_service,
+        get_mcp_config,
+        sanitize_sql_param,
+    )
     from services.fireworks_config import fireworks_client_kwargs, get_fireworks_model
 except ModuleNotFoundError:
     from backend.coral.queries import (
@@ -54,7 +60,9 @@ except ModuleNotFoundError:
         SYSTEMS_WITHOUT_BACKUP,
     )
     from backend.services.coral_service import (
+        check_mcp_available,
         get_coral_service,
+        get_mcp_config,
         sanitize_sql_param,
     )
     from backend.services.fireworks_config import (
@@ -477,6 +485,27 @@ async def coral_query(req: CoralQueryRequest) -> CoralQueryResponse:
         coral_rows=len(rows),
         retrieval_method="coral_sql_join",
     )
+
+
+@router.get("/coral-mcp-config")
+async def coral_mcp_config() -> dict[str, Any]:
+    """
+    MCP server config for Claude Desktop / Cursor (parallel to production CLI subprocess).
+
+    Used by SettingsPage copy-paste setup.
+    """
+    mcp_ok = check_mcp_available()
+    return {
+        "available": mcp_ok,
+        "cli_available": coral.available,
+        "config": get_mcp_config(),
+        "instructions": (
+            "Add the `config` object to your MCP client settings (Claude Desktop, Cursor, "
+            "or any MCP host), then restart the client. Ask natural-language questions — "
+            "Coral exposes SQL tools over knowledge_nodes, knowledge_edges, incident_reports, "
+            "and slack_messages without loading raw files into the model context."
+        ),
+    }
 
 
 @router.get("/coral-schema")

@@ -15,6 +15,7 @@ import Button from '../components/atoms/Button.jsx'
 import Icon from '../components/atoms/Icon.jsx'
 import StatCard from '../components/atoms/StatCard.jsx'
 import { fetchCoralSchema } from '../services/api.js'
+import McpIntegrationSection from '../components/settings/McpIntegrationSection.jsx'
 
 /** Static registry — aligned with backend/coral manifests; enriched by live /coral-schema. */
 const CORAL_TABLES = [
@@ -473,6 +474,8 @@ export default function SettingsPage() {
             )
           })}
         </div>
+
+        <McpIntegrationSection />
 
         <div
           style={{

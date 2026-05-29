@@ -144,6 +144,16 @@ export async function fetchCoralReport() {
 }
 
 /**
+ * MCP server config for Claude Desktop / Cursor (Coral `coral mcp` mode).
+ * @returns {Promise<{ available: boolean, cli_available?: boolean, config: object, instructions: string }>}
+ */
+export async function fetchCoralMcpConfig() {
+  const res = await fetch(`${BASE}/coral-mcp-config`)
+  if (!res.ok) throw new Error(`/coral-mcp-config failed: ${res.status}`)
+  return res.json()
+}
+
+/**
  * Uploads a file and triggers the ingestion pipeline.
  * @param {File} file
  * @returns {Promise<{ status: string, job_id: string, filename?: string, source_type?: string, message?: string }>}

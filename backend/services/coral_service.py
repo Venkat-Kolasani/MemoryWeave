@@ -59,6 +59,43 @@ def get_coral_service() -> "CoralService":
     return _coral_instance
 
 
+def get_mcp_config() -> dict[str, Any]:
+    """
+    MCP server configuration block for Claude Desktop / Cursor.
+
+    Copy-paste into the client's mcpServers section. Used by GET /coral-mcp-config.
+    """
+    sources_path = str((_BACKEND_ROOT / "coral" / "sources.yaml").resolve())
+    return {
+        "mcpServers": {
+            "memoryweave-coral": {
+                "command": CORAL_CLI,
+                "args": ["mcp", "--sources", sources_path],
+                "description": (
+                    "MemoryWeave Coral SQL layer — query knowledge_nodes, "
+                    "knowledge_edges, incident_reports, slack_messages as SQL tables"
+                ),
+            }
+        }
+    }
+
+
+def check_mcp_available() -> bool:
+    """Return True when `coral mcp --help` succeeds (same binary as CLI SQL path)."""
+    try:
+        result = subprocess.run(
+            [CORAL_CLI, "mcp", "--help"],
+            capture_output=True,
+            text=True,
+            timeout=_VERSION_TIMEOUT_SEC,
+            cwd=str(_BACKEND_ROOT),
+            env=_coral_env(),
+        )
+        return result.returncode == 0
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return False
+
+
 def probe_coral_health(*, run_sql_smoke_test: bool = False) -> str:
     """
     Check Coral CLI once (optionally run a lightweight SQL smoke test).
