@@ -7,8 +7,7 @@
 **Live Demo:** [memory-weave-ai.vercel.app](https://memory-weave-ai.vercel.app)  
 **API:** [memoryweave-1.onrender.com](https://memoryweave-1.onrender.com)
 
-Deploy guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**  
-**Coral demo script (judges):** **[docs/CORAL-DEMO-SCRIPT.md](docs/CORAL-DEMO-SCRIPT.md)**
+Deploy guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**
 
 ---
 
