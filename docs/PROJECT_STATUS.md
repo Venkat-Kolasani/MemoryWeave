@@ -11,6 +11,7 @@ Production demo: Vercel + Render + Neo4j Aura — submission-ready
 See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORAL_LOCAL.md)**.
 
 - [x] Coral source specs over Acme demo corpus (Slack JSONL, incidents JSONL, graph manifests / JSONL)
+- [x] **GitHub issues** — live `github.issues` API when `GITHUB_TOKEN` set; JSONL fallback otherwise
 - [x] `coral_service.py` + `/coral-query`, `/coral-schema`, `/coral-report`, `/coral-mcp-config`
 - [x] Assistant: Coral SQL primary (default on), auto-fallback to `/query`, SQL metadata on bubbles
 - [x] Production Docker + Coral CLI install (`backend/Dockerfile`, `render.yaml`)
@@ -91,7 +92,7 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORA
 |--------|--------|-------|
 | `python backend/data/seed.py` | Verified | 16 nodes (incl. P-3722) |
 | `python backend/data/populate_chroma.py` | Verified | 58 chunks indexed |
-| `bash backend/coral/install_sources.sh` | Verified | 4 Coral SQL tables |
+| `bash backend/coral/install_sources.sh` | Verified | 5 Coral SQL tables (+ GitHub API or JSONL) |
 | `python backend/data/export_coral_graph.py` | Verified | Regenerate graph JSONL |
 
 ## Environment

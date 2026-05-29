@@ -26,6 +26,8 @@ from typing import Any, Optional
 
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent
 CORAL_CLI = os.environ.get("CORAL_CLI_PATH", "coral")
+_GITHUB_OWNER = "Venkat-Kolasani"
+_GITHUB_REPO = "MemoryWeave"
 
 _QUERY_TIMEOUT_SEC = 45
 _SCHEMA_TIMEOUT_SEC = 20
@@ -72,8 +74,8 @@ def get_mcp_config() -> dict[str, Any]:
                 "command": CORAL_CLI,
                 "args": ["mcp", "--sources", sources_path],
                 "description": (
-                    "MemoryWeave Coral SQL layer — query knowledge_nodes, "
-                    "knowledge_edges, incident_reports, slack_messages as SQL tables"
+                    "MemoryWeave Coral SQL layer — knowledge_nodes, knowledge_edges, "
+                    "incident_reports, slack_messages, github.issues (live API when configured)"
                 ),
             }
         }
@@ -258,14 +260,14 @@ class CoralService:
             tables = self.query(
                 "SELECT schema_name, table_name, description "
                 "FROM coral.tables "
-                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
+                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo', 'github') "
                 "ORDER BY schema_name, table_name",
                 timeout_sec=_SCHEMA_TIMEOUT_SEC,
             )
             columns = self.query(
                 "SELECT schema_name, table_name, column_name, data_type, description "
                 "FROM coral.columns "
-                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
+                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo', 'github') "
                 "ORDER BY schema_name, table_name, ordinal_position "
                 "LIMIT 500",
                 timeout_sec=_SCHEMA_TIMEOUT_SEC,
@@ -340,3 +342,48 @@ class CoralService:
     def patel_absence_risk(self) -> list[dict[str, Any]]:
         queries = self._load_queries()
         return self.query(queries.PATEL_ABSENCE_RISK)
+
+    def github_mode(self) -> str:
+        """
+        Return 'api' when live github.issues is active, else 'file' (JSONL fallback).
+
+        Reads CORAL_GITHUB_MODE env or github_mode file written by install_sources.sh.
+        """
+        mode = os.getenv("CORAL_GITHUB_MODE", "").strip().lower()
+        if mode in {"api", "file"}:
+            return mode
+
+        mode_file = Path(
+            os.getenv("CORAL_CONFIG_DIR", str(_BACKEND_ROOT / ".coral_config"))
+        ) / "github_mode"
+        if mode_file.is_file():
+            stored = mode_file.read_text(encoding="utf-8").strip().lower()
+            if stored in {"api", "file"}:
+                return stored
+
+        return "file"
+
+    def github_knowledge_cross_join(self) -> list[dict[str, Any]]:
+        """Person × GitHub issues cross-source JOIN (live API or JSONL fallback)."""
+        queries = self._load_queries()
+        sql = (
+            queries.GITHUB_KNOWLEDGE_CROSS_JOIN_API
+            if self.github_mode() == "api"
+            else queries.GITHUB_KNOWLEDGE_CROSS_JOIN_FILE
+        )
+        return self.query(sql)
+
+    def github_issues_preview(self, *, limit: int = 5) -> list[dict[str, Any]]:
+        """Lightweight GitHub issues sample for health / demo checks."""
+        if self.github_mode() == "api":
+            return self.query(
+                "SELECT number, title, state, created_at "
+                f"FROM github.issues "
+                f"WHERE owner = '{_GITHUB_OWNER}' AND repo = '{_GITHUB_REPO}' "
+                f"ORDER BY created_at DESC LIMIT {int(limit)}"
+            )
+        return self.query(
+            f"SELECT number, title, state, created_at "
+            f"FROM memoryweave_demo.github_issues "
+            f"ORDER BY created_at DESC LIMIT {int(limit)}"
+        )

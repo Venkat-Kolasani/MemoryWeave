@@ -30,6 +30,10 @@ const MCP_TOOLS = [
     name: 'coral_cross_join',
     description: 'JOIN across all sources in one query',
   },
+  {
+    name: 'github_issues',
+    description: 'Live GitHub issues (github.issues) when GITHUB_TOKEN is set',
+  },
 ]
 
 const EXAMPLE_MCP_QUERY = `// Claude Desktop with MemoryWeave MCP:

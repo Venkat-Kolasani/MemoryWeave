@@ -17,5 +17,7 @@ services:
         value: "1"
       - key: CORAL_CONFIG_DIR
         value: /app/.coral_config
+      - key: GITHUB_TOKEN
+        sync: false
       - key: PYTHON_VERSION
         value: "3.11.9"

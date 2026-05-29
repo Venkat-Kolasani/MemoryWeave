@@ -55,18 +55,20 @@ export const MOCK_SQL_PREVIEW_ROWS = [
 ]
 
 const SQL_LINES = [
-  { code: '-- MemoryWeave × Coral: cross-source JOIN across 3 source types', comment: null },
+  {
+    code: '-- MemoryWeave × Coral: 5 sources, 3 source types, 1 query',
+    comment: null,
+  },
   { code: 'SELECT', comment: null },
-  { code: '  n.name          AS person,', comment: null },
-  { code: '  n.team          AS team,', comment: null },
-  { code: '  e.rel_type      AS owns,', comment: null },
-  { code: '  e.to_name       AS system,', comment: null },
-  { code: '  e.weight        AS strength', comment: null },
-  { code: 'FROM knowledge_nodes n', comment: '-- source: Neo4j AuraDB' },
-  { code: 'JOIN knowledge_edges e', comment: '-- source: Neo4j AuraDB' },
-  { code: '  ON n.id = e.from_id', comment: null },
+  { code: '  n.name          AS person,', comment: '-- source: knowledge_nodes (JSONL)' },
+  { code: '  e.to_name       AS system,', comment: '-- source: knowledge_edges (JSONL)' },
+  { code: '  gh.title        AS github_issue', comment: '-- source: github_issues (Live GitHub API)' },
+  { code: 'FROM knowledge_nodes n', comment: null },
+  { code: 'JOIN knowledge_edges e ON n.id = e.from_id', comment: null },
+  { code: 'JOIN github_issues gh', comment: null },
+  { code: "  ON LOWER(gh.body) LIKE '%' || LOWER(n.name) || '%'", comment: null },
   { code: "WHERE n.type = 'Person'", comment: null },
-  { code: "  AND e.rel_type IN ('KNOWS', 'OWNS')", comment: null },
+  { code: "  AND e.rel_type = 'OWNS'", comment: null },
   { code: 'ORDER BY e.weight DESC', comment: null },
 ]
 
@@ -241,8 +243,8 @@ export default function LiveCrossSourceSqlCard({ previewRows, isLive }) {
           color: 'var(--text-secondary)',
         }}
       >
-        <span>Sources joined: 3</span>
-        <span>Tables: knowledge_nodes, knowledge_edges, incident_reports</span>
+        <span>Sources joined: 5</span>
+        <span>Source types: JSONL, Markdown, JSON, GitHub API</span>
         <span>Cache TTL: 300s</span>
       </div>
 

@@ -340,6 +340,51 @@ LIMIT 30
 """
 
 
+# ─── Query 14: GitHub issues × knowledge graph (live API or JSONL fallback) ───
+# Live: github.issues with owner/repo filters (Coral bundled GitHub source).
+# Fallback: memoryweave_demo.github_issues (github_issues.jsonl).
+GITHUB_KNOWLEDGE_CROSS_JOIN_API = """
+SELECT
+    kn.name         AS team_member,
+    kn.team         AS team,
+    kn.role         AS role,
+    gh.number       AS issue_number,
+    gh.title        AS issue_title,
+    gh.state        AS issue_state,
+    gh.created_at   AS opened_at
+FROM memoryweave_graph.knowledge_nodes kn
+JOIN github.issues gh
+    ON LOWER(gh.body) LIKE '%' || LOWER(kn.name) || '%'
+    OR LOWER(gh.title) LIKE '%' || LOWER(kn.name) || '%'
+WHERE kn.type = 'Person'
+  AND gh.owner = 'Venkat-Kolasani'
+  AND gh.repo = 'MemoryWeave'
+ORDER BY gh.created_at DESC
+LIMIT 20
+"""
+
+GITHUB_KNOWLEDGE_CROSS_JOIN_FILE = """
+SELECT
+    kn.name         AS team_member,
+    kn.team         AS team,
+    kn.role         AS role,
+    gh.number       AS issue_number,
+    gh.title        AS issue_title,
+    gh.state        AS issue_state,
+    gh.created_at   AS opened_at
+FROM memoryweave_graph.knowledge_nodes kn
+JOIN memoryweave_demo.github_issues gh
+    ON LOWER(gh.body) LIKE '%' || LOWER(kn.name) || '%'
+    OR LOWER(gh.title) LIKE '%' || LOWER(kn.name) || '%'
+WHERE kn.type = 'Person'
+ORDER BY gh.created_at DESC
+LIMIT 20
+"""
+
+# Default alias used by coral_service.github_knowledge_cross_join()
+GITHUB_KNOWLEDGE_CROSS_JOIN = GITHUB_KNOWLEDGE_CROSS_JOIN_FILE
+
+
 # ─── Cross-source demo: graph + Slack + incidents (Patel / payment) ─────────
 PATEL_CROSS_SOURCE = """
 SELECT

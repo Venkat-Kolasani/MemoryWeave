@@ -67,6 +67,49 @@ tables:
         nullable: true
         description: Full postmortem markdown.
 
+  - name: github_issues
+    description: >-
+      GitHub issues for MemoryWeave (JSONL fallback when live github.issues API
+      is unavailable). Columns number, title, state, body, author, created_at, labels, url.
+    format: jsonl
+    source:
+      location: file://__MEMORYWEAVE_CORAL_DATA__/
+      glob: github_issues.jsonl
+    columns:
+      - name: number
+        type: Int64
+        nullable: true
+        description: GitHub issue number.
+      - name: title
+        type: Utf8
+        nullable: true
+        description: Issue title.
+      - name: state
+        type: Utf8
+        nullable: true
+        description: open or closed.
+      - name: body
+        type: Utf8
+        nullable: true
+        description: Issue body text.
+      - name: author
+        type: Utf8
+        nullable: true
+        description: Author login.
+      - name: created_at
+        type: Utf8
+        nullable: true
+        description: ISO-8601 created timestamp.
+      - name: labels
+        type: Utf8
+        nullable: true
+        description: Comma-separated label names.
+      - name: url
+        type: Utf8
+        nullable: true
+        description: GitHub issue or PR URL.
+
 test_queries:
   - SELECT * FROM memoryweave_demo.slack_messages LIMIT 3
   - SELECT * FROM memoryweave_demo.incident_reports LIMIT 3
+  - SELECT * FROM memoryweave_demo.github_issues LIMIT 3

@@ -503,7 +503,7 @@ async def coral_mcp_config() -> dict[str, Any]:
             "Add the `config` object to your MCP client settings (Claude Desktop, Cursor, "
             "or any MCP host), then restart the client. Ask natural-language questions — "
             "Coral exposes SQL tools over knowledge_nodes, knowledge_edges, incident_reports, "
-            "and slack_messages without loading raw files into the model context."
+            "slack_messages, and github.issues without loading raw files into the model context."
         ),
     }
 
@@ -515,11 +515,19 @@ async def coral_schema() -> dict[str, Any]:
     Used by SettingsPage to display connected SQL tables + column names.
     """
     schema = coral.get_schema()
+    github_mode = coral.github_mode() if coral.available else "unknown"
+    github_label = (
+        "github_issues (Live GitHub API — github.issues)"
+        if github_mode == "api"
+        else "github_issues (JSONL fallback — memoryweave_demo.github_issues)"
+    )
+    schema["github_mode"] = github_mode
     schema["sources_registered"] = [
         "knowledge_nodes (Graph snapshot JSONL)",
         "knowledge_edges (Graph snapshot JSONL)",
         "incident_reports (Markdown → JSONL)",
         "slack_messages (JSON export)",
+        github_label,
     ]
     schema["available"] = coral.available
     return schema

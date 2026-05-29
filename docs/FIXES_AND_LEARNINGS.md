@@ -1,5 +1,27 @@
 # MemoryWeave — Fixes & Learnings
 
+## Coral GitHub source — live API vs JSONL fallback
+**Date:** 2026-05-29
+**Phase:** Phase 6 — Coral hackathon polish
+**Severity:** Medium
+
+### What Happened
+Judges expect a **live external API** in the Coral story, not only local JSONL. Coral 0.4.1 requires `GITHUB_TOKEN` for the bundled `github` source (no unauthenticated install).
+
+### Root Cause
+Coral's `github` bundled source marks `GITHUB_TOKEN` as required at `coral source add` time. Public GitHub REST allows unauthenticated reads, but Coral's install path does not.
+
+### How It Was Fixed
+`install_sources.sh` tries `coral source add github` when `GITHUB_TOKEN` is set and smoke-tests `github.issues` for `Venkat-Kolasani/MemoryWeave`. On failure or missing token, queries use `memoryweave_demo.github_issues` from `coral/data/github_issues.jsonl`. Mode is written to `$CORAL_CONFIG_DIR/github_mode` and exposed on `GET /coral-schema` as `github_mode`.
+
+### What I Learned
+Ship a **file fallback** for demos and CI; use the live API when credentials exist. Document both paths so judges can reproduce without blocking on PAT setup.
+
+### Relevant for Interview
+Shows pragmatic integration design: sponsor feature (live API) + reliable fallback for hackathon demos.
+
+---
+
 ## Frontend fetch failures from missing Vercel CORS origin
 **Date:** 2026-05-29
 **Phase:** Phase 6 — Production verification
