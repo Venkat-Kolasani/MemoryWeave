@@ -167,9 +167,61 @@ Redeploy after adding.
 
 ### Render cold start (free tier)
 
-The API sleeps after ~15 minutes idle. The frontend **auto-pings** `/` and `/health` as soon as the landing page loads (see `frontend/index.html` + `warmBackend()` in `api.js`), so the instance often wakes while judges read the hero.
+The API sleeps after ~15 minutes idle on Render free tier. The frontend calls `warmBackend()` in `App.jsx` → `api.js`, which pings `/` and `/health` on load and again at 2s, 5s, 12s, 25s, 50s, and 90s while the user reads the landing page. Navigating to `/dashboard` (or any app route) triggers `boostBackendWarm()` for another immediate ping.
 
-For extra reliability before a live demo, use a free monitor (e.g. [UptimeRobot](https://uptimerobot.com)) to hit `https://memoryweave.onrender.com/health` every **10 minutes**.
+**Verify warm pings:** Open https://memory-weave-ai.vercel.app → DevTools → **Network** → filter `health` or `onrender`. You should see GETs to `https://memoryweave-1.onrender.com/health` within a few seconds (CORS must allow your Vercel origin).
+
+---
+
+## Keep Render warm — UptimeRobot (free, ~5 minutes)
+
+Use this **tonight** so the backend stays awake through hackathon judging (in addition to frontend warm pings).
+
+### 1. Create account
+
+1. Go to [uptimerobot.com](https://uptimerobot.com) → **Register** (free plan: 50 monitors, 5-minute interval).
+
+### 2. Add HTTP monitor
+
+1. Dashboard → **Add New Monitor**
+2. **Monitor Type:** HTTP(s)
+3. **Friendly Name:** `MemoryWeave API health`
+4. **URL:** `https://memoryweave-1.onrender.com/health`  
+   (replace with your Render URL if different)
+5. **Monitoring Interval:** **5 minutes** (shortest on free tier)
+6. **Monitor Timeout:** 60 seconds (Render cold start can take 1–4 min on first ping after long sleep — first alert may fail; that’s OK)
+7. **Alert Contacts:** optional email/Telegram if you want down alerts
+8. **Create Monitor**
+
+### 3. Confirm it works
+
+1. Wait for the first check (green **Up**).
+2. In a terminal:
+
+```bash
+curl -sS https://memoryweave-1.onrender.com/health | python3 -m json.tool
+```
+
+Expect `"status": "ok"` and `"coral": "ok"` after the instance is warm.
+
+### 4. Tips
+
+| Tip | Why |
+|-----|-----|
+| Use `/health` not `/graph` | Lighter; still runs Neo4j count but wakes the same service |
+| Do **not** use `/health/deep` | Runs Coral SQL smoke test — too slow for a ping |
+| 5-minute interval | Free tier minimum; enough to prevent 15-minute Render sleep |
+| Warm once before recording demo | Open the Vercel site 2–3 minutes before the video |
+
+### 5. Vercel env (required for warm pings)
+
+In Vercel → Project → **Settings** → **Environment Variables**:
+
+| Key | Value |
+|-----|--------|
+| `VITE_API_URL` | `https://memoryweave-1.onrender.com` |
+
+Redeploy after changing. Without this, the built app defaults to `http://127.0.0.1:8000` and **no production warm pings run**.
 
 ### Step 5 — Verify
 

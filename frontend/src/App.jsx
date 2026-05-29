@@ -8,7 +8,9 @@
  * Depends on: page components
  */
 
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { boostBackendWarm, warmBackend } from './services/api.js'
 import LandingPage from './pages/LandingPage.jsx'
 import OverviewPage from './pages/OverviewPage.jsx'
 import GraphPage from './pages/GraphPage.jsx'
@@ -23,6 +25,20 @@ import SettingsPage from './pages/SettingsPage.jsx'
  * Application route table — landing at `/`, dashboard pages under app routes.
  */
 export default function App() {
+  const location = useLocation()
+
+  // Wake Render as soon as the SPA loads (production only).
+  useEffect(() => {
+    warmBackend()
+  }, [])
+
+  // Extra ping when leaving landing — user often opens dashboard next.
+  useEffect(() => {
+    if (location.pathname !== '/') {
+      boostBackendWarm()
+    }
+  }, [location.pathname])
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />

@@ -9,35 +9,68 @@
 
 const BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
-let backendWarmStarted = false
+/** Paths used to wake Render — root is light; /health confirms app + Coral cache. */
+const WARM_PATHS = ['/', '/health']
+
+/**
+ * Delays (ms) for repeated pings through a typical Render free-tier cold start (1–4 min).
+ * Fires immediately, then while the user reads the landing page, then on dashboard nav.
+ */
+const WARM_SCHEDULE_MS = [0, 2_000, 5_000, 12_000, 25_000, 50_000, 90_000]
+
+let warmScheduleStarted = false
+const warmTimerIds = []
 
 /** True when API base is local dev — skip Render wake pings. */
-function isLocalApiBase() {
+export function isLocalApiBase() {
   return /localhost|127\.0\.0\.1/.test(BASE)
 }
 
+function ping(path) {
+  const url = `${BASE}${path}`
+  fetch(url, { method: 'GET', mode: 'cors', keepalive: true, cache: 'no-store' }).catch(
+    () => {},
+  )
+}
+
+/** Send one wave of wake pings (safe to call anytime). */
+export function boostBackendWarm() {
+  if (isLocalApiBase()) return
+  WARM_PATHS.forEach((path) => ping(path))
+  if (import.meta.env.DEV) {
+    console.info('[MemoryWeave] boostBackendWarm →', BASE, WARM_PATHS.join(', '))
+  }
+}
+
 /**
- * Fire-and-forget pings to wake Render free tier before dashboard API calls.
- * Safe to call multiple times; only the first invocation sends requests.
+ * Schedule repeated wake pings for Render cold starts.
+ * Call once at app load (main.jsx / App.jsx). Idempotent.
  */
 export function warmBackend() {
-  if (backendWarmStarted || isLocalApiBase()) return
-  backendWarmStarted = true
+  if (isLocalApiBase()) return
+  if (warmScheduleStarted) return
+  warmScheduleStarted = true
 
-  const ping = (path) => {
-    fetch(`${BASE}${path}`, { method: 'GET', mode: 'cors', keepalive: true }).catch(
-      () => {},
-    )
+  if (import.meta.env.DEV) {
+    console.info('[MemoryWeave] warmBackend schedule →', BASE, WARM_SCHEDULE_MS)
   }
 
-  ping('/')
-  ping('/health')
+  boostBackendWarm()
 
-  // Second wave during typical cold-start window while user reads landing page
-  window.setTimeout(() => {
-    ping('/')
-    ping('/health')
-  }, 8000)
+  WARM_SCHEDULE_MS.slice(1).forEach((delayMs) => {
+    const id = window.setTimeout(() => boostBackendWarm(), delayMs)
+    warmTimerIds.push(id)
+  })
+}
+
+/**
+ * Lightweight health check — use before dashboard fetches when cold start matters.
+ * @returns {Promise<{ status: string, coral?: string, neo4j?: string }>}
+ */
+export async function fetchHealth() {
+  const res = await fetch(`${BASE}/health`, { method: 'GET', mode: 'cors', cache: 'no-store' })
+  if (!res.ok) throw new Error(`/health failed: ${res.status}`)
+  return res.json()
 }
 
 /**
