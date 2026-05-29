@@ -232,6 +232,8 @@ class CoralReportResponse(BaseModel):
     team_concentration: list[dict[str, Any]]
     incident_resolvers: list[dict[str, Any]]
     undocumented_workflows: list[dict[str, Any]]
+    github_knowledge_cross_join: list[dict[str, Any]]
+    github_mode: str
     coral_available: bool
 
 
@@ -240,6 +242,7 @@ You have access to cross-source data retrieved via Coral SQL JOINs across:
 - Neo4j knowledge graph (people, systems, workflows, incidents)
 - Incident postmortem reports
 - Slack operational discussions
+- GitHub issues (MemoryWeave repository)
 
 Answer the user's question using ONLY the provided data context.
 Return a JSON object with this exact structure — no other text, no markdown fences:
@@ -352,6 +355,16 @@ def _resolve_coral_query(
             coral.patel_absence_risk(),
             PATEL_ABSENCE_RISK.strip(),
             "Intent: Patel absence / bus-factor risk",
+        )
+
+    if re.search(
+        r"github|git\s*hub|memoryweave\s+issue|issue.*memoryweave|repo\s+issue",
+        lower,
+    ):
+        return (
+            coral.github_knowledge_cross_join(),
+            coral.github_knowledge_cross_join_sql(),
+            "Intent: knowledge graph × GitHub issues cross-source JOIN",
         )
 
     return [], "", ""
@@ -537,7 +550,7 @@ async def coral_schema() -> dict[str, Any]:
 async def coral_report() -> CoralReportResponse:
     """
     Cross-source analytics for the Reports page.
-    Runs four Coral SQL queries (bus factor, teams, incidents, workflows).
+    Runs Coral SQL queries (bus factor, teams, incidents, workflows, GitHub × graph).
     """
     if not coral.available:
         return CoralReportResponse(
@@ -545,6 +558,8 @@ async def coral_report() -> CoralReportResponse:
             team_concentration=[],
             incident_resolvers=[],
             undocumented_workflows=[],
+            github_knowledge_cross_join=[],
+            github_mode="unknown",
             coral_available=False,
         )
 
@@ -554,10 +569,13 @@ async def coral_report() -> CoralReportResponse:
         except Exception:
             return []
 
+    mode = coral.github_mode()
     return CoralReportResponse(
         bus_factor=_safe_call(coral.bus_factor),
         team_concentration=_safe_call(coral.team_concentration),
         incident_resolvers=_safe_call(coral.incident_resolvers),
         undocumented_workflows=_safe_call(coral.undocumented_workflows),
+        github_knowledge_cross_join=_safe_call(coral.github_knowledge_cross_join),
+        github_mode=mode,
         coral_available=True,
     )

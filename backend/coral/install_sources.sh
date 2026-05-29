@@ -73,8 +73,10 @@ GITHUB_MODE="file"
 CORAL_MODE_FILE="${CORAL_CONFIG_DIR:-$ROOT/.coral_config}/github_mode"
 mkdir -p "$(dirname "$CORAL_MODE_FILE")"
 
+# Drop bundled github when using file mode so /coral-schema matches github_mode=file.
+coral source remove github 2>/dev/null || true
+
 if [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "${CORAL_GITHUB_FORCE_FILE:-0}" != "1" ]]; then
-  coral source remove github 2>/dev/null || true
   if coral source add github 2>/dev/null; then
     if [[ "${CORAL_SKIP_TESTS:-0}" != "1" ]]; then
       coral source test github 2>/dev/null || echo "[coral] warn: github API test failed — using file fallback"
@@ -86,10 +88,11 @@ if [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "${CORAL_GITHUB_FORCE_FILE:-0}" != "1" ]];
     GITHUB_MODE="api"
     echo "[coral] GitHub live API source registered (github.issues)"
   else
+    coral source remove github 2>/dev/null || true
     echo "[coral] warn: GITHUB_TOKEN set but github.issues query failed — using memoryweave_demo.github_issues"
   fi
 else
-  echo "[coral] No GITHUB_TOKEN — using file-backed memoryweave_demo.github_issues"
+  echo "[coral] No GITHUB_TOKEN (or CORAL_GITHUB_FORCE_FILE=1) — using memoryweave_demo.github_issues"
 fi
 
 echo "$GITHUB_MODE" > "$CORAL_MODE_FILE"

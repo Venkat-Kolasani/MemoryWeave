@@ -256,18 +256,25 @@ class CoralService:
         if not self.available:
             return {"available": False, "sources": []}
 
+        tables_where = (
+            "schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
+            "OR (schema_name = 'github' AND table_name = 'issues')"
+            if self.github_mode() == "api"
+            else "schema_name IN ('memoryweave_graph', 'memoryweave_demo')"
+        )
+
         try:
             tables = self.query(
                 "SELECT schema_name, table_name, description "
                 "FROM coral.tables "
-                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo', 'github') "
+                f"WHERE {tables_where} "
                 "ORDER BY schema_name, table_name",
                 timeout_sec=_SCHEMA_TIMEOUT_SEC,
             )
             columns = self.query(
                 "SELECT schema_name, table_name, column_name, data_type, description "
                 "FROM coral.columns "
-                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo', 'github') "
+                f"WHERE {tables_where} "
                 "ORDER BY schema_name, table_name, ordinal_position "
                 "LIMIT 500",
                 timeout_sec=_SCHEMA_TIMEOUT_SEC,
@@ -276,6 +283,7 @@ class CoralService:
                 "available": True,
                 "tables": tables,
                 "columns": columns,
+                "github_mode": self.github_mode(),
             }
         except Exception as exc:
             return {"available": True, "sources": [], "error": str(exc)}
@@ -363,15 +371,16 @@ class CoralService:
 
         return "file"
 
+    def github_knowledge_cross_join_sql(self) -> str:
+        """Canonical SQL for person × GitHub issues (matches active github_mode)."""
+        queries = self._load_queries()
+        if self.github_mode() == "api":
+            return queries.GITHUB_KNOWLEDGE_CROSS_JOIN_API.strip()
+        return queries.GITHUB_KNOWLEDGE_CROSS_JOIN_FILE.strip()
+
     def github_knowledge_cross_join(self) -> list[dict[str, Any]]:
         """Person × GitHub issues cross-source JOIN (live API or JSONL fallback)."""
-        queries = self._load_queries()
-        sql = (
-            queries.GITHUB_KNOWLEDGE_CROSS_JOIN_API
-            if self.github_mode() == "api"
-            else queries.GITHUB_KNOWLEDGE_CROSS_JOIN_FILE
-        )
-        return self.query(sql)
+        return self.query(self.github_knowledge_cross_join_sql())
 
     def github_issues_preview(self, *, limit: int = 5) -> list[dict[str, Any]]:
         """Lightweight GitHub issues sample for health / demo checks."""
