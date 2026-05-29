@@ -16,6 +16,9 @@ import Badge from '../components/atoms/Badge.jsx'
 import Button from '../components/atoms/Button.jsx'
 import Icon from '../components/atoms/Icon.jsx'
 import { fetchCoralReport } from '../services/api.js'
+import LiveCrossSourceSqlCard, {
+  buildSqlPreviewRows,
+} from '../components/reports/LiveCrossSourceSqlCard.jsx'
 
 /** Pulsing Coral SQL attribution chip on analytics cards. */
 function CoralBadge() {
@@ -79,118 +82,13 @@ export default function ReportsPage() {
     }
   }, [])
 
-  if (loading) {
-    return (
-      <DashboardShell
-        title="Reports"
-        subtitle="Cross-source analytics · Powered by Coral SQL"
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              style={{
-                height: 120,
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-tertiary)',
-                animation: 'shimmer 1.5s ease-in-out infinite',
-                backgroundImage:
-                  'linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%)',
-                backgroundSize: '200% 100%',
-              }}
-            />
-          ))}
-        </div>
-      </DashboardShell>
-    )
-  }
+  const isLive = Boolean(!loading && !error && data?.coral_available)
+  const previewRows = buildSqlPreviewRows(data?.bus_factor)
 
-  if (error) {
-    return (
-      <DashboardShell
-        title="Reports"
-        subtitle="Cross-source analytics · Powered by Coral SQL"
-      >
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '80px 24px',
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-lg)',
-          }}
-        >
-          <Icon name="alert" size={40} color="var(--danger)" />
-          <p style={{ fontSize: 16, fontWeight: 600, marginTop: 16 }}>
-            Could not load analytics
-          </p>
-          <p
-            style={{
-              fontSize: 13,
-              color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-mono)',
-              marginTop: 8,
-            }}
-          >
-            {error}
-          </p>
-        </div>
-      </DashboardShell>
-    )
-  }
-
-  if (!data?.coral_available) {
-    return (
-      <DashboardShell
-        title="Reports"
-        subtitle="Cross-source analytics · Powered by Coral SQL"
-      >
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '80px 24px',
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-lg)',
-          }}
-        >
-          <Icon name="database" size={40} color="var(--text-tertiary)" />
-          <p style={{ fontSize: 16, fontWeight: 600, marginTop: 16 }}>
-            Coral not connected
-          </p>
-          <p
-            style={{
-              fontSize: 13,
-              color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-mono)',
-              marginTop: 8,
-            }}
-          >
-            Install Coral CLI to enable cross-source SQL analytics
-          </p>
-          <code
-            style={{
-              display: 'block',
-              marginTop: 16,
-              padding: '8px 16px',
-              background: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: 12,
-              fontFamily: 'var(--font-mono)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            brew install withcoral/tap/coral
-          </code>
-        </div>
-      </DashboardShell>
-    )
-  }
-
-  const busFactor = data.bus_factor || []
-  const teamConcentration = data.team_concentration || []
-  const incidentResolvers = data.incident_resolvers || []
-  const undocumentedWorkflows = data.undocumented_workflows || []
+  const busFactor = data?.bus_factor || []
+  const teamConcentration = data?.team_concentration || []
+  const incidentResolvers = data?.incident_resolvers || []
+  const undocumentedWorkflows = data?.undocumented_workflows || []
 
   const soleOwners = busFactor.filter((r) => (r.owner_count ?? 0) <= 1).length
   const criticalTeams = teamConcentration.filter((r) => (r.avg_risk_score ?? 0) > 60).length
@@ -210,6 +108,91 @@ export default function ReportsPage() {
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <LiveCrossSourceSqlCard previewRows={previewRows} isLive={isLive} />
+
+        {error && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+              padding: '14px 20px',
+              background: 'oklch(97% 0.04 25)',
+              border: '1px solid oklch(90% 0.07 25)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <Icon name="alert" size={18} color="var(--danger)" />
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                Analytics could not load
+              </p>
+              <p
+                style={{
+                  fontSize: 12,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-secondary)',
+                  marginTop: 4,
+                }}
+              >
+                {error} — SQL demo above uses fallback rows.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && !data?.coral_available && (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '32px 24px',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <Icon name="database" size={32} color="var(--text-tertiary)" />
+            <p style={{ fontSize: 14, fontWeight: 600, marginTop: 12 }}>
+              Coral analytics unavailable
+            </p>
+            <code
+              style={{
+                display: 'inline-block',
+                marginTop: 12,
+                padding: '6px 12px',
+                background: 'var(--bg-secondary)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 11,
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              brew install withcoral/tap/coral
+            </code>
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                style={{
+                  height: 120,
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--bg-tertiary)',
+                  animation: 'shimmer 1.5s ease-in-out infinite',
+                  backgroundImage:
+                    'linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%)',
+                  backgroundSize: '200% 100%',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && data?.coral_available && (
+          <>
         <div
           style={{
             display: 'grid',
@@ -748,10 +731,12 @@ export default function ReportsPage() {
             }}
           >
             All analytics above retrieved via Coral SQL cross-source JOINs across
-            Neo4j (knowledge graph), incident reports, and Slack exports. No ETL.
+            Neo4j (knowledge graph), incident reports, and Slack exports.             No ETL.
             No warehouse. One SQL interface.
           </span>
         </div>
+          </>
+        )}
       </div>
     </DashboardShell>
   )
