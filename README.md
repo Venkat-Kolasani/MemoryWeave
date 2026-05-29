@@ -98,7 +98,7 @@ Instead of separate API calls to Neo4j (Cypher), ChromaDB (embeddings), and file
 | `slack_messages` | JSON export | 50 operational Slack messages |
 | `github_issues` | **Live GitHub API** (or JSONL fallback) | Issues/PRs from [Venkat-Kolasani/MemoryWeave](https://github.com/Venkat-Kolasani/MemoryWeave) |
 
-With `GITHUB_TOKEN` set, Coral registers the bundled **`github.issues`** table (live REST API). Without a token, `install_sources.sh` uses **`memoryweave_demo.github_issues`** from `backend/coral/data/github_issues.jsonl`.
+With `GITHUB_TOKEN` set, Coral registers **`github.issues`** (live REST API) and **UNION**s it with **`memoryweave_demo.github_issues`** (demo supplement JSONL aligned to the Acme graph). Cross-join rows include `issue_source`: `live_github_api` vs `demo_supplement`. Without a token, only the JSONL supplement is used.
 
 On **Render**, graph tables are served from JSONL snapshots (`backend/coral/data/`) aligned with the same Acme seed as Aura. **Graph** and **Risk** pages still query live Neo4j over Bolt.
 

@@ -529,11 +529,14 @@ async def coral_schema() -> dict[str, Any]:
     """
     schema = coral.get_schema()
     github_mode = coral.github_mode() if coral.available else "unknown"
-    github_label = (
-        "github_issues (Live GitHub API — github.issues)"
-        if github_mode == "api"
-        else "github_issues (JSONL fallback — memoryweave_demo.github_issues)"
-    )
+    if github_mode == "hybrid":
+        github_label = (
+            "github.issues (live API) + github_issues (demo supplement JSONL)"
+        )
+    elif github_mode == "api":
+        github_label = "github_issues (Live GitHub API — github.issues)"
+    else:
+        github_label = "github_issues (JSONL fallback — memoryweave_demo.github_issues)"
     schema["github_mode"] = github_mode
     schema["sources_registered"] = [
         "knowledge_nodes (Graph snapshot JSONL)",

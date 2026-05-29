@@ -41,32 +41,38 @@ export const MOCK_SQL_PREVIEW_ROWS = [
 /** Fallback when GitHub cross-join returns no rows (JSONL mentions people in issue bodies). */
 export const MOCK_GITHUB_JOIN_ROWS = [
   {
+    person: 'A. Patel',
+    team: 'Engineering',
+    system: 'Payment API',
+    issue: '#6 Payment recovery runbook alignment',
+    state: 'open',
+    source: 'demo_supplement',
+    critical: true,
+  },
+  {
     person: 'R. Chen',
     team: 'Engineering',
+    system: 'Auth Service',
     issue: '#5 MCP config for Claude Desktop',
     state: 'open',
+    source: 'demo_supplement',
     critical: false,
   },
   {
     person: 'A. Patel',
     team: 'Engineering',
-    issue: '#6 Payment recovery runbook alignment',
-    state: 'open',
-    critical: true,
-  },
-  {
-    person: 'A. Patel',
-    team: 'Engineering',
+    system: 'Payment API',
     issue: '#2 Coral integration',
     state: 'closed',
+    source: 'live_github_api',
     critical: true,
   },
 ]
 
 const SQL_LINES = [
   {
-    code: '-- This query joins 3 tables (graph nodes, edges, GitHub issues)',
-    comment: '5 sources registered on platform',
+    code: '-- UNION: live github.issues + demo_supplement JSONL',
+    comment: 'then JOIN graph nodes/edges',
   },
   { code: 'SELECT', comment: null },
   { code: '  n.name          AS person,', comment: '-- knowledge_nodes' },
@@ -110,11 +116,14 @@ export function buildGithubCrossJoinPreviewRows(githubJoin) {
     const title = String(row.issue_title ?? row.title ?? '—')
     const issueLabel =
       issueNum != null ? `#${issueNum} ${title}` : title
+    const source = String(row.issue_source ?? 'demo_supplement')
     return {
       person,
       team: String(row.team ?? '—'),
+      system: String(row.owned_system ?? '—'),
       issue: issueLabel,
       state: String(row.issue_state ?? row.state ?? '—'),
+      source: source === 'live_github_api' ? 'GitHub API' : 'Supplement',
       critical: /patel/i.test(person),
     }
   })
@@ -166,12 +175,12 @@ export default function LiveCrossSourceSqlCard({
   const rows = previewRows?.length ? previewRows : MOCK_GITHUB_JOIN_ROWS
   const isGithubPreview = previewVariant === 'github'
   const githubSourceLabel =
-    githubMode === 'api'
-      ? 'Live GitHub API (github.issues)'
-      : 'JSONL fallback (memoryweave_demo.github_issues)'
+    githubMode === 'hybrid' || githubMode === 'api'
+      ? 'Hybrid: live github.issues + demo_supplement JSONL (Acme narrative)'
+      : 'JSONL supplement (memoryweave_demo.github_issues)'
 
   const columns = isGithubPreview
-    ? ['Person', 'Team', 'GitHub issue', 'State']
+    ? ['Person', 'Team', 'System', 'GitHub issue', 'State', 'Source']
     : ['Person', 'Team', 'Relationship', 'System', 'Strength']
 
   return (
@@ -296,7 +305,10 @@ export default function LiveCrossSourceSqlCard({
       >
         <span>Tables in this query: 3</span>
         <span>Registered sources: 5</span>
-        <span>GitHub: {githubMode === 'api' ? 'live API' : 'JSONL'}</span>
+        <span>
+          GitHub:{' '}
+          {githubMode === 'hybrid' || githubMode === 'api' ? 'live + supplement' : 'JSONL'}
+        </span>
       </div>
 
       <div
@@ -346,7 +358,8 @@ export default function LiveCrossSourceSqlCard({
                 }}
               >
                 {isGithubPreview
-                  ? [row.person, row.team, row.issue, row.state].map((cell, cellIndex) => (
+                  ? [row.person, row.team, row.system, row.issue, row.state, row.source].map(
+                      (cell, cellIndex) => (
                       <td
                         key={`${row.person}-${cellIndex}`}
                         style={{

@@ -85,8 +85,8 @@ if [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "${CORAL_GITHUB_FORCE_FILE:-0}" != "1" ]];
   if coral sql --format json \
     "SELECT number, title FROM github.issues WHERE owner = 'Venkat-Kolasani' AND repo = 'MemoryWeave' AND state = 'all' LIMIT 1" \
     2>/dev/null | grep -q number; then
-    GITHUB_MODE="api"
-    echo "[coral] GitHub live API source registered (github.issues)"
+    GITHUB_MODE="hybrid"
+    echo "[coral] GitHub hybrid: live github.issues + demo_supplement JSONL"
   else
     coral source remove github 2>/dev/null || true
     echo "[coral] warn: GITHUB_TOKEN set but github.issues query failed — using memoryweave_demo.github_issues"

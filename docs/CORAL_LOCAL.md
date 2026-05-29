@@ -55,6 +55,8 @@ export GITHUB_TOKEN=ghp_...   # read-only PAT or: gh auth token
 
 Without `GITHUB_TOKEN`, Coral uses `memoryweave_demo.github_issues` (JSONL in `coral/data/`).
 
+With a token, install writes `github_mode=hybrid`: Coral **UNION**s live `github.issues` with the JSONL supplement so cross-join demos show both `live_github_api` and `demo_supplement` rows (real repo issues #1–#2 plus Acme narrative issues).
+
 Run the setup script (registers graph + demo + GitHub):
 
 ```bash
