@@ -1,23 +1,23 @@
 # MemoryWeave — Project Status
 
 ## Last Updated
-2026-05-28 (branch: Coral-integration)
+2026-05-29 (branch: `main`)
 
 ## Current Phase
-Phase 6 — Coral integration on branch `Coral-integration`  
-`main` — production demo (Vercel + Render + Aura) remains submission-ready
+Phase 6 — **Coral integration complete** on `main`  
+Production demo: Vercel + Render + Neo4j Aura — submission-ready
 
-## Coral integration (in progress)
-See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being added and the target architecture.
+## Coral integration
+See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORAL_LOCAL.md)**.
 
-- [x] Coral source specs over Acme demo corpus (Slack JSONL, incidents JSONL, Neo4j graph manifests)
-- [x] `coral_service.py` + `/coral-query`, `/coral-schema`, `/coral-report` (existing `/query` unchanged)
+- [x] Coral source specs over Acme demo corpus (Slack JSONL, incidents JSONL, graph manifests / JSONL)
+- [x] `coral_service.py` + `/coral-query`, `/coral-schema`, `/coral-report`, `/coral-mcp-config`
 - [x] Assistant: Coral SQL primary (default on), auto-fallback to `/query`, SQL metadata on bubbles
 - [x] Production Docker + Coral CLI install (`backend/Dockerfile`, `render.yaml`)
-- [x] Boot-time Coral source registration (`coral_setup.py`, `CORAL_AUTO_SETUP`)
-- [ ] Judge-visible cross-source SQL demo (Patel / payment / incidents)
-- [ ] MCP or CLI integration documented for local reproduction
-- [ ] Submission README section for Coral-powered narrative
+- [x] Boot-time Coral source registration (`services/coral_setup.py`, `CORAL_AUTO_SETUP`)
+- [x] Judge-visible cross-source SQL demo (Reports **Live Cross-Source SQL** card + intent routing)
+- [x] MCP + CLI documented (`docs/CORAL_LOCAL.md`, Settings MCP section, README Coral block)
+- [x] Submission README Coral integration section + [CORAL-DEMO-SCRIPT.md](CORAL-DEMO-SCRIPT.md)
 
 ## What's Been Built
 ### Frontend
@@ -25,7 +25,7 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being adde
 - [x] CSS design tokens + keyframes (`src/index.css`)
 - [x] App.jsx route table (react-router-dom) — all 10 routes wired
 - [x] Zustand store — full data state + async actions (`src/stores/appStore.js`)
-- [x] **API service layer — live fetch** (`src/services/api.js` → `http://127.0.0.1:8000`)
+- [x] **API service layer — live fetch** (`src/services/api.js` → production Render URL on Vercel)
 - [x] mockData.js — fallback seed data when API unavailable
 - [x] Icon, Badge, Button, StatCard atoms
 - [x] DashboardShell, Sidebar, TopBar, Nav layout components
@@ -34,65 +34,70 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** for why Coral is being adde
 - [x] OverviewPage.jsx — fetches live stats, graph, risk on mount
 - [x] GraphPage.jsx — fetches live graph on mount
 - [x] RiskPage.jsx — fetches live risk report on mount
-- [x] AssistantPage.jsx — chat UI with live `/query` + error fallback
+- [x] AssistantPage.jsx — Coral `/coral-query` primary, `/query` fallback, sample pills
 - [x] SourcesPage.jsx — 8 source cards with status badges and stats
 - [x] WorkflowsPage.jsx — Acme Corp workflow cards (hardcoded demo data)
-- [x] ReportsPage.jsx — Coral `/coral-report` analytics (bus factor, teams, incidents, workflows)
-- [x] SettingsPage.jsx — Coral `/coral-schema` table registry + JOIN demo
+- [x] ReportsPage.jsx — **Live Cross-Source SQL** card + `/coral-report` analytics
+- [x] SettingsPage.jsx — `/coral-schema` + **MCP Integration** copy-paste config
 - [x] `frontend/vercel.json` — SPA rewrites (Vercel Root Directory = `frontend`)
 - [x] All navigation + routing verified end-to-end
 
 ### Backend
 - [x] FastAPI skeleton with CORS (`backend/main.py`)
 - [x] Demo seed JSON + Acme extraction corpus (50 Slack msgs, 3 incidents, 2 runbooks)
-- [x] Fireworks.ai config (`fireworks_config.py`, default `kimi-k2p5`; live LLM synthesis on `/query`)
-- [x] Neo4j schema + seed script (`neo4j_service.py`, `data/seed.py`)
+- [x] Fireworks.ai config (`fireworks_config.py`, default `kimi-k2p5`; live LLM synthesis)
+- [x] Neo4j schema + seed script (`neo4j_service.py`, `data/seed.py` — 16 nodes)
 - [x] ChromaDB service + populate script (`chroma_service.py`, `data/populate_chroma.py`)
 - [x] **GET /graph → live Neo4j** (`routers/graph.py`)
 - [x] **GET /stats → Neo4j node counts** (partial; some fields hardcoded)
 - [x] **POST /ingest → background extraction pipeline** (`routers/ingest.py`, `agents/pipeline.py`)
 - [x] **GET /risk-report → live Neo4j + NetworkX** (`services/risk_scorer.py`)
 - [x] **POST /query → Chroma + Neo4j hybrid retrieval** (`services/retriever.py`, `routers/query.py`)
-- [x] Render deploy files (`Procfile`, `runtime.txt`, `render.yaml`)
-- [x] Production Chroma in-memory + startup auto-populate (`CHROMA_MODE=inmemory`)
+- [x] **Coral SQL layer** (`services/coral_service.py`, `routers/coral_query.py`)
+- [x] Render deploy Docker + Coral CLI (`backend/Dockerfile`, `render.yaml`)
+- [x] Production Chroma in-memory (`CHROMA_MODE=inmemory`, `CHROMA_STARTUP_POPULATE=false` on Render)
 
 ## What's In Progress
-- **Coral-integration branch** — Coral SQL read layer for cross-source queries (`docs/CORAL_INTEGRATION.md`)
+- None — hackathon submission polish only
 
 ## What's Next
-1. Create AuraDB instance and seed graph against production URI
-2. Deploy backend on Render; set env vars; verify `/` and `/graph`
-3. Deploy frontend on Vercel; set `VITE_API_URL` to Render URL
-4. Update README demo links
-5. Node LTS build verification (`npm run build`)
-4. Compute `/stats` undocumented/risk/query counters from live data
-5. Automated tests
+1. Record 3-minute demo video (see [CORAL-DEMO-SCRIPT.md](CORAL-DEMO-SCRIPT.md))
+2. Compute `/stats` undocumented/risk/query counters from live data
+3. Optional: sync Coral JSONL after `/ingest` uploads
+4. Automated tests
 
 ## Known Issues / Blockers
 - `/stats` returns live Neo4j node count but `undocumented`, `risks`, `queries` are placeholder values.
-- `/ingest` requires Neo4j + Chroma + `FIREWORKS_API_KEY`; runs as background task.
-- Local dev: Chroma server must be running (`chroma run --port 8001`) unless using `CHROMA_MODE=inmemory`.
-- Render: in-memory Chroma resets on redeploy; startup re-indexes demo chunks (~58).
-- Fireworks may return 404 for configured model — `/query` uses grounded retrieval fallback.
+- Render free tier cold start (~1–4 min idle); warm `/health` before demos.
+- MCP `available: false` on Render (expected) — MCP for local Claude Desktop; production uses CLI `coral sql`.
+- Graph Coral tables on Render use JSONL snapshots (Aura HTTP blocked); UI graph uses live Bolt.
 - `npm run build` may hang on Node v25; use Node 20/22 LTS.
 
 ## API Endpoints Status
 | Endpoint | Status | Frontend wired |
-|----------------|-------------|----------------|
+|----------|--------|----------------|
 | GET /graph | **Live** | Yes — Overview, Graph |
 | GET /stats | **Live** | Yes — Overview |
 | GET /risk-report | **Live** | Yes — Overview, Risk |
-| POST /query | **Live** | Yes — Assistant |
+| POST /query | **Live** | Yes — Assistant (fallback) |
+| POST /coral-query | **Live** | Yes — Assistant (primary) |
+| GET /coral-schema | **Live** | Yes — Settings |
+| GET /coral-report | **Live** | Yes — Reports |
+| GET /coral-mcp-config | **Live** | Yes — Settings |
 | POST /ingest | **Live** | Yes — `ingestFile()` in api.js |
 
 ## Data Store Scripts
 | Script | Status | Notes |
-|----------------|-------------|------------------------|
-| `python backend/data/seed.py` | Verified | 15 nodes, 21 relationships |
+|--------|--------|-------|
+| `python backend/data/seed.py` | Verified | 16 nodes (incl. P-3722) |
 | `python backend/data/populate_chroma.py` | Verified | 58 chunks indexed |
+| `bash backend/coral/install_sources.sh` | Verified | 4 Coral SQL tables |
+| `python backend/data/export_coral_graph.py` | Verified | Regenerate graph JSONL |
 
 ## Environment
-- Frontend: http://localhost:5173 (`VITE_API_URL=http://127.0.0.1:8000`)
-- Backend: http://127.0.0.1:8000 (avoid `localhost:8000` if Docker binds that port)
-- Neo4j: http://localhost:7474
-- ChromaDB: http://localhost:8001
+- Frontend: https://memory-weave-ai.vercel.app
+- Backend: https://memoryweave-1.onrender.com
+- Local frontend: http://localhost:5173 (`VITE_API_URL=http://127.0.0.1:8000`)
+- Local backend: http://127.0.0.1:8000
+- Neo4j Aura: production graph + risk
+- ChromaDB: http://localhost:8001 (local) or in-memory (Render)

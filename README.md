@@ -81,6 +81,77 @@ Legacy path (fallback): `/query` → Neo4j Cypher + Chroma embeddings → manual
 
 ---
 
+## Coral Integration
+
+MemoryWeave uses [Coral](https://withcoral.com) as its cross-source SQL retrieval layer.
+
+Instead of separate API calls to Neo4j (Cypher), ChromaDB (embeddings), and file parsers that get merged manually inside the agent — MemoryWeave exposes 4 SQL tables via Coral and runs **cross-source JOINs** from FastAPI.
+
+### SQL Tables
+
+| Table | Source Type | Contents |
+|-------|-------------|----------|
+| `knowledge_nodes` | Neo4j AuraDB | People, systems, incidents, workflows |
+| `knowledge_edges` | Neo4j AuraDB | OWNS, KNOWS, RESOLVES, AFFECTS relationships |
+| `incident_reports` | Markdown files | P0/P1/P2 postmortem documents |
+| `slack_messages` | JSON export | 50 operational Slack messages |
+
+On **Render**, graph tables are served from JSONL snapshots (`backend/coral/data/`) aligned with the same Acme seed as Aura. **Graph** and **Risk** pages still query live Neo4j over Bolt.
+
+### The Cross-Source JOIN
+
+```sql
+-- One query. Three source types. Coral handles everything below.
+SELECT n.name, n.team, e.rel_type, e.to_name, e.weight
+FROM knowledge_nodes n          -- Neo4j AuraDB
+JOIN knowledge_edges e          -- Neo4j AuraDB
+  ON n.id = e.from_id
+WHERE n.type = 'Person'
+ORDER BY e.weight DESC
+```
+
+See the **Live Cross-Source SQL** card on the [Reports](https://memory-weave-ai.vercel.app/reports) page for this query with live result rows.
+
+### Coral Features Used
+
+| Feature | How MemoryWeave uses it |
+|---------|-------------------------|
+| SQL over graph database | `knowledge_nodes` + `knowledge_edges` from Neo4j |
+| SQL over Markdown files | `incident_reports` from demo postmortems |
+| SQL over JSON files | `slack_messages` from Slack export |
+| Cross-source JOIN | 3-way JOINs in `/coral-report` and `/coral-query` |
+| Schema learning | Automatic column detection on first query per source |
+| Caching | 300s TTL on repeated Coral queries |
+| CLI integration | `coral sql` via subprocess in `coral_service.py` |
+| MCP server | `coral mcp` config on [Settings](https://memory-weave-ai.vercel.app/settings) |
+
+### API Endpoints (Coral-powered)
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /coral-query` | Natural language → SQL → structured answer |
+| `GET /coral-schema` | Schema catalog of all 4 registered tables |
+| `GET /coral-report` | Full cross-source analytics (bus factor, team concentration, incident chains) |
+| `GET /coral-mcp-config` | MCP server config for Claude Desktop integration |
+
+### How to reproduce locally
+
+See **[docs/CORAL_LOCAL.md](docs/CORAL_LOCAL.md)** for full setup.
+
+Quick start:
+
+```bash
+brew install withcoral/tap/coral      # macOS
+# or: see docs/CORAL_LOCAL.md for Linux / Docker
+coral --version                       # verify install
+cd backend
+export NEO4J_URI=... NEO4J_USER=... NEO4J_PASSWORD=...
+bash coral/install_sources.sh         # register all 4 sources
+coral sql --format table "SELECT schema_name, table_name FROM coral.tables WHERE schema_name IN ('memoryweave_graph','memoryweave_demo')"
+```
+
+---
+
 ## Tech Stack
 
 | Layer | Stack |
@@ -92,55 +163,13 @@ Legacy path (fallback): `/query` → Neo4j Cypher + Chroma embeddings → manual
 
 ---
 
-## Coral SQL Integration
-
-MemoryWeave uses [Coral](https://github.com/coraldata/coral) as the data retrieval layer for its AI agent. Instead of querying Neo4j and ChromaDB separately and merging responses manually, Coral provides a single SQL interface across all sources.
-
-### Registered SQL Tables
-
-| Table | Source | Description |
-|-------|--------|-------------|
-| `memoryweave_graph.knowledge_nodes` | Graph snapshot (Acme seed, Neo4j-aligned) | People, systems, incidents, workflows |
-| `memoryweave_graph.knowledge_edges` | Graph snapshot | OWNS, KNOWS, RESOLVES, AFFECTS, BACKUP_FOR relationships |
-| `memoryweave_demo.incident_reports` | Markdown → JSONL | P0/P1 postmortem documents (P-4021, P-3882, P-3722) |
-| `memoryweave_demo.slack_messages` | JSON export | 50+ operational Slack messages |
-
-On **Render**, graph tables are served from packaged JSONL under `backend/coral/data/` (same Acme Corp seed as Neo4j Aura). The **Knowledge Graph** and **Risk** UI still query **live Neo4j** over Bolt; Coral SQL is the read layer for Assistant, Reports, and Settings.
-
-### How Coral Powers MemoryWeave
-
-**Before Coral:** `/query` called Neo4j (Cypher) + ChromaDB (embeddings) separately, merged results manually, and sent large raw chunks to the LLM context window.
-
-**After Coral:** `/coral-query` runs a single SQL JOIN across all four tables. Coral handles auth, pagination, rate limits, and schema learning internally. Results are structured rows — not raw text blobs — then **Fireworks** synthesizes the natural-language answer.
-
-```sql
--- Example: person → system ownership (powers risk / bus-factor analysis)
-SELECT n.name, e.rel_type, e.to_name, e.weight
-FROM memoryweave_graph.knowledge_nodes n
-JOIN memoryweave_graph.knowledge_edges e ON n.id = e.from_id
-WHERE n.type = 'Person'
-ORDER BY e.weight DESC
-```
-
-### Coral Features Used
-
-- SQL interface over graph nodes and edges (packaged JSONL; Neo4j HTTP when configured locally)
-- SQL interface over Markdown-derived incident reports
-- SQL interface over JSON Slack exports
-- Cross-source JOIN across graph + incidents + Slack
-- Schema learning (automatic column detection via `coral.tables` / manifests)
-- Caching (Coral internal TTL on repeated queries)
-- CLI integration via subprocess in FastAPI (`backend/services/coral_service.py`)
-
----
-
 ## Key Features
 
 1. **Knowledge Graph** — interactive SVG: people, systems, workflows, incidents (pan/zoom)
 2. **Dependency Risk** — bus-factor scoring and risk inventory (live Neo4j)
 3. **AI Assistant** — Coral SQL JOIN + Fireworks grounding (`/coral-query`); `/query` fallback
-4. **Reports** — Coral analytics: bus factor, team concentration, incident chains, workflows
-5. **Settings** — Coral catalog: registered SQL tables and cross-source JOIN examples
+4. **Reports** — Live Cross-Source SQL demo + Coral analytics (bus factor, incidents, teams)
+5. **Settings** — Coral SQL catalog, JOIN examples, and **MCP** copy-paste config
 6. **Extraction Pipeline** — 3-pass LLM ingest from Slack, incidents, runbooks
 7. **Workflows** — operational procedures with documentation status (demo data)
 
@@ -148,6 +177,7 @@ ORDER BY e.weight DESC
 
 ## Docs
 
+- [CORAL_LOCAL.md](docs/CORAL_LOCAL.md) — **local Coral CLI + MCP reproduction**
 - [CORAL-DEMO-SCRIPT.md](docs/CORAL-DEMO-SCRIPT.md) — **3-minute judge demo script**
 - [CORAL_INTEGRATION.md](docs/CORAL_INTEGRATION.md) — architecture and integration notes
 - [PROJECT_STATUS.md](docs/PROJECT_STATUS.md) — build log and API status
