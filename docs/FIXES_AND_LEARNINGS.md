@@ -1,5 +1,33 @@
 # MemoryWeave — Fixes & Learnings
 
+## Settings / Reports refetched Coral on every navigation
+**Date:** 2026-05-29
+**Phase:** Phase 6 — Production UX
+**Severity:** Medium
+
+### What Happened
+On production, **Settings** stayed on “Coral CLI Checking…” and **Reports** showed skeleton loaders for a long time. Leaving either page and returning triggered the same wait again, as if the app reloaded Coral from scratch every visit.
+
+### Root Cause
+React Router **unmounts** page components on navigation. `SettingsPage`, `ReportsPage`, and `McpIntegrationSection` each used local `useState` + `useEffect` to call `GET /coral-schema`, `GET /coral-report`, and `GET /coral-mcp-config` on **every mount**. `/coral-report` runs multiple Coral SQL subprocesses on Render and can take many seconds; there was no client-side cache, so revisiting the page always looked like a cold load.
+
+### How It Was Fixed
+Moved Coral API responses into **Zustand** (`appStore.js`) with a **5-minute TTL** (`CORAL_CACHE_TTL_MS`, aligned with the Settings “Cache TTL” stat card):
+
+- `fetchCoralSchema`, `fetchCoralReport`, `fetchCoralMcpConfig` skip the network when cache is fresh.
+- **Stale-while-revalidate:** if data exists but TTL expired, the UI keeps showing cached rows while a background refetch runs (no full-page spinner).
+- Loading spinners only when there is **no cached data** yet (`status === 'loading' && !coralReport`).
+
+Files: `frontend/src/stores/appStore.js`, `SettingsPage.jsx`, `ReportsPage.jsx`, `McpIntegrationSection.jsx`.
+
+### What I Learned
+Route-level `useEffect` fetch is wrong for expensive, slow-changing data. Cache in global state (or React Query) when users hop between dashboard tabs. Match TTL to product copy (300s on Settings) so behavior is explainable to judges.
+
+### Relevant for Interview
+Demonstrates SPA performance debugging: distinguish slow backend from unnecessary refetch, and fix with session cache without changing API contracts.
+
+---
+
 ## Coral GitHub source — live API vs JSONL fallback
 **Date:** 2026-05-29
 **Phase:** Phase 6 — Coral hackathon polish

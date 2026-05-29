@@ -165,6 +165,15 @@ Vercel → Project → **Settings** → **Environment Variables**
 
 Redeploy after adding.
 
+### Coral pages — client cache (Settings / Reports)
+
+The frontend caches `GET /coral-schema`, `GET /coral-report`, and `GET /coral-mcp-config` in Zustand for **5 minutes** (`CORAL_CACHE_TTL_MS` in `appStore.js`). Navigating away from Settings or Reports and back does **not** refetch until the TTL expires.
+
+- **Demo tip:** Open Reports once and wait for it to load, then hop to Assistant and back — second visit should be instant.
+- **First** load per session is still slow on Render (`/coral-report` runs several Coral SQL queries).
+
+See [FIXES_AND_LEARNINGS.md](FIXES_AND_LEARNINGS.md) — *Settings / Reports refetched Coral on every navigation*.
+
 ### Render cold start (free tier)
 
 The API sleeps after ~15 minutes idle on Render free tier. The frontend calls `warmBackend()` in `App.jsx` → `api.js`, which pings `/` and `/health` on load and again at 2s, 5s, 12s, 25s, 50s, and 90s while the user reads the landing page. Navigating to `/dashboard` (or any app route) triggers `boostBackendWarm()` for another immediate ping.
