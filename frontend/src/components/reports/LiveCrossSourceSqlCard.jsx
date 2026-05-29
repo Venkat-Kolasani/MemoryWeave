@@ -2,7 +2,7 @@
  * LiveCrossSourceSqlCard.jsx
  *
  * Judge-facing Coral SQL demo: static cross-source JOIN + live result preview rows.
- * Always renders (backend optional); preview rows update when bus_factor data loads.
+ * Preview prefers /coral-report github_knowledge_cross_join, then bus_factor fallback.
  *
  * Used by: ReportsPage
  * Depends on: Badge
@@ -10,7 +10,7 @@
 
 import Badge from '../atoms/Badge.jsx'
 
-/** Fallback rows when /coral-report is unavailable (matches Acme Patel narrative). */
+/** Fallback rows when /coral-report is unavailable (graph ownership preview). */
 export const MOCK_SQL_PREVIEW_ROWS = [
   {
     person: 'A. Patel',
@@ -36,37 +36,54 @@ export const MOCK_SQL_PREVIEW_ROWS = [
     strength: '0.64',
     critical: false,
   },
+]
+
+/** Fallback when GitHub cross-join returns no rows (JSONL mentions people in issue bodies). */
+export const MOCK_GITHUB_JOIN_ROWS = [
   {
-    person: 'T. Walsh',
-    team: 'Infrastructure',
-    relationship: 'OWNS',
-    system: 'Deploy System',
-    strength: '0.41',
+    person: 'A. Patel',
+    team: 'Engineering',
+    system: 'Payment API',
+    issue: '#6 Payment recovery runbook alignment',
+    state: 'open',
+    source: 'demo_supplement',
+    critical: true,
+  },
+  {
+    person: 'R. Chen',
+    team: 'Engineering',
+    system: 'Auth Service',
+    issue: '#5 MCP config for Claude Desktop',
+    state: 'open',
+    source: 'demo_supplement',
     critical: false,
   },
   {
-    person: 'J. Brooks',
-    team: 'Infrastructure',
-    relationship: 'KNOWS',
-    system: 'Incident Resp',
-    strength: '0.28',
-    critical: false,
+    person: 'A. Patel',
+    team: 'Engineering',
+    system: 'Payment API',
+    issue: '#2 Coral integration',
+    state: 'closed',
+    source: 'live_github_api',
+    critical: true,
   },
 ]
 
 const SQL_LINES = [
-  { code: '-- MemoryWeave × Coral: cross-source JOIN across 3 source types', comment: null },
+  {
+    code: '-- UNION: live github.issues + demo_supplement JSONL',
+    comment: 'then JOIN graph nodes/edges',
+  },
   { code: 'SELECT', comment: null },
-  { code: '  n.name          AS person,', comment: null },
-  { code: '  n.team          AS team,', comment: null },
-  { code: '  e.rel_type      AS owns,', comment: null },
-  { code: '  e.to_name       AS system,', comment: null },
-  { code: '  e.weight        AS strength', comment: null },
-  { code: 'FROM knowledge_nodes n', comment: '-- source: Neo4j AuraDB' },
-  { code: 'JOIN knowledge_edges e', comment: '-- source: Neo4j AuraDB' },
-  { code: '  ON n.id = e.from_id', comment: null },
+  { code: '  n.name          AS person,', comment: '-- knowledge_nodes' },
+  { code: '  e.to_name       AS system,', comment: '-- knowledge_edges' },
+  { code: '  gh.title        AS github_issue', comment: '-- github_issues' },
+  { code: 'FROM knowledge_nodes n', comment: null },
+  { code: 'JOIN knowledge_edges e ON n.id = e.from_id', comment: null },
+  { code: 'JOIN github_issues gh', comment: null },
+  { code: "  ON LOWER(gh.body) LIKE '%' || LOWER(n.name) || '%'", comment: null },
   { code: "WHERE n.type = 'Person'", comment: null },
-  { code: "  AND e.rel_type IN ('KNOWS', 'OWNS')", comment: null },
+  { code: "  AND e.rel_type = 'OWNS'", comment: null },
   { code: 'ORDER BY e.weight DESC', comment: null },
 ]
 
@@ -87,7 +104,33 @@ const TEAM_BY_PERSON = {
 }
 
 /**
- * Map /coral-report bus_factor rows into SQL result preview shape.
+ * Map /coral-report github_knowledge_cross_join rows for the SQL preview table.
+ * @param {Array<Record<string, unknown>>|null|undefined} githubJoin
+ */
+export function buildGithubCrossJoinPreviewRows(githubJoin) {
+  if (!githubJoin?.length) return MOCK_GITHUB_JOIN_ROWS
+
+  return githubJoin.slice(0, 5).map((row) => {
+    const person = String(row.team_member ?? row.person_name ?? '—')
+    const issueNum = row.issue_number ?? row.number
+    const title = String(row.issue_title ?? row.title ?? '—')
+    const issueLabel =
+      issueNum != null ? `#${issueNum} ${title}` : title
+    const source = String(row.issue_source ?? 'demo_supplement')
+    return {
+      person,
+      team: String(row.team ?? '—'),
+      system: String(row.owned_system ?? '—'),
+      issue: issueLabel,
+      state: String(row.issue_state ?? row.state ?? '—'),
+      source: source === 'live_github_api' ? 'GitHub API' : 'Supplement',
+      critical: /patel/i.test(person),
+    }
+  })
+}
+
+/**
+ * Map /coral-report bus_factor rows into graph-ownership preview shape.
  * @param {Array<{ system_name?: string, owner_count?: number, max_ownership_weight?: number }>|null|undefined} busFactor
  */
 export function buildSqlPreviewRows(busFactor) {
@@ -116,10 +159,29 @@ export function buildSqlPreviewRows(busFactor) {
 
 /**
  * Live Coral SQL showcase card for Reports page.
- * @param {{ previewRows: typeof MOCK_SQL_PREVIEW_ROWS, isLive: boolean }} props
+ * @param {{
+ *   previewRows: typeof MOCK_GITHUB_JOIN_ROWS,
+ *   isLive: boolean,
+ *   githubMode?: string,
+ *   previewVariant?: 'github' | 'graph',
+ * }} props
  */
-export default function LiveCrossSourceSqlCard({ previewRows, isLive }) {
-  const rows = previewRows?.length ? previewRows : MOCK_SQL_PREVIEW_ROWS
+export default function LiveCrossSourceSqlCard({
+  previewRows,
+  isLive,
+  githubMode = 'file',
+  previewVariant = 'github',
+}) {
+  const rows = previewRows?.length ? previewRows : MOCK_GITHUB_JOIN_ROWS
+  const isGithubPreview = previewVariant === 'github'
+  const githubSourceLabel =
+    githubMode === 'hybrid' || githubMode === 'api'
+      ? 'Hybrid: live github.issues + demo_supplement JSONL (Acme narrative)'
+      : 'JSONL supplement (memoryweave_demo.github_issues)'
+
+  const columns = isGithubPreview
+    ? ['Person', 'Team', 'System', 'GitHub issue', 'State', 'Source']
+    : ['Person', 'Team', 'Relationship', 'System', 'Strength']
 
   return (
     <div
@@ -241,16 +303,30 @@ export default function LiveCrossSourceSqlCard({ previewRows, isLive }) {
           color: 'var(--text-secondary)',
         }}
       >
-        <span>Sources joined: 3</span>
-        <span>Tables: knowledge_nodes, knowledge_edges, incident_reports</span>
-        <span>Cache TTL: 300s</span>
+        <span>Tables in this query: 3</span>
+        <span>Registered sources: 5</span>
+        <span>
+          GitHub:{' '}
+          {githubMode === 'hybrid' || githubMode === 'api' ? 'live + supplement' : 'JSONL'}
+        </span>
+      </div>
+
+      <div
+        style={{
+          padding: '8px 24px 0',
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          color: 'var(--text-tertiary)',
+        }}
+      >
+        {githubSourceLabel}
       </div>
 
       <div style={{ padding: '12px 24px 16px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              {['Person', 'Team', 'Relationship', 'System', 'Strength'].map((col) => (
+              {columns.map((col) => (
                 <th
                   key={col}
                   style={{
@@ -273,7 +349,7 @@ export default function LiveCrossSourceSqlCard({ previewRows, isLive }) {
           <tbody>
             {rows.map((row) => (
               <tr
-                key={`${row.person}-${row.system}`}
+                key={`${row.person}-${row.issue ?? row.system}`}
                 style={{
                   borderBottom: '1px solid var(--border-subtle)',
                   borderLeft: row.critical
@@ -281,29 +357,44 @@ export default function LiveCrossSourceSqlCard({ previewRows, isLive }) {
                     : '4px solid transparent',
                 }}
               >
-                {[
-                  row.person,
-                  row.team,
-                  row.relationship,
-                  row.system,
-                  row.strength,
-                ].map((cell, cellIndex) => (
-                  <td
-                    key={cell}
-                    style={{
-                      padding: '10px 12px 10px 0',
-                      fontSize: 12,
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: cellIndex === 0 ? 500 : 400,
-                      color:
-                        cellIndex === 0
-                          ? 'var(--text-primary)'
-                          : 'var(--text-secondary)',
-                    }}
-                  >
-                    {cell}
-                  </td>
-                ))}
+                {isGithubPreview
+                  ? [row.person, row.team, row.system, row.issue, row.state, row.source].map(
+                      (cell, cellIndex) => (
+                      <td
+                        key={`${row.person}-${cellIndex}`}
+                        style={{
+                          padding: '10px 12px 10px 0',
+                          fontSize: 12,
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: cellIndex === 0 ? 500 : 400,
+                          color:
+                            cellIndex === 0
+                              ? 'var(--text-primary)'
+                              : 'var(--text-secondary)',
+                        }}
+                      >
+                        {cell}
+                      </td>
+                    ))
+                  : [row.person, row.team, row.relationship, row.system, row.strength].map(
+                      (cell, cellIndex) => (
+                        <td
+                          key={`${row.person}-${cellIndex}`}
+                          style={{
+                            padding: '10px 12px 10px 0',
+                            fontSize: 12,
+                            fontFamily: 'var(--font-mono)',
+                            fontWeight: cellIndex === 0 ? 500 : 400,
+                            color:
+                              cellIndex === 0
+                                ? 'var(--text-primary)'
+                                : 'var(--text-secondary)',
+                          }}
+                        >
+                          {cell}
+                        </td>
+                      ),
+                    )}
               </tr>
             ))}
           </tbody>

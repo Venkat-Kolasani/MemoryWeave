@@ -17,7 +17,7 @@ import Button from '../components/atoms/Button.jsx'
 import Icon from '../components/atoms/Icon.jsx'
 import { fetchCoralReport } from '../services/api.js'
 import LiveCrossSourceSqlCard, {
-  buildSqlPreviewRows,
+  buildGithubCrossJoinPreviewRows,
 } from '../components/reports/LiveCrossSourceSqlCard.jsx'
 
 /** Pulsing Coral SQL attribution chip on analytics cards. */
@@ -83,7 +83,8 @@ export default function ReportsPage() {
   }, [])
 
   const isLive = Boolean(!loading && !error && data?.coral_available)
-  const previewRows = buildSqlPreviewRows(data?.bus_factor)
+  const githubMode = data?.github_mode ?? 'file'
+  const previewRows = buildGithubCrossJoinPreviewRows(data?.github_knowledge_cross_join)
 
   const busFactor = data?.bus_factor || []
   const teamConcentration = data?.team_concentration || []
@@ -108,7 +109,12 @@ export default function ReportsPage() {
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-        <LiveCrossSourceSqlCard previewRows={previewRows} isLive={isLive} />
+        <LiveCrossSourceSqlCard
+          previewRows={previewRows}
+          isLive={isLive}
+          githubMode={githubMode}
+          previewVariant="github"
+        />
 
         {error && (
           <div

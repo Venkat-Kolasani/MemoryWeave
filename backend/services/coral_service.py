@@ -26,6 +26,8 @@ from typing import Any, Optional
 
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent
 CORAL_CLI = os.environ.get("CORAL_CLI_PATH", "coral")
+_GITHUB_OWNER = "Venkat-Kolasani"
+_GITHUB_REPO = "MemoryWeave"
 
 _QUERY_TIMEOUT_SEC = 45
 _SCHEMA_TIMEOUT_SEC = 20
@@ -72,8 +74,8 @@ def get_mcp_config() -> dict[str, Any]:
                 "command": CORAL_CLI,
                 "args": ["mcp", "--sources", sources_path],
                 "description": (
-                    "MemoryWeave Coral SQL layer — query knowledge_nodes, "
-                    "knowledge_edges, incident_reports, slack_messages as SQL tables"
+                    "MemoryWeave Coral SQL layer — knowledge_nodes, knowledge_edges, "
+                    "incident_reports, slack_messages, github.issues (live API when configured)"
                 ),
             }
         }
@@ -254,18 +256,26 @@ class CoralService:
         if not self.available:
             return {"available": False, "sources": []}
 
+        mode = self.github_mode()
+        tables_where = (
+            "schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
+            "OR (schema_name = 'github' AND table_name = 'issues')"
+            if mode in {"api", "hybrid"}
+            else "schema_name IN ('memoryweave_graph', 'memoryweave_demo')"
+        )
+
         try:
             tables = self.query(
                 "SELECT schema_name, table_name, description "
                 "FROM coral.tables "
-                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
+                f"WHERE {tables_where} "
                 "ORDER BY schema_name, table_name",
                 timeout_sec=_SCHEMA_TIMEOUT_SEC,
             )
             columns = self.query(
                 "SELECT schema_name, table_name, column_name, data_type, description "
                 "FROM coral.columns "
-                "WHERE schema_name IN ('memoryweave_graph', 'memoryweave_demo') "
+                f"WHERE {tables_where} "
                 "ORDER BY schema_name, table_name, ordinal_position "
                 "LIMIT 500",
                 timeout_sec=_SCHEMA_TIMEOUT_SEC,
@@ -274,6 +284,7 @@ class CoralService:
                 "available": True,
                 "tables": tables,
                 "columns": columns,
+                "github_mode": self.github_mode(),
             }
         except Exception as exc:
             return {"available": True, "sources": [], "error": str(exc)}
@@ -340,3 +351,56 @@ class CoralService:
     def patel_absence_risk(self) -> list[dict[str, Any]]:
         queries = self._load_queries()
         return self.query(queries.PATEL_ABSENCE_RISK)
+
+    def github_mode(self) -> str:
+        """
+        Return github integration mode: hybrid | api | file.
+
+        hybrid = live github.issues UNION demo JSONL supplement (recommended for demos).
+        Reads CORAL_GITHUB_MODE env or github_mode file written by install_sources.sh.
+        """
+        mode = os.getenv("CORAL_GITHUB_MODE", "").strip().lower()
+        if mode in {"api", "file", "hybrid"}:
+            # Legacy installs wrote "api" — treat as hybrid when supplement JSONL exists.
+            return "hybrid" if mode == "api" else mode
+
+        mode_file = Path(
+            os.getenv("CORAL_CONFIG_DIR", str(_BACKEND_ROOT / ".coral_config"))
+        ) / "github_mode"
+        if mode_file.is_file():
+            stored = mode_file.read_text(encoding="utf-8").strip().lower()
+            if stored == "api":
+                return "hybrid"
+            if stored in {"file", "hybrid"}:
+                return stored
+
+        return "file"
+
+    def github_knowledge_cross_join_sql(self) -> str:
+        """Canonical SQL for person × GitHub issues (matches active github_mode)."""
+        queries = self._load_queries()
+        if self.github_mode() == "hybrid":
+            return queries.GITHUB_KNOWLEDGE_CROSS_JOIN_HYBRID.strip()
+        if self.github_mode() == "api":
+            return queries.GITHUB_KNOWLEDGE_CROSS_JOIN_API.strip()
+        return queries.GITHUB_KNOWLEDGE_CROSS_JOIN_FILE.strip()
+
+    def github_knowledge_cross_join(self) -> list[dict[str, Any]]:
+        """Person × GitHub issues cross-source JOIN (live API or JSONL fallback)."""
+        return self.query(self.github_knowledge_cross_join_sql())
+
+    def github_issues_preview(self, *, limit: int = 5) -> list[dict[str, Any]]:
+        """Lightweight GitHub issues sample (live + supplement when hybrid)."""
+        queries = self._load_queries()
+        if self.github_mode() in {"api", "hybrid"}:
+            return self.query(
+                f"SELECT number, title, state, issue_source, created_at "
+                f"FROM {queries.GITHUB_ISSUES_UNION_SUBQUERY.strip()} gh "
+                f"ORDER BY CASE WHEN issue_source = 'live_github_api' THEN 0 ELSE 1 END, "
+                f"created_at DESC LIMIT {int(limit)}"
+            )
+        return self.query(
+            f"SELECT number, title, state, 'demo_supplement' AS issue_source, created_at "
+            f"FROM memoryweave_demo.github_issues "
+            f"ORDER BY created_at DESC LIMIT {int(limit)}"
+        )

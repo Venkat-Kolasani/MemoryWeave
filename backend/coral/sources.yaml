@@ -44,3 +44,17 @@ sources:
     manifest: ./coral/manifests/memoryweave_demo.yaml
     table: slack_messages
     description: "Slack export — operational discussions, escalations, on-call threads"
+
+  # Table: github.issues (live API) OR memoryweave_demo.github_issues (JSONL fallback)
+  # Schema: number, title, state, body, author/user__login, created_at, labels, url/html_url
+  # Source: live GitHub REST API — Venkat-Kolasani/MemoryWeave (requires GITHUB_TOKEN for Coral)
+  - name: github_issues
+    type: github
+    bundled_source: github
+    table: issues
+    description: "Live GitHub issues from the MemoryWeave repository"
+    repo: "Venkat-Kolasani/MemoryWeave"
+    resource: issues
+    token: "${GITHUB_TOKEN}"
+    fallback_manifest: ./coral/manifests/memoryweave_demo.yaml
+    fallback_table: github_issues

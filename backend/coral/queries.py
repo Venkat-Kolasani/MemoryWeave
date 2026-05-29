@@ -340,6 +340,107 @@ LIMIT 30
 """
 
 
+# ─── Query 14: GitHub issues × knowledge graph ───────────────────────────────
+# file: memoryweave_demo.github_issues (JSONL — Acme narrative supplement)
+# api: github.issues only (often 0 JOIN rows — live issues lack person names in body)
+# hybrid: UNION live API + JSONL supplement (production demo default when token set)
+
+GITHUB_ISSUES_UNION_SUBQUERY = """
+(
+  SELECT
+      number,
+      title,
+      state,
+      body,
+      created_at,
+      'live_github_api' AS issue_source
+  FROM github.issues
+  WHERE owner = 'Venkat-Kolasani'
+    AND repo = 'MemoryWeave'
+    AND state = 'all'
+  UNION ALL
+  SELECT
+      number,
+      title,
+      state,
+      body,
+      created_at,
+      'demo_supplement' AS issue_source
+  FROM memoryweave_demo.github_issues
+)
+"""
+
+GITHUB_KNOWLEDGE_CROSS_JOIN_HYBRID = f"""
+SELECT
+    kn.name         AS team_member,
+    kn.team         AS team,
+    kn.role         AS role,
+    e.to_name       AS owned_system,
+    e.rel_type      AS relationship,
+    gh.number       AS issue_number,
+    gh.title        AS issue_title,
+    gh.state        AS issue_state,
+    gh.issue_source AS issue_source,
+    gh.created_at   AS opened_at
+FROM memoryweave_graph.knowledge_nodes kn
+LEFT JOIN memoryweave_graph.knowledge_edges e
+    ON kn.id = e.from_id
+    AND e.rel_type IN ('OWNS', 'KNOWS')
+JOIN {GITHUB_ISSUES_UNION_SUBQUERY} gh
+    ON LOWER(COALESCE(gh.body, '')) LIKE '%' || LOWER(kn.name) || '%'
+    OR LOWER(gh.title) LIKE '%' || LOWER(kn.name) || '%'
+WHERE kn.type = 'Person'
+ORDER BY
+    CASE WHEN gh.issue_source = 'live_github_api' THEN 0 ELSE 1 END,
+    gh.created_at DESC
+LIMIT 20
+"""
+
+GITHUB_KNOWLEDGE_CROSS_JOIN_API = """
+SELECT
+    kn.name         AS team_member,
+    kn.team         AS team,
+    kn.role         AS role,
+    gh.number       AS issue_number,
+    gh.title        AS issue_title,
+    gh.state        AS issue_state,
+    'live_github_api' AS issue_source,
+    gh.created_at   AS opened_at
+FROM memoryweave_graph.knowledge_nodes kn
+JOIN github.issues gh
+    ON LOWER(COALESCE(gh.body, '')) LIKE '%' || LOWER(kn.name) || '%'
+    OR LOWER(gh.title) LIKE '%' || LOWER(kn.name) || '%'
+WHERE kn.type = 'Person'
+  AND gh.owner = 'Venkat-Kolasani'
+  AND gh.repo = 'MemoryWeave'
+  AND gh.state = 'all'
+ORDER BY gh.created_at DESC
+LIMIT 20
+"""
+
+GITHUB_KNOWLEDGE_CROSS_JOIN_FILE = """
+SELECT
+    kn.name         AS team_member,
+    kn.team         AS team,
+    kn.role         AS role,
+    gh.number       AS issue_number,
+    gh.title        AS issue_title,
+    gh.state        AS issue_state,
+    'demo_supplement' AS issue_source,
+    gh.created_at   AS opened_at
+FROM memoryweave_graph.knowledge_nodes kn
+JOIN memoryweave_demo.github_issues gh
+    ON LOWER(gh.body) LIKE '%' || LOWER(kn.name) || '%'
+    OR LOWER(gh.title) LIKE '%' || LOWER(kn.name) || '%'
+WHERE kn.type = 'Person'
+ORDER BY gh.created_at DESC
+LIMIT 20
+"""
+
+# Default alias used by coral_service.github_knowledge_cross_join()
+GITHUB_KNOWLEDGE_CROSS_JOIN = GITHUB_KNOWLEDGE_CROSS_JOIN_FILE
+
+
 # ─── Cross-source demo: graph + Slack + incidents (Patel / payment) ─────────
 PATEL_CROSS_SOURCE = """
 SELECT

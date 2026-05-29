@@ -73,6 +73,7 @@ Input (Slack / GitHub / Incidents / Docs)
         knowledge_edges table   (relationships)
         incident_reports table  (Markdown postmortems → JSONL)
         slack_messages table    (Slack JSON export)
+        github_issues table     (Live GitHub API or JSONL fallback)
   → Cross-source SQL JOINs → LLM query synthesis (/coral-query)
   → React frontend (Graph + Risk still read live Neo4j over Bolt)
 ```
@@ -85,16 +86,19 @@ Legacy path (fallback): `/query` → Neo4j Cypher + Chroma embeddings → manual
 
 MemoryWeave uses [Coral](https://withcoral.com) as its cross-source SQL retrieval layer.
 
-Instead of separate API calls to Neo4j (Cypher), ChromaDB (embeddings), and file parsers that get merged manually inside the agent — MemoryWeave exposes 4 SQL tables via Coral and runs **cross-source JOINs** from FastAPI.
+Instead of separate API calls to Neo4j (Cypher), ChromaDB (embeddings), and file parsers that get merged manually inside the agent — MemoryWeave exposes **5 SQL tables** via Coral and runs **cross-source JOINs** from FastAPI.
 
 ### SQL Tables
 
 | Table | Source Type | Contents |
 |-------|-------------|----------|
-| `knowledge_nodes` | Neo4j AuraDB | People, systems, incidents, workflows |
-| `knowledge_edges` | Neo4j AuraDB | OWNS, KNOWS, RESOLVES, AFFECTS relationships |
-| `incident_reports` | Markdown files | P0/P1/P2 postmortem documents |
+| `knowledge_nodes` | Graph JSONL (Neo4j-aligned) | People, systems, incidents, workflows |
+| `knowledge_edges` | Graph JSONL | OWNS, KNOWS, RESOLVES, AFFECTS relationships |
+| `incident_reports` | Markdown → JSONL | P0/P1/P2 postmortem documents |
 | `slack_messages` | JSON export | 50 operational Slack messages |
+| `github_issues` | **Live GitHub API** (or JSONL fallback) | Issues/PRs from [Venkat-Kolasani/MemoryWeave](https://github.com/Venkat-Kolasani/MemoryWeave) |
+
+With `GITHUB_TOKEN` set, Coral registers **`github.issues`** (live REST API) and **UNION**s it with **`memoryweave_demo.github_issues`** (demo supplement JSONL aligned to the Acme graph). Cross-join rows include `issue_source`: `live_github_api` vs `demo_supplement`. Without a token, only the JSONL supplement is used.
 
 On **Render**, graph tables are served from JSONL snapshots (`backend/coral/data/`) aligned with the same Acme seed as Aura. **Graph** and **Risk** pages still query live Neo4j over Bolt.
 
@@ -119,7 +123,8 @@ See the **Live Cross-Source SQL** card on the [Reports](https://memory-weave-ai.
 | SQL over graph database | `knowledge_nodes` + `knowledge_edges` from Neo4j |
 | SQL over Markdown files | `incident_reports` from demo postmortems |
 | SQL over JSON files | `slack_messages` from Slack export |
-| Cross-source JOIN | 3-way JOINs in `/coral-report` and `/coral-query` |
+| SQL over GitHub API | `github.issues` for MemoryWeave repo (when `GITHUB_TOKEN` set) |
+| Cross-source JOIN | Graph + incidents + Slack + **GitHub** in `/coral-report` and `/coral-query` |
 | Schema learning | Automatic column detection on first query per source |
 | Caching | 300s TTL on repeated Coral queries |
 | CLI integration | `coral sql` via subprocess in `coral_service.py` |
@@ -130,7 +135,7 @@ See the **Live Cross-Source SQL** card on the [Reports](https://memory-weave-ai.
 | Endpoint | Description |
 |----------|-------------|
 | `POST /coral-query` | Natural language → SQL → structured answer |
-| `GET /coral-schema` | Schema catalog of all 4 registered tables |
+| `GET /coral-schema` | Schema catalog of all 5 registered tables (+ `github_mode`) |
 | `GET /coral-report` | Full cross-source analytics (bus factor, team concentration, incident chains) |
 | `GET /coral-mcp-config` | MCP server config for Claude Desktop integration |
 
@@ -146,8 +151,9 @@ brew install withcoral/tap/coral      # macOS
 coral --version                       # verify install
 cd backend
 export NEO4J_URI=... NEO4J_USER=... NEO4J_PASSWORD=...
-bash coral/install_sources.sh         # register all 4 sources
-coral sql --format table "SELECT schema_name, table_name FROM coral.tables WHERE schema_name IN ('memoryweave_graph','memoryweave_demo')"
+export GITHUB_TOKEN=ghp_...           # optional — enables live github.issues
+bash coral/install_sources.sh         # register all 5 sources
+coral sql --format table "SELECT schema_name, table_name FROM coral.tables WHERE table_name IN ('knowledge_nodes','knowledge_edges','incident_reports','slack_messages','github_issues','issues')"
 ```
 
 ---

@@ -47,7 +47,17 @@ export NEO4J_USER=neo4j
 export NEO4J_PASSWORD=your_password
 ```
 
-Run the setup script (registers graph + demo manifests):
+Optional — live GitHub issues (`github.issues` via Coral bundled source):
+
+```bash
+export GITHUB_TOKEN=ghp_...   # read-only PAT or: gh auth token
+```
+
+Without `GITHUB_TOKEN`, Coral uses `memoryweave_demo.github_issues` (JSONL in `coral/data/`).
+
+With a token, install writes `github_mode=hybrid`: Coral **UNION**s live `github.issues` with the JSONL supplement so cross-join demos show both `live_github_api` and `demo_supplement` rows (real repo issues #1–#2 plus Acme narrative issues).
+
+Run the setup script (registers graph + demo + GitHub):
 
 ```bash
 bash coral/install_sources.sh
@@ -59,13 +69,16 @@ Or via Python (same as Render boot):
 python -c "from services.coral_setup import ensure_coral_sources; print(ensure_coral_sources())"
 ```
 
-### Verify 4 tables registered
+### Verify 5 tables registered
 
 Coral 0.4.1 uses the SQL catalog — not the legacy `coral schema` subcommand:
 
 ```bash
 coral sql --format table \
-  "SELECT schema_name, table_name FROM coral.tables WHERE schema_name IN ('memoryweave_graph','memoryweave_demo') ORDER BY 1, 2"
+  "SELECT schema_name, table_name FROM coral.tables \
+   WHERE table_name IN ('knowledge_nodes','knowledge_edges','incident_reports','slack_messages','github_issues','issues') \
+   ORDER BY 1, 2"
+cat "${CORAL_CONFIG_DIR:-.coral_config}/github_mode"   # api | file
 ```
 
 Expected tables:
@@ -74,10 +87,13 @@ Expected tables:
 - `memoryweave_graph.knowledge_edges`
 - `memoryweave_demo.incident_reports`
 - `memoryweave_demo.slack_messages`
+- `github.issues` (live API) **or** `memoryweave_demo.github_issues` (JSONL fallback)
 
 ---
 
 ## Run a Cross-Source Query
+
+Graph + edges:
 
 ```bash
 coral sql --format json \
@@ -86,6 +102,32 @@ coral sql --format json \
    JOIN memoryweave_graph.knowledge_edges e ON n.id = e.from_id
    WHERE n.type = 'Person'
    ORDER BY e.weight DESC
+   LIMIT 5"
+```
+
+Graph + live GitHub (requires `GITHUB_TOKEN` + `github_mode=api`):
+
+```bash
+coral sql --format json \
+  "SELECT n.name, gh.title, gh.state
+   FROM memoryweave_graph.knowledge_nodes n
+   JOIN github.issues gh
+     ON LOWER(gh.body) LIKE '%' || LOWER(n.name) || '%'
+   WHERE n.type = 'Person'
+     AND gh.owner = 'Venkat-Kolasani'
+     AND gh.repo = 'MemoryWeave'
+   LIMIT 5"
+```
+
+File fallback (no token):
+
+```bash
+coral sql --format json \
+  "SELECT n.name, gh.title
+   FROM memoryweave_graph.knowledge_nodes n
+   JOIN memoryweave_demo.github_issues gh
+     ON LOWER(gh.body) LIKE '%' || LOWER(n.name) || '%'
+   WHERE n.type = 'Person'
    LIMIT 5"
 ```
 
