@@ -4,6 +4,10 @@
 
 Use this doc when recording your **YouTube submission** (max **3 minutes**) and when demoing live to Coral judges.
 
+**Presenter teleprompter (local only, gitignored):** `docs/CORAL-DEMO-TELEPROMPTER.md` — timed script, click cheat sheet, emergency `curl` backup.
+
+**Captain's Log blog drafts (Medium + Hashnode):** `docs/blog/` — see `PUBLISH.md` for paste instructions.
+
 ---
 
 ## YouTube video demo link
@@ -37,7 +41,7 @@ https://youtu.be/YOUR_VIDEO_ID
 | Service | URL |
 |---------|-----|
 | Frontend | https://memory-weave-ai.vercel.app |
-| Backend API | https://memoryweave-1.onrender.com |
+| Backend API | https://memoryweave-r6r4.onrender.com |
 | GitHub | https://github.com/Venkat-Kolasani/MemoryWeave |
 
 ---
@@ -108,8 +112,8 @@ Slack / Incidents / Docs
 
 **Pre-recording checklist**
 
-- [ ] `GET https://memoryweave-1.onrender.com/health` → `"coral": "ok"`
-- [ ] `GET https://memoryweave-1.onrender.com/coral-schema` → `"available": true`
+- [ ] `GET https://memoryweave-r6r4.onrender.com/health` → `"coral": "ok"`
+- [ ] `GET https://memoryweave-r6r4.onrender.com/coral-schema` → `"available": true`
 - [ ] https://memory-weave-ai.vercel.app/reports loads with data
 - [ ] Assistant: Coral SQL JOIN on (default); send one warm-up query before recording
 - [ ] Browser 100% zoom, DevTools closed, Do Not Disturb on
@@ -185,11 +189,11 @@ Demo **data** is Acme Corp (seeded). Demo **answers** after Send are generated f
 ## Post-deploy verification (copy-paste)
 
 ```bash
-curl -sS https://memoryweave-1.onrender.com/health | python3 -m json.tool
+curl -sS https://memoryweave-r6r4.onrender.com/health | python3 -m json.tool
 
-curl -sS https://memoryweave-1.onrender.com/coral-schema | python3 -m json.tool
+curl -sS https://memoryweave-r6r4.onrender.com/coral-schema | python3 -m json.tool
 
-curl -sS -X POST https://memoryweave-1.onrender.com/coral-query \
+curl -sS -X POST https://memoryweave-r6r4.onrender.com/coral-query \
   -H "Content-Type: application/json" \
   -d '{"question": "Who resolves payment incidents?"}' | python3 -m json.tool
 ```

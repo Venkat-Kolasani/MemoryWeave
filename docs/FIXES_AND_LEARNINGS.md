@@ -246,7 +246,7 @@ Started `Coral-integration` branch to add [Coral](https://withcoral.com) as the 
 N/A — planned enhancement 
 
 ### How It Was Fixed
-N/A — documented approach in `docs/CORAL_INTEGRATION.md`; implementation follows in subsequent prompts on this branch.
+N/A — documented approach in `docs/CORAL_LOCAL.md`; implementation follows on `main`.
 
 ### What I Learned
 MemoryWeave’s Neo4j graph UI and Patel bus-factor story are the product differentiator; Coral strengthens the **Assistant** and judge demo with one SQL join across Slack, incidents, and org data — aligned with hackathon scoring for MCP and cross-source queries.
