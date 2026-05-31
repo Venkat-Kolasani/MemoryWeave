@@ -5,7 +5,8 @@
 > AI-powered organizational memory. Makes institutional knowledge queryable before it walks out the door.
 
 **Live Demo:** [memory-weave-ai.vercel.app](https://memory-weave-ai.vercel.app)  
-**API:** [memoryweave-r6r4.onrender.com](https://memoryweave-r6r4.onrender.com)
+**API:** [memoryweave-r6r4.onrender.com](https://memoryweave-r6r4.onrender.com)  
+**Logo (SVG):** [docs/assets/memoryweave-logo.svg](docs/assets/memoryweave-logo.svg) — for hackathon / social uploads
 
 Deploy guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**
 
