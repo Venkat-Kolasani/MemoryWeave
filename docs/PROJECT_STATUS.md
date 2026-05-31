@@ -8,7 +8,7 @@ Phase 6 — **Coral integration complete** on `main`
 Production demo: Vercel + Render + Neo4j Aura — submission-ready
 
 ## Coral integration
-See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORAL_LOCAL.md)**.
+See **[CORAL_LOCAL.md](CORAL_LOCAL.md)** and **[CORAL-DEMO-SCRIPT.md](CORAL-DEMO-SCRIPT.md)**.
 
 - [x] Coral source specs over Acme demo corpus (Slack JSONL, incidents JSONL, graph manifests / JSONL)
 - [x] **GitHub issues** — live `github.issues` API when `GITHUB_TOKEN` set; JSONL fallback otherwise
@@ -99,7 +99,7 @@ See **[CORAL_INTEGRATION.md](CORAL_INTEGRATION.md)** and **[CORAL_LOCAL.md](CORA
 
 ## Environment
 - Frontend: https://memory-weave-ai.vercel.app
-- Backend: https://memoryweave-1.onrender.com
+- Backend: https://memoryweave-r6r4.onrender.com
 - Local frontend: http://localhost:5173 (`VITE_API_URL=http://127.0.0.1:8000`)
 - Local backend: http://127.0.0.1:8000
 - Neo4j Aura: production graph + risk

@@ -5,7 +5,7 @@
 > AI-powered organizational memory. Makes institutional knowledge queryable before it walks out the door.
 
 **Live Demo:** [memory-weave-ai.vercel.app](https://memory-weave-ai.vercel.app)  
-**API:** [memoryweave-1.onrender.com](https://memoryweave-1.onrender.com)
+**API:** [memoryweave-r6r4.onrender.com](https://memoryweave-r6r4.onrender.com)
 
 Deploy guide: **[docs/DEPLOY.md](docs/DEPLOY.md)**
 
@@ -185,7 +185,7 @@ coral sql --format table "SELECT schema_name, table_name FROM coral.tables WHERE
 
 - [CORAL_LOCAL.md](docs/CORAL_LOCAL.md) — **local Coral CLI + MCP reproduction**
 - [CORAL-DEMO-SCRIPT.md](docs/CORAL-DEMO-SCRIPT.md) — **3-minute judge demo script**
-- [CORAL_INTEGRATION.md](docs/CORAL_INTEGRATION.md) — architecture and integration notes
+- [CORAL_LOCAL.md](docs/CORAL_LOCAL.md) — Coral setup and reproduction
 - [PROJECT_STATUS.md](docs/PROJECT_STATUS.md) — build log and API status
 - [FIXES_AND_LEARNINGS.md](docs/FIXES_AND_LEARNINGS.md) — debugging notes
 - [LOCAL_SETUP.md](docs/LOCAL_SETUP.md) — local dev guide

@@ -233,13 +233,13 @@ If this fails, install or upgrade Coral CLI. Production on Render uses **CLI SQL
 
 - Coral runs in Docker on Render (`python:3.11-slim-trixie` for glibc 2.39+).
 - `CORAL_AUTO_SETUP=true` registers sources on boot via `services/coral_setup.py`.
-- Verify: `GET https://memoryweave-1.onrender.com/health` → `"coral": "ok"`
+- Verify: `GET https://memoryweave-r6r4.onrender.com/health` → `"coral": "ok"`
 
 | URL | Purpose |
 |-----|---------|
-| https://memoryweave-1.onrender.com/coral-schema | Table catalog |
-| https://memoryweave-1.onrender.com/coral-report | Analytics |
-| https://memoryweave-1.onrender.com/coral-mcp-config | MCP JSON block |
+| https://memoryweave-r6r4.onrender.com/coral-schema | Table catalog |
+| https://memoryweave-r6r4.onrender.com/coral-report | Analytics |
+| https://memoryweave-r6r4.onrender.com/coral-mcp-config | MCP JSON block |
 | https://memory-weave-ai.vercel.app/reports | Live SQL demo UI |
 | https://memory-weave-ai.vercel.app/settings | MCP + schema UI |
 
@@ -254,4 +254,4 @@ If this fails, install or upgrade Coral CLI. Production on Render uses **CLI SQL
 | `coral schema` not found | Use `coral sql` against `coral.tables` (Coral 0.4.1) |
 | MCP `available: false` on Render | Expected — use MCP locally; production uses `coral sql` subprocess |
 
-See also: [FIXES_AND_LEARNINGS.md](FIXES_AND_LEARNINGS.md), [CORAL_INTEGRATION.md](CORAL_INTEGRATION.md).
+See also: [FIXES_AND_LEARNINGS.md](FIXES_AND_LEARNINGS.md), [CORAL-DEMO-SCRIPT.md](CORAL-DEMO-SCRIPT.md).

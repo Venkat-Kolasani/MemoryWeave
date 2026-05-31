@@ -178,7 +178,7 @@ See [FIXES_AND_LEARNINGS.md](FIXES_AND_LEARNINGS.md) — *Settings / Reports ref
 
 The API sleeps after ~15 minutes idle on Render free tier. The frontend calls `warmBackend()` in `App.jsx` → `api.js`, which pings `/` and `/health` on load and again at 2s, 5s, 12s, 25s, 50s, and 90s while the user reads the landing page. Navigating to `/dashboard` (or any app route) triggers `boostBackendWarm()` for another immediate ping.
 
-**Verify warm pings:** Open https://memory-weave-ai.vercel.app → DevTools → **Network** → filter `health` or `onrender`. You should see GETs to `https://memoryweave-1.onrender.com/health` within a few seconds (CORS must allow your Vercel origin).
+**Verify warm pings:** Open https://memory-weave-ai.vercel.app → DevTools → **Network** → filter `health` or `onrender`. You should see GETs to `https://memoryweave-r6r4.onrender.com/health` within a few seconds (CORS must allow your Vercel origin).
 
 ---
 
@@ -195,7 +195,7 @@ Use this **tonight** so the backend stays awake through hackathon judging (in ad
 1. Dashboard → **Add New Monitor**
 2. **Monitor Type:** HTTP(s)
 3. **Friendly Name:** `MemoryWeave API health`
-4. **URL:** `https://memoryweave-1.onrender.com/health`  
+4. **URL:** `https://memoryweave-r6r4.onrender.com/health`  
    (replace with your Render URL if different)
 5. **Monitoring Interval:** **5 minutes** (shortest on free tier)
 6. **HTTP Method:** **GET** preferred (full JSON body). **HEAD** also returns `200` on `/health` if your monitor uses it.
@@ -209,7 +209,7 @@ Use this **tonight** so the backend stays awake through hackathon judging (in ad
 2. In a terminal:
 
 ```bash
-curl -sS https://memoryweave-1.onrender.com/health | python3 -m json.tool
+curl -sS https://memoryweave-r6r4.onrender.com/health | python3 -m json.tool
 ```
 
 Expect `"status": "ok"` and `"coral": "ok"` after the instance is warm.
@@ -229,7 +229,7 @@ In Vercel → Project → **Settings** → **Environment Variables**:
 
 | Key | Value |
 |-----|--------|
-| `VITE_API_URL` | `https://memoryweave-1.onrender.com` |
+| `VITE_API_URL` | `https://memoryweave-r6r4.onrender.com` |
 
 Redeploy after changing. Without this, the built app defaults to `http://127.0.0.1:8000` and **no production warm pings run**.
 
