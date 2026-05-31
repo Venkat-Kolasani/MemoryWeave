@@ -425,6 +425,7 @@ export default function LandingPage() {
 
       {/* Section 5 — How It Works */}
       <section
+        id="architecture"
         style={{
           background: 'var(--bg)',
           padding: '80px 24px 96px',
@@ -508,7 +509,10 @@ export default function LandingPage() {
       </section>
 
       {/* Section 6 — Core Capabilities */}
-      <section style={{ background: 'var(--bg-secondary)', padding: '96px 24px' }}>
+      <section
+        id="product"
+        style={{ background: 'var(--bg-secondary)', padding: '96px 24px' }}
+      >
         <ScrollReveal style={SECTION_CONTAINER}>
           <Overline>Core Capabilities</Overline>
           <h2
@@ -1043,7 +1047,7 @@ export default function LandingPage() {
       </section>
 
       {/* Section 8 — Security */}
-      <section style={{ background: '#111110', padding: '96px 24px' }}>
+      <section id="security" style={{ background: '#111110', padding: '96px 24px' }}>
         <ScrollReveal style={SECTION_CONTAINER}>
           <div
             className="grid items-center"
@@ -1151,6 +1155,7 @@ export default function LandingPage() {
 
       {/* Section 10 — Footer */}
       <footer
+        id="docs"
         className="flex flex-wrap items-center justify-between"
         style={{
           padding: '40px 24px',

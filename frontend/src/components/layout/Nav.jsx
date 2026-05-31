@@ -2,20 +2,46 @@
  * Nav.jsx
  *
  * Landing page marketing navigation. Fixed, scroll-aware.
- * Uses useNavigate() for CTA buttons. No currentPage prop.
+ * Layout: logo (left) · section links (center) · Request Demo (right).
  *
  * Used by: LandingPage
  * Depends on: Icon, Button, react-router-dom
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from '../atoms/Icon.jsx'
 import Button from '../atoms/Button.jsx'
 
-const NAV_LINKS = ['Product', 'Architecture', 'Security', 'Docs']
+const NAV_INNER_MAX = 1200
+const NAV_HEIGHT = 60
 
-/** Fixed marketing nav with frosted scroll state and dashboard CTAs. */
+/** Anchor targets on LandingPage — must match section ids. */
+const NAV_LINKS = [
+  { label: 'Product', hash: '#product' },
+  { label: 'Architecture', hash: '#architecture' },
+  { label: 'Security', hash: '#security' },
+  { label: 'Docs', hash: '#docs', external: 'https://github.com/Venkat-Kolasani/MemoryWeave' },
+]
+
+/**
+ * Nav link action — scroll to section or open external URL (Docs → GitHub).
+ * @param {{ hash: string, external?: string }} link
+ */
+function handleNavLink(link) {
+  if (link.external) {
+    window.open(link.external, '_blank', 'noopener,noreferrer')
+    return
+  }
+  const target = document.querySelector(link.hash)
+  if (target) {
+    const top =
+      target.getBoundingClientRect().top + window.scrollY - NAV_HEIGHT - 8
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+}
+
+/** Fixed marketing nav with frosted scroll state. */
 export default function Nav() {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
@@ -26,6 +52,11 @@ export default function Nav() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  const handleLogoClick = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    navigate('/')
+  }, [navigate])
 
   return (
     <nav
@@ -38,18 +69,18 @@ export default function Nav() {
       }}
     >
       <div
-        className="mx-auto flex items-center justify-between"
+        className="mx-auto flex w-full items-center"
         style={{
-          maxWidth: 1200,
-          padding: '0 32px',
-          height: 60,
+          maxWidth: NAV_INNER_MAX,
+          height: NAV_HEIGHT,
+          padding: '0 40px',
         }}
       >
-        {/* Logo */}
+        {/* Left — logo (unchanged) */}
         <button
           type="button"
-          onClick={() => navigate('/')}
-          className="flex items-center border-none bg-transparent p-0 cursor-pointer"
+          onClick={handleLogoClick}
+          className="flex shrink-0 items-center border-none bg-transparent p-0 cursor-pointer"
           style={{ gap: 10 }}
         >
           <div
@@ -75,15 +106,20 @@ export default function Nav() {
           </span>
         </button>
 
-        {/* Links + CTAs */}
-        <div className="flex items-center" style={{ gap: 4 }}>
-          {NAV_LINKS.map((item) => {
-            const isHovered = hoveredLink === item
+        {/* Center — section links (between logo and CTA) */}
+        <div
+          className="flex flex-1 items-center justify-center"
+          style={{ gap: 4, minWidth: 0 }}
+        >
+          {NAV_LINKS.map((link) => {
+            const { label } = link
+            const isHovered = hoveredLink === label
             return (
               <button
-                key={item}
+                key={label}
                 type="button"
-                onMouseEnter={() => setHoveredLink(item)}
+                onClick={() => handleNavLink(link)}
+                onMouseEnter={() => setHoveredLink(label)}
                 onMouseLeave={() => setHoveredLink(null)}
                 className="border-none cursor-pointer"
                 style={{
@@ -94,25 +130,17 @@ export default function Nav() {
                   transition: 'all 0.15s',
                   background: isHovered ? 'var(--bg-secondary)' : 'transparent',
                   color: isHovered ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {item}
+                {label}
               </button>
             )
           })}
+        </div>
 
-          <div
-            style={{
-              width: 1,
-              height: 16,
-              background: 'var(--border)',
-              margin: '0 8px',
-            }}
-          />
-
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-            Sign in
-          </Button>
+        {/* Right — primary CTA only */}
+        <div className="flex shrink-0 items-center">
           <Button variant="primary" size="sm" onClick={() => navigate('/dashboard')}>
             Request Demo
           </Button>
